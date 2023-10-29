@@ -1,0 +1,58 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'head.html' %}
+    <style>
+        .messages .error {
+            color: red;
+        }
+        .messages .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        {% include 'header.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-sm-12">
+                        <a href="edit-profile" class="btn btn-primary btn-rounded float-left"><i class="fa fa-arrow-left"></i> Go Back</a>
+                        <br>
+                        <h4 class="page-title" style="margin-top: 40px;">Change Image</h4>
+                    </div>
+                </div>
+                <form method="POST" action="" id="editProfile" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="card-box">
+                        <h3 class="card-title">New Image</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="file" class="form-control" name="image" id="image" accept="image/*" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center m-t-20">
+                        <button type="submit" class="btn btn-primary submit-btn">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %} 
+</body>
+</html>
+

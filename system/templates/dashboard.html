@@ -1,0 +1,149 @@
+﻿{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header.html' %}
+        <div class="page-wrapper">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success" id="success-alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="content">
+                <h3 class="page-title">Graph and chart</h3>
+            </div>
+            {% if request.user.groups.exists %}
+                {% with group=request.user.groups.first.name %}
+                {% if group == 'admin' %}
+                <div class="row">
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+							<span class="dash-widget-bg1"><i class="fa fa-user-o" aria-hidden="true"></i></span>
+							<div class="dash-widget-info text-right">
+								<h3>60%</h3>
+								<span class="widget-title1">Classcode 1 <i class="fa fa-check" aria-hidden="true"></i></span>
+							</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg2"><i class="fa fa-users"></i></span>
+                            <div class="dash-widget-info text-right">
+                                <h3>70%</h3>
+                                <span class="widget-title2">Classcode 2 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg3"><i class="fa fa fa-user-o" aria-hidden="true"></i></span>
+                            <div class="dash-widget-info text-right">
+                                <h3>80%</h3>
+                                <span class="widget-title3">Classcode 3 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg4"><i class="fa fa-users" aria-hidden="true"></i></span>
+                            <div class="dash-widget-info text-right">
+                                <h3>90%</h3>
+                                <span class="widget-title4">Classcode 4 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+				<div class="row">
+					<div class="col-12 col-md-6 col-lg-6 col-xl-6">
+						<div class="card">
+							<div class="card-body">
+								<div class="chart-title">
+									<h4>Line graph</h4>
+								</div>	
+                                <canvas id="linegraph"></canvas>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-6 col-xl-6">
+						<div class="card">
+							<div class="card-body">
+								<div class="chart-title">
+									<h4>Donut chart</h4>
+								</div>	
+                                <canvas id="myChart"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
+        </div>
+    </div>
+    
+    {% include 'jsreferences.html' %}
+    <script>
+        var xValues = ["Italy", "France", "Spain", "USA", "Argentina"];
+        var yValues = [55, 49, 44, 24, 15];
+        var barColors = [
+          "#b91d47",
+          "#00aba9",
+          "#2b5797",
+          "#e8c3b9",
+          "#1e7145"
+        ];
+        
+        new Chart("myChart", {
+          type: "doughnut",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            title: {
+              display: true,
+              text: "World Wide Wine Production 2018"
+            }
+          }
+        });
+        </script>
+        <script>
+            const x = [100,200,300,400,500,600,700,800,900,1000];
+            
+            new Chart("linegraph", {
+              type: "line",
+              data: {
+                labels: x,
+                datasets: [{ 
+                  data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478],
+                  borderColor: "red",
+                  fill: false
+                }, { 
+                  data: [1600,1700,1700,1900,2000,2700,4000,5000,6000,7000],
+                  borderColor: "green",
+                  fill: false
+                }, { 
+                  data: [300,700,2000,5000,6000,4000,2000,1000,200,100],
+                  borderColor: "blue",
+                  fill: false
+                }]
+              },
+              options: {
+                legend: {display: false}
+              }
+            });
+            </script>
+    <script>
+        // Function to automatically dismiss the alert after 3 seconds
+        setTimeout(function() {
+            $("#success-alert").alert('close');
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+</body>
+
+</html>

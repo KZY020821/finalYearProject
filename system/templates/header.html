@@ -1,0 +1,115 @@
+{% load static %}
+<div class="header">
+    <div class="header-left">
+        <a href="dashboard" class="logo">
+            <img src=" {% static 'assets/img/bolt.png' %} " width="35" height="35" alt=""> <span>Bolt-FRAS</span>
+        </a>
+    </div>
+    <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
+    <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
+    <ul class="nav user-menu float-right">
+        <li class="nav-item dropdown has-arrow">
+            
+            <a href="#" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
+                <span class="user-img">
+                    <img class="rounded-circle" src="{{user.profile.image.url}}" width="24" alt="Admin">
+                    <span class="status online"></span>
+                </span>
+                <span>{{request.user}}</span>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="profile">My Profile</a>
+                {% if request.user.groups.exists %}
+                {% with group=request.user.groups.first.name %}
+                {% if group == 'admin' %}
+                <a class="dropdown-item" href="edit-profile">Edit Profile</a>
+                <a class="dropdown-item" href="settings">Settings</a>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+                <a class="dropdown-item" href="logout">Logout</a>
+                {% if request.user.groups.exists %}
+                {% with group=request.user.groups.first.name %}
+                {% if group == 'admin' %}
+                <!-- Display the line if the user is in the 'admin' group -->
+                <a class="dropdown-item" href="/">Take Attendance</a>
+                {% endif %}
+                {% endwith %}
+                {% endif %}
+            </div>
+        </li>
+    </ul>
+    <div class="dropdown mobile-user-menu float-right">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="profile">My Profile</a>
+            {% if request.user.groups.exists %}
+            {% with group=request.user.groups.first.name %}
+            {% if group == 'admin' %}
+            <a class="dropdown-item" href="edit-profile">Edit Profile</a>
+            <a class="dropdown-item" href="settings">Settings</a>
+            {% endif %}
+            {% endwith %}
+            {% endif %}
+            <a class="dropdown-item" href="logout">Logout</a>
+        </div>
+    </div>
+</div>
+{% if request.user.groups.exists %}
+{% with group=request.user.groups.first.name %}
+{% if group == 'admin' %}
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-inner slimscroll">
+            <div id="sidebar-menu" class="sidebar-menu">
+                <ul>
+                    <li class="menu-title">Main</li>
+                    <li {% if request.path == '/user-dashboard' or request.path == '/dashboard' %}class="active"{% endif %}>
+                        <a href="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                    </li>
+                    <li {% if request.path == '/users' %}class="active"{% endif %}>
+                        <a href="users"><i class="fa fa-user"></i> <span>Users</span></a>
+                    </li>
+                    <li {% if request.path == '/attendance' %}class="active"{% endif %}>
+                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance</span></a>
+                    </li>
+                    <li {% if request.path == '/warnings' %}class="active"{% endif %}>
+                        <a href="warnings"><i class="fa fa-flag-o"></i> <span>Warning</span></a>
+                    </li>
+                    <li {% if request.path == '/profile' %}class="active"{% endif %}>
+                        <a href="profile"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    </li>
+                    <li {% if request.path == '/edit-profile' or request.path == '/changeImage' %}class="active"{% endif %}>
+                        <a href="edit-profile"><i class="fa fa-edit"></i> <span>Edit Profile</span></a>
+                    </li>
+                    <li {% if request.path == '/reviewLeaves' %}class="active"{% endif %}>
+                        <a href="reviewLeaves"><i class="fa fa-envelope-open-o"></i> <span>Review Leaves</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-inner slimscroll">
+            <div id="sidebar-menu" class="sidebar-menu">
+                <ul>
+                    <li class="menu-title">Main</li>
+                    <li {% if request.path == '/user-dashboard' or request.path == '/dashboard' %}class="active"{% endif %}>
+                        <a href="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                    </li>
+                    <li {% if request.path == '/attendance' %}class="active"{% endif %}>
+                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance</span></a>
+                    </li>
+                    <li {% if request.path == '/profile' %}class="active"{% endif %}>
+                        <a href="profile"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    </li>
+                    <li {% if request.path == '/applyLeaves' %}class="active"{% endif %}>
+                        <a href="applyLeaves"><i class="fa fa-envelope"></i> <span>Apply Leaves</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endwith %}
+{% endif %}

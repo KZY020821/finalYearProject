@@ -1,0 +1,73 @@
+﻿{% load static %}
+{% include 'head.html' %}
+<head>
+    <style>
+        .messages .error {
+            color: red;
+        }
+        .messages .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper account-wrapper">
+        <div class="account-page">
+			<div class="account-center">
+				<div class="account-box">
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                    {{ message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    <form method="POST" action="" class="form-signin">
+                        {% csrf_token %}
+						<div class="account-logo">
+                            <img src="{% static 'assets/img/bolt-dark.png' %} " alt="">
+                        </div>
+                        <div class="form-group">
+                            <label>username</label>
+                            <input name="username" type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input name="password" type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="form-group text-right">
+                            <a href="forgot-password">Forgot your password?</a>
+                        </div>
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary account-btn">Login</button>
+                        </div>
+                        <div class="text-center register-link">
+                            Don’t have an account? <a href="registerPage">Register Now</a>
+                        </div>
+                    </form>
+                </div>
+			</div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        // Function to automatically dismiss messages after 5 seconds
+        function autoDismissMessages() {
+            var messages = document.querySelectorAll('.messages li');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0'; // Fade out
+                    setTimeout(function() {
+                        message.style.display = 'none'; // Hide
+                    }, 1000); // Hide after fade-out animation (1 second)
+                }, 5000); // Auto-dismiss after 5 seconds
+            });
+        }
+        // Call the auto-dismiss function when the page loads
+        window.onload = autoDismissMessages;
+    </script>
+</body>
+
+</html>

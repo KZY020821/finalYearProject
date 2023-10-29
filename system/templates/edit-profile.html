@@ -1,0 +1,145 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'head.html' %}
+    <style>
+        .messages .error {
+            color: red;
+        }
+        .messages .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        {% include 'header.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h4 class="page-title">Edit Profile</h4>
+                    </div>
+                </div>
+                <form method="POST" action="" id="editProfile">
+                    {% csrf_token %}
+                    <div class="card-box">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="profile-img-wrap">
+                                    <img id="profile-image" class="inline-block" src="{{ selected_user.profile.image.url }}" alt="user">
+                                    <a href="{% url 'changeImage' %}?user_id={{ selected_user.id }}">
+                                        <div class="fileupload btn">
+                                            <span class="btn-text">Edit</span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="profile-basic">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Username</label>
+                                                <input type="text" class="form-control" id="username" name="username" value="{{ selected_user.username }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>ID</label>
+                                                <input type="text" class="form-control" id="id" name="id" value="{{ selected_user.id }}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>First Name</label>
+                                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ selected_user.first_name }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Last Name</label>
+                                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ selected_user.last_name }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="birth_date">Birth Date</label>
+                                                <input type="date" class="form-control" id="birthday" name="birthday" value="{{ selected_user.profile.birthday|date:'Y-m-d' }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="gender">Gender</label>
+                                                <select class="form-control" id="gender" name="gender">
+                                                    <option value="male" {% if selected_user.profile.gender == 'male' %}selected{% endif %}>Male</option>
+                                                    <option value="female" {% if selected_user.profile.gender == 'female' %}selected{% endif %}>Female</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-box">
+                        <h3 class="card-title">Email</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ selected_user.email }}">
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Phone number</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ selected_user.profile.phone_number }}">
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Address</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="address" name="address" value="{{ selected_user.profile.address }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center m-t-20">
+                        <button type="submit" class="btn btn-primary submit-btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        // Function to automatically dismiss messages after 5 seconds
+        function autoDismissMessages() {
+            var messages = document.querySelectorAll('.messages li');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0'; // Fade out
+                    setTimeout(function() {
+                        message.style.display = 'none'; // Hide
+                    }, 1000); // Hide after fade-out animation (1 second)
+                }, 5000); // Auto-dismiss after 5 seconds
+            });
+        }
+        // Call the auto-dismiss function when the page loads
+        window.onload = autoDismissMessages;
+    </script>    
+</body>
+</html>
+
