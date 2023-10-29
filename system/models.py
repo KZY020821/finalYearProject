@@ -13,5 +13,13 @@ class Profile(models.Model):
     def __str__(self):
         return str(self.user.username)
     
+class subject(models.Model):
+    subjectCode = models.CharField(max_length=255, unique=True)
+    subjectName = models.CharField(max_length=255, default='Not provided')
+
+    def __str__(self):
+        return self.subjectCode
 class Attendance(models.Model):
     name = models.CharField(max_length=255)
+    classDate = models.DateTimeField(default=datetime.datetime.now)
+    attendanceSubjectCode = models.CharField(max_length=255, default="Not provided")

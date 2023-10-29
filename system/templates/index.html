@@ -16,6 +16,15 @@
                         <div class="account-logo">
                             <img src="{% static 'assets/img/bolt-dark.png' %} " alt="">
                         </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select class="form-control" name="classCode" required>
+                                <option value="">---</option>
+                                {% for subject in subjects %}
+                                    <option value="{{ subject.subjectCode }}">{{ subject.subjectCode }} - {{ subject.subjectName }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>                        
                         <div class="form-group text-center">
                             <button class="btn btn-primary account-btn" type="submit">Take Attendance</button>
                         </div>

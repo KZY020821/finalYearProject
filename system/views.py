@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user, allow_users
 from datetime import datetime
 from django.http import HttpResponse
-from .models import Profile as personalinfo, Attendance as attendanceModel
+from .models import Profile as personalinfo, Attendance as attendanceModel, subject
 import subprocess
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -21,9 +21,23 @@ import math
 @login_required(login_url='login')
 def index(request):
     if request.method == "POST":
-        subprocess.run(["/Users/khorzeyi/code/finalYearProject/myenv/bin/python /Users/khorzeyi/code/finalYearProject/main.py"], capture_output=True, text=True, shell=True)
+        classCode = request.POST['classCode']
+
+        # Execute main.py with the classCode as a command-line argument
+        command = ["/Users/khorzeyi/code/finalYearProject/myenv/bin/python", "/Users/khorzeyi/code/finalYearProject/main.py", classCode]
+        
+        try:
+            subprocess.run(command, capture_output=True, text=True, shell=False)
+            # Handle the subprocess result if needed
+        except subprocess.CalledProcessError as e:
+            # Handle any errors or exceptions
+            pass
+
         return render(request, 'dashboard.html')
-    return render(request, 'index.html')
+
+    subjects = subject.objects.all()
+    data = {'subjects': subjects}
+    return render(request, 'index.html', data)
 
 @login_required(login_url='login')
 def attendance(request):
@@ -409,3 +423,15 @@ def changeImage(request):
             messages.error(request, "No image was uploaded.")
 
     return render(request, 'changeImage.html')
+
+def save_attendance(name, classCode):
+    if name is not None and classCode is not None:
+        try:
+            print(name)
+            print(classCode)
+            attendance = attendanceModel(name=name, attendanceSubjectCode=classCode)
+            attendance.save()
+        except Exception as e:
+            print(f"Error saving attendance: {str(e)}")
+    else:
+        print("Both name and classCode must be provided.")

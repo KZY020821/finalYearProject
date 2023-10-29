@@ -5,6 +5,7 @@ import numpy as np
 import math
 import os
 import django
+import datetime
 
 # Set the DJANGO_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
@@ -13,7 +14,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 django.setup()
 
 # Import Django models
-from system.models import Attendance as attendanceModel
+from system.views import save_attendance
 
 # Define a function to calculate face recognition confidence
 def face_confidence(face_distance, face_match_threshold=0.6):
@@ -28,7 +29,7 @@ def face_confidence(face_distance, face_match_threshold=0.6):
         value = (linear_val + ((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2))) * 100
         return str(round(value, 2)) + '%'  # Return adjusted confidence as a percentage
 
-class FaceRecognition:
+class FaceRecognition():
     # Initialize class variables
     face_locations = []
     face_encodings = []
@@ -96,7 +97,10 @@ class FaceRecognition:
                         confidence = face_confidence(face_distances[best_matches_index])
                         self.face_names.append(f'{name} ({confidence})')
                         if name not in self.processed_names:
-                            self.save_attendance(f'{name}')
+                            if len(sys.argv) > 1:
+                                classCode = sys.argv[1]
+                            print(f'{name}', classCode)
+                            save_attendance(f'{name}', classCode)
                             self.processed_names.add(f'{name}')
 
             self.process_current_frame = not self.process_current_frame
@@ -120,13 +124,6 @@ class FaceRecognition:
 
         video_capture.release()
         cv2.destroyAllWindows()
-
-    def save_attendance(self, name):            
-        try:
-            attendance = attendanceModel(name=name)
-            attendance.save()
-        except Exception as e:
-            print(f"Error saving attendance: {str(e)}")
 
 
 if __name__ == '__main__':
