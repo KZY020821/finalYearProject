@@ -7,6 +7,7 @@
         </div>
         <div class="account-page">
             <div class="account-center">
+                <h2 style="text-align: center;">Register User</h2>
                 <div class="account-box" style="margin-top: 15px;">
                     {% for message in messages %}
                     <h5 style="color: red;"> {{ message }} </h5>
@@ -16,13 +17,12 @@
                         <div class="account-logo">
                             <img src="{% static 'assets/img/bolt-dark.png' %} " alt="">
                         </div>
-                        <h2 style="text-align: center;">Register Admin</h2>
                         <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" class="form-control" name="username" id="username" required>
+                            <label>Student ID</label>
+                            <input type="text" class="form-control" name="studentID" id="studentID" required>
                         </div>
                         <div class="form-group">
-                            <label>Email Address</label>
+                            <label>College Email Address</label>
                             <input type="email" class="form-control" name="email" required>
                         </div>
                         <div class="form-group">
@@ -30,32 +30,29 @@
                             <input type="password" class="form-control" name="password" required>
                         </div>
                         <div class="form-group">
-                            <label>First Name</label>
+                            <label>Repeat password</label>
+                            <input type="password" class="form-control" name="password2" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Given Name</label>
                             <input type="text" class="form-control" name="first_name" required>
                         </div>
                         <div class="form-group">
-                            <label>Last Name</label>
+                            <label>Family Name</label>
                             <input type="text" class="form-control" name="last_name" required>
                         </div>
                         <div class="form-group">
-                            <label>Gender</label>
-                            <select class="form-control" name="gender" required>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
+                            <label>Intake</label>
+                            <select class="form-control" name="intakeCode" required>
+                                <option value="">---</option>
+                                {% for intake in intakes %}
+                                    <option value="{{ intake.intakeCode }}">{{ intake.intakeCode }}</option>
+                                {% endfor %}
                             </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Birthday</label>
-                            <input type="date" class="form-control" name="birthday" required>
                         </div>
                         <div class="form-group">
                             <label>Phone Number</label>
                             <input type="text" class="form-control" name="phone_number" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Address</label>
-                            <input type="text" class="form-control" name="address" required>
                         </div>
                         <div class="form-group">
                             <label>Face Image</label>
@@ -63,6 +60,9 @@
                         </div>
                         <div class="form-group text-center">
                             <button class="btn btn-primary account-btn" type="submit">Signup</button>
+                        </div>
+                        <div class="text-center login-link">
+                            Already have an account? <a href="loginPage">Login</a>
                         </div>
                     </form>
                 </div>

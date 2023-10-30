@@ -43,34 +43,38 @@
                                                         {% endif %}
                                                     {% endwith %}
                                                 {% endif %}
-                                                <div class="staff-id">ID : {{request.user.id}}</div>
+                                                {% if request.user.groups.exists %}
+                                                    {% with group=request.user.groups.first.name %}
+                                                        {% if group == 'admin' %}
+                                                            <div class="staff-id">Admin ID : {{request.user.id}}</div>
+                                                        {% else %}
+                                                            <div class="staff-id">Student ID : {{request.user.id}}</div>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                {% endif %}
                                             </div>
                                         </div>
                                         <div class="col-md-7">
                                             <ul class="personal-info">
                                                 <li>
-                                                    <span class="title">Phone:</span>
-                                                    <span class="text">{{user.profile.phone_number}}</a></span>
+                                                    <span class="title">Intake:</span>
+                                                    <span class="text">{{request.user.profile.intakeCode}}</span>
                                                 </li>
                                                 <li>
                                                     <span class="title">Email:</span>
                                                     <span class="text">{{request.user.email}}</span>
                                                 </li>
                                                 <li>
-                                                    <span class="title">Birthday:</span>
-                                                    <span class="text">{{user.profile.birthday}}</span>
+                                                    <span class="title">Given Name:</span>
+                                                    <span class="text">{{request.user.first_name}}</span>
                                                 </li>
                                                 <li>
-                                                    <span class="title">Address:</span>
-                                                    <span class="text">{{user.profile.address}}</span>
+                                                    <span class="title">Family name:</span>
+                                                    <span class="text">{{request.user.last_name}}</span>
                                                 </li>
                                                 <li>
-                                                    <span class="title">Gender:</span>
-                                                    <span class="text">{{user.profile.gender}}</span>
-                                                </li>
-                                                <li>
-                                                    <span class="title">Umage:</span>
-                                                    <span class="text">{{user.profile.image.url}}</span>
+                                                    <span class="title">Phone Number:</span>
+                                                    <span class="text">{{request.user.profile.phone_number}}</span>
                                                 </li>
                                             </ul>
                                         </div>

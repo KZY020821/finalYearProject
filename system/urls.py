@@ -22,7 +22,6 @@ urlpatterns = [
     path('registerAdmin', views.registerAdmin, name='registerAdmin'),
     path('applyLeaves', views.applyLeaves, name='applyLeaves'),
     path('reviewLeaves', views.reviewLeaves, name='reviewLeaves'),
-    path('faceImage', views.faceImage, name='faceImage'),
     path('changeImage', views.changeImage, name='changeImage'),
     path('delete-user-image/', views.delete_user_image, name='delete_user_image'),
 

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user
 from django.http import Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -7,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user, allow_users
 from datetime import datetime
 from django.http import HttpResponse
-from .models import Profile as personalinfo, Attendance as attendanceModel, subject
+from .models import Profile as personalinfo, Attendance as attendanceModel, subject, intake, leave
 import subprocess
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -59,29 +60,16 @@ def editProfile(request, user_id=None):
     user = request.user
 
     if request.method == "POST":
-        username = request.POST['username']
-        email = request.POST['email']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        gender = request.POST['gender']
-        birthday = request.POST['birthday']
+        intakeCode = request.POST['intakeCode']
         phone_number = request.POST['phone_number']
-        address = request.POST['address']
 
-        # Check for duplicate email or username
-        if User.objects.filter(email=email).exclude(id=user.id).exists():
-            messages.error(request, "Email already used by another user")
-            return redirect('edit-profile', user_id=user.id)
-        elif User.objects.filter(username=username).exclude(id=user.id).exists():
-            messages.error(request, "Username already used by another user")
-            return redirect('edit-profile', user_id=user.id)
-        elif personalinfo.objects.filter(phone_number=phone_number).exclude(user=user).exists():
+        if personalinfo.objects.filter(phone_number=phone_number).exclude(user=user).exists():
             messages.error(request, "Phone number already used by another user")
             return redirect('edit-profile', user_id=user.id)
 
         # Update user information
-        selected_user.username = username
-        selected_user.email = email
         selected_user.first_name = first_name
         selected_user.last_name = last_name
         selected_user.save()
@@ -89,14 +77,13 @@ def editProfile(request, user_id=None):
         # Update or create profile information
         personalInfo = personalinfo.objects.get(user=selected_user)
 
-        personalInfo.gender = gender
-        personalInfo.birthday = birthday
         personalInfo.phone_number = phone_number
-        personalInfo.address = address
+        personalInfo.intakeCode = intakeCode
         personalInfo.save()
         messages.success(request, "Profile updated successfully")
-    
-    return render(request, 'edit-profile.html', {'user': user, 'profile': user.profile, 'selected_user': selected_user, })
+    intakes = intake.objects.all()
+    data = {'intakes': intakes, 'user': user, 'profile': user.profile, 'selected_user': selected_user }
+    return render(request, 'edit-profile.html', data)
 
     
 
@@ -128,32 +115,34 @@ def profile(request):
 def registerPage(request):
     if request.method == "POST":
         # Extract user registration data from the POST request
-        username = request.POST['username']
+        studentID = request.POST['studentID']
         email = request.POST['email']
         password = request.POST['password']
+        password2 = request.POST['password2']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        gender = request.POST['gender']
-        birthday = request.POST['birthday']
+        intakeCode = request.POST['intakeCode']
         phone_number = request.POST['phone_number']
-        address = request.POST['address']
         faceimage = request.FILES.get('image')  # Use request.FILES for file input
 
+        if password != password2:
+            messages.error(request, "Password not same")
+            return redirect('register') 
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already used")
             return redirect('register') 
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, "Username already used")
+        elif User.objects.filter(username=studentID).exists():
+            messages.error(request, "studentID already used")
             return redirect('register') 
         elif personalinfo.objects.filter(phone_number=phone_number).exists():
             messages.error(request, "Phone number already used")
             return redirect('register') 
         else:
             # Create a new User instance
-            user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+            user = User.objects.create_user(username=studentID, email=email, password=password, first_name=first_name, last_name=last_name)
             user.save()
              # Get the username and user ID
-            username_id = f"{username}_{user.id}"
+            username_id = f"{studentID}_{user.id}"
 
             # Determine the file extension based on the user's uploaded file
             file_extension = faceimage.name.split('.')[-1]
@@ -170,7 +159,7 @@ def registerPage(request):
             fs.save(image_path, faceimage)
 
             # Create a new profile instance and associate it with the user
-            user_profile = personalinfo(user=user, gender=gender, birthday=birthday, phone_number=phone_number, address=address, image=image_path)
+            user_profile = personalinfo(user=user, intakeCode=intakeCode, phone_number=phone_number, image=image_path)
             user_profile.save()
 
             # Add the user to a group if needed (e.g., 'user' group)
@@ -178,10 +167,11 @@ def registerPage(request):
             user.groups.add(group)
 
             messages.success(request, "User registered successfully.")
-            print(faceimage)
             return redirect('login')  # Redirect to the login page
     else:
-        return render(request, 'register.html')
+        intakes = intake.objects.all()
+        data = {'intakes': intakes}
+        return render(request, 'register.html', data)
 
 @login_required(login_url='login')
 def logoutUser (request):
@@ -206,7 +196,7 @@ def delete_user_image(request):
         allowed_extensions = ['jpg', 'jpeg', 'png']
         # Attempt to delete the image file for each allowed extension
         for extension in allowed_extensions:
-            image_path = os.path.join('/Users/khorzeyi/code/project/media/faceImage', f'{username_id}.{extension}')
+            image_path = os.path.join('/Users/khorzeyi/code/finalYearProject/media/faceImage', f'{username_id}.{extension}')
 
             if os.path.exists(image_path):
                 os.remove(image_path)
@@ -240,32 +230,34 @@ def deleteUser(request):
 def registerAdmin(request):
     if request.method == "POST":
         # Extract user registration data from the POST request
-        username = request.POST['username']
+        studentID = request.POST['studentID']
         email = request.POST['email']
         password = request.POST['password']
+        password2 = request.POST['password2']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        gender = request.POST['gender']
-        birthday = request.POST['birthday']
+        intakeCode = request.POST['intakeCode']
         phone_number = request.POST['phone_number']
-        address = request.POST['address']
         faceimage = request.FILES.get('image')  # Use request.FILES for file input
 
+        if password != password2:
+            messages.error(request, "Password not same")
+            return redirect('register') 
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email already used")
             return redirect('register') 
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, "Username already used")
+        elif User.objects.filter(username=studentID).exists():
+            messages.error(request, "studentID already used")
             return redirect('register') 
         elif personalinfo.objects.filter(phone_number=phone_number).exists():
             messages.error(request, "Phone number already used")
             return redirect('register') 
         else:
             # Create a new User instance
-            user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+            user = User.objects.create_user(username=studentID, email=email, password=password, first_name=first_name, last_name=last_name)
             user.save()
              # Get the username and user ID
-            username_id = f"{username}_{user.id}"
+            username_id = f"{studentID}_{user.id}"
 
             # Determine the file extension based on the user's uploaded file
             file_extension = faceimage.name.split('.')[-1]
@@ -282,66 +274,7 @@ def registerAdmin(request):
             fs.save(image_path, faceimage)
 
             # Create a new profile instance and associate it with the user
-            user_profile = personalinfo(user=user, gender=gender, birthday=birthday, phone_number=phone_number, address=address, image=image_path)
-            user_profile.save()
-
-            # Add the user to a group if needed (e.g., 'user' group)
-            group = Group.objects.get(name='admin')
-            user.groups.add(group)
-
-            messages.success(request, "User registered successfully.")
-            print(faceimage)
-            return redirect('users')  # Redirect to the login page
-    else:
-        return render(request, 'registerAdmin.html')
-
-@login_required(login_url='login')
-def registerUser(request):
-    if request.method == "POST":
-        # Extract user registration data from the POST request
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        gender = request.POST['gender']
-        birthday = request.POST['birthday']
-        phone_number = request.POST['phone_number']
-        address = request.POST['address']
-        faceimage = request.FILES.get('image')  # Use request.FILES for file input
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already used")
-            return redirect('register') 
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, "Username already used")
-            return redirect('register') 
-        elif personalinfo.objects.filter(phone_number=phone_number).exists():
-            messages.error(request, "Phone number already used")
-            return redirect('register') 
-        else:
-            # Create a new User instance
-            user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
-            user.save()
-             # Get the username and user ID
-            username_id = f"{username}_{user.id}"
-
-            # Determine the file extension based on the user's uploaded file
-            file_extension = faceimage.name.split('.')[-1]
-
-            # Define the path to save the image with the appropriate extension
-            image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
-
-            # Delete the existing image if it exists
-            if os.path.exists(image_path):
-                os.remove(image_path)
-
-            # Save the uploaded image with the new name and correct file extension
-            fs = FileSystemStorage()
-            fs.save(image_path, faceimage)
-
-            # Create a new profile instance and associate it with the user
-            user_profile = personalinfo(user=user, gender=gender, birthday=birthday, phone_number=phone_number, address=address, image=image_path)
+            user_profile = personalinfo(user=user, intakeCode=intakeCode, phone_number=phone_number, image=image_path)
             user_profile.save()
 
             # Add the user to a group if needed (e.g., 'user' group)
@@ -349,25 +282,103 @@ def registerUser(request):
             user.groups.add(group)
 
             messages.success(request, "User registered successfully.")
-            print(faceimage)
             return redirect('login')  # Redirect to the login page
     else:
-        return render(request, 'registerUser.html')
+        intakes = intake.objects.all()
+        data = {'intakes': intakes}
+        return render(request, 'registerAdmin.html', data)
+
+@login_required(login_url='login')
+def registerUser(request):
+    if request.method == "POST":
+        # Extract user registration data from the POST request
+        studentID = request.POST['studentID']
+        email = request.POST['email']
+        password = request.POST['password']
+        password2 = request.POST['password2']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        intakeCode = request.POST['intakeCode']
+        phone_number = request.POST['phone_number']
+        faceimage = request.FILES.get('image')  # Use request.FILES for file input
+
+        if password != password2:
+            messages.error(request, "Password not same")
+            return redirect('register') 
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already used")
+            return redirect('register') 
+        elif User.objects.filter(username=studentID).exists():
+            messages.error(request, "studentID already used")
+            return redirect('register') 
+        elif personalinfo.objects.filter(phone_number=phone_number).exists():
+            messages.error(request, "Phone number already used")
+            return redirect('register') 
+        else:
+            # Create a new User instance
+            user = User.objects.create_user(username=studentID, email=email, password=password, first_name=first_name, last_name=last_name)
+            user.save()
+             # Get the username and user ID
+            username_id = f"{studentID}_{user.id}"
+
+            # Determine the file extension based on the user's uploaded file
+            file_extension = faceimage.name.split('.')[-1]
+
+            # Define the path to save the image with the appropriate extension
+            image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+
+            # Delete the existing image if it exists
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+            # Save the uploaded image with the new name and correct file extension
+            fs = FileSystemStorage()
+            fs.save(image_path, faceimage)
+
+            # Create a new profile instance and associate it with the user
+            user_profile = personalinfo(user=user, intakeCode=intakeCode, phone_number=phone_number, image=image_path)
+            user_profile.save()
+
+            # Add the user to a group if needed (e.g., 'user' group)
+            group = Group.objects.get(name='user')
+            user.groups.add(group)
+
+            messages.success(request, "User registered successfully.")
+            return redirect('login')  # Redirect to the login page
+    else:
+        intakes = intake.objects.all()
+        data = {'intakes': intakes}
+        return render(request, 'registerUser.html', data)
 
 @login_required(login_url='login')
 @allow_users(allow_roles=['admin'])
 def reviewLeaves(request):
   data = User.objects.all()
-  return render(request, 'reviewLeaves.html', {'users': data})
+  leaveData = leave.objects.all()
+  #   leaveInfo = leave in html
+  for leaveInfo in leaveData:
+        leaveInfo.user = User.objects.get(id=leaveInfo.userID)
+        leaveInfo.first_name = leaveInfo.user.first_name
+  return render(request, 'reviewLeaves.html', {'users': data, 'leaves': leaveData, 'firstname':leaveInfo.first_name})
 
 @login_required(login_url='login')
 def applyLeaves(request):
-  data = User.objects.all()
-  return render(request, 'applyLeaves.html', {'users': data})
+    data = User.objects.all()
+    leaveData = leave.objects.all()
+    if request.method == "POST":
+        leaveTitle = request.POST.get('leaveTitle')
+        leaveDescription = request.POST.get('leaveDescription')
+        startDate = request.POST.get('startDate')
+        endDate = request.POST.get('endDate')
+        leaveAttachment = request.FILES.get('leaveAttachment')
+        user = get_user(request)
 
-@login_required(login_url='login')
-def faceImage(request):
-    return render(request, 'faceImage.html')
+        leaves = leave.objects.create(leaveTitle = leaveTitle, leaveDescription = leaveDescription, userID = user.id, startDate = startDate, endDate = endDate, leaveAttachment = leaveAttachment)
+        leaves.save
+        messages.success(request, "Leave applied, waiting for approval.")
+        return render(request, 'applyLeaves.html', {'users': data, 'leaves': leaveData})
+    else:
+        return render(request, 'applyLeaves.html', {'users': data, 'leaves': leaveData})
 
 @login_required(login_url='login')
 @allow_users(allow_roles=['admin'])
@@ -427,8 +438,6 @@ def changeImage(request):
 def save_attendance(name, classCode):
     if name is not None and classCode is not None:
         try:
-            print(name)
-            print(classCode)
             attendance = attendanceModel(name=name, attendanceSubjectCode=classCode)
             attendance.save()
         except Exception as e:

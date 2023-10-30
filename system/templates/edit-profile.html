@@ -48,41 +48,26 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Username</label>
-                                                <input type="text" class="form-control" id="username" name="username" value="{{ selected_user.username }}">
+                                                <label>Student ID</label>
+                                                <input type="text" class="form-control" id="username" name="username" value="{{ selected_user.username }}" readonly>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>ID</label>
-                                                <input type="text" class="form-control" id="id" name="id" value="{{ selected_user.id }}" readonly>
+                                                <label>College Email</label>
+                                                <input type="email" class="form-control" id="email" name="email" value="{{ selected_user.email }}" readonly>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>First Name</label>
+                                                <label>Given Name</label>
                                                 <input type="text" class="form-control" id="first_name" name="first_name" value="{{ selected_user.first_name }}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group">
-                                                <label>Last Name</label>
+                                                <label>Family Name</label>
                                                 <input type="text" class="form-control" id="last_name" name="last_name" value="{{ selected_user.last_name }}">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="birth_date">Birth Date</label>
-                                                <input type="date" class="form-control" id="birthday" name="birthday" value="{{ selected_user.profile.birthday|date:'Y-m-d' }}">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="gender">Gender</label>
-                                                <select class="form-control" id="gender" name="gender">
-                                                    <option value="male" {% if selected_user.profile.gender == 'male' %}selected{% endif %}>Male</option>
-                                                    <option value="female" {% if selected_user.profile.gender == 'female' %}selected{% endif %}>Female</option>
-                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -91,14 +76,6 @@
                         </div>
                     </div>
                     <div class="card-box">
-                        <h3 class="card-title">Email</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="email" class="form-control" id="email" name="email" value="{{ selected_user.email }}">
-                                </div>
-                            </div>
-                        </div>
                         <h3 class="card-title">Phone number</h3>
                         <div class="row">
                             <div class="col-md-12">
@@ -107,11 +84,15 @@
                                 </div>
                             </div>
                         </div>
-                        <h3 class="card-title">Address</h3>
+                        <h3 class="card-title">Intake</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="address" name="address" value="{{ selected_user.profile.address }}">
+                                    <select class="form-control" id="intakeCode" name="intakeCode">
+                                    {% for intake in intakes %}
+                                        <option value="{{ intake.intakeCode }}" {% if selected_user.profile.intakeCode == intake.intakeCode %}selected{% endif %}>{{ intake.intakeCode }}</option>
+                                    {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -142,4 +123,5 @@
     </script>    
 </body>
 </html>
-
+                    
+    
