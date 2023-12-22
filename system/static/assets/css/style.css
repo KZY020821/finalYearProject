@@ -114,6 +114,7 @@ a:focus {
 	box-shadow: none;
 	outline: 0 none;
 }
+
 a {
 	color: #009ce7;
 }
@@ -182,6 +183,7 @@ textarea.form-control {
 }
 table.table td .avatar {
 	margin: 0 5px 0 0;
+	object-fit: contain;
 }
 table.table td h2 {
 	display: inline-block;
@@ -1902,8 +1904,7 @@ ul.chat-user-total li i.old-users {
 	max-width: 60%;
 }
 .avatar {
-	background-color: #aaa;
-	border-radius: 50%;
+	background-color: #fff;
 	color: #fff;
 	display: inline-block;
 	font-weight: 500;
@@ -1924,7 +1925,6 @@ ul.chat-user-total li i.old-users {
 }
 .avatar > img {
 	width: 100%;
-	display: block;
 }
 .chat.chat-left .chat-bubble:first-child .chat-content {
 	border-top-left-radius: 20px;
@@ -2712,6 +2712,7 @@ a.fc-event:not([href]) {
 	line-height: 150px;
 	margin: 0;
 	width: 150px;
+	object-fit: contain;
 }
 .profile-view .profile-basic {
 	margin-left: 170px;
@@ -2792,9 +2793,7 @@ a.fc-event:not([href]) {
 	padding: 6px 12px;
 	text-align: center;
 }
-.profile-info-left {
-	border-right: 2px dashed #ccc;
-}
+
 .profile-tabs .nav-tabs {
 	background-color: #fff;
 	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
@@ -3196,6 +3195,7 @@ html.menu-opened body {
 	line-height: 80px;
 	margin: 0;
 	width: 80px;
+
 }
 .doc-prof {
 	color: #777;

@@ -67,22 +67,28 @@
                         <a href="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
                     </li>
                     <li {% if request.path == '/users' %}class="active"{% endif %}>
-                        <a href="users"><i class="fa fa-user"></i> <span>Users</span></a>
+                        <a href="users"><i class="fa fa-user"></i> <span>Account Management</span></a>
                     </li>
                     <li {% if request.path == '/attendance' %}class="active"{% endif %}>
-                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance</span></a>
+                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
                     </li>
                     <li {% if request.path == '/warnings' %}class="active"{% endif %}>
-                        <a href="warnings"><i class="fa fa-flag-o"></i> <span>Warning</span></a>
+                        <a href="warnings"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
                     </li>
                     <li {% if request.path == '/profile' %}class="active"{% endif %}>
                         <a href="profile"><i class="fa fa-user"></i> <span>My Profile</span></a>
                     </li>
-                    <li {% if request.path == '/edit-profile' or request.path == '/changeImage' %}class="active"{% endif %}>
-                        <a href="edit-profile"><i class="fa fa-edit"></i> <span>Edit Profile</span></a>
-                    </li>
                     <li {% if request.path == '/reviewLeaves' %}class="active"{% endif %}>
-                        <a href="reviewLeaves"><i class="fa fa-envelope-open-o"></i> <span>Review Leaves</span></a>
+                        <a href="reviewLeaves"><i class="fa-solid fa-envelope-open"></i></i> <span>Review Leaves</span></a>
+                    </li>
+                    <li {% if request.path == '/intake' %}class="active"{% endif %}>
+                        <a href="intake"><i class="fa-solid fa-user-group"></i> <span>Intake Management</span></a>
+                    </li>
+                    <li {% if request.path == '/subject' %}class="active"{% endif %}>
+                        <a href="subject"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
+                    </li>
+                    <li {% if request.path == '/aboutUs' %}class="active"{% endif %}>
+                        <a href="aboutUs"><i class="fa-solid fa-info"></i> <span>About us</span></a>
                     </li>
                 </ul>
             </div>
@@ -105,6 +111,15 @@
                     </li>
                     <li {% if request.path == '/applyLeaves' %}class="active"{% endif %}>
                         <a href="applyLeaves"><i class="fa fa-envelope"></i> <span>Apply Leaves</span></a>
+                    </li>
+                    <li {% if request.path == '/subject' %}class="active"{% endif %}>
+                        <a href="subject"><i class="fas fa-chalkboard-teacher"></i><span>View Subjects</span></a>
+                    </li>
+                    <li {% if request.path == '/warnings' %}class="active"{% endif %}>
+                        <a href="warnings"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
+                    </li>
+                    <li {% if request.path == '/aboutUs' %}class="active"{% endif %}>
+                        <a href="aboutUs"><i class="fa-solid fa-info"></i> <span>About us</span></a>
                     </li>
                 </ul>
             </div>
