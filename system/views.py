@@ -444,3 +444,6 @@ def save_attendance(name, classCode):
             print(f"Error saving attendance: {str(e)}")
     else:
         print("Both name and classCode must be provided.")
+
+def test(request):
+    return render(request, 'test.html')

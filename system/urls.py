@@ -24,5 +24,6 @@ urlpatterns = [
     path('reviewLeaves', views.reviewLeaves, name='reviewLeaves'),
     path('changeImage', views.changeImage, name='changeImage'),
     path('delete-user-image/', views.delete_user_image, name='delete_user_image'),
+    path('test', views.test, name='test'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 
