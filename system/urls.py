@@ -23,6 +23,10 @@ urlpatterns = [
     path('applyLeaves', views.applyLeaves, name='applyLeaves'),
     path('reviewLeaves', views.reviewLeaves, name='reviewLeaves'),
     path('changeImage', views.changeImage, name='changeImage'),
+    path('subject', views.subject, name='subject'),
+    path('intake', views.intake, name='intake'),
+    path('contactUs', views.contactUs, name='contactUs'),
+    path('reviewFeedback', views.reviewFeedback, name='reviewFeedback'),
     path('delete-user-image/', views.delete_user_image, name='delete_user_image'),
     path('test', views.test, name='test'),
 

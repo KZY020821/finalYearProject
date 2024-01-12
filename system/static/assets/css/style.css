@@ -1353,7 +1353,9 @@ ul.chat-user-total li i.old-users {
 .custom-table tr {
 	background-color: #fff;
 	box-shadow: 0 0 3px #e5e5e5;
+	cursor: pointer;
 }
+
 .table.custom-table > tbody > tr > td,
 .table.custom-table > tbody > tr > th,
 .table.custom-table > tfoot > tr > td,

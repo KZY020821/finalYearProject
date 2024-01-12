@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user, allow_users
 from datetime import datetime
 from django.http import HttpResponse
-from .models import Profile as personalinfo, Attendance as attendanceModel, subject, intake, leave
+from .models import Profile as personalinfo, Attendance as attendanceModel, subject as subjectTable, intake as intakeTable, leave, feedback as feedbackTable
 import subprocess
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -36,7 +36,7 @@ def index(request):
 
         return render(request, 'dashboard.html')
 
-    subjects = subject.objects.all()
+    subjects = subjectTable.objects.all()
     data = {'subjects': subjects}
     return render(request, 'index.html', data)
 
@@ -81,7 +81,7 @@ def editProfile(request, user_id=None):
         personalInfo.intakeCode = intakeCode
         personalInfo.save()
         messages.success(request, "Profile updated successfully")
-    intakes = intake.objects.all()
+    intakes = intakeTable.objects.all()
     data = {'intakes': intakes, 'user': user, 'profile': user.profile, 'selected_user': selected_user }
     return render(request, 'edit-profile.html', data)
 
@@ -169,9 +169,8 @@ def registerPage(request):
             messages.success(request, "User registered successfully.")
             return redirect('login')  # Redirect to the login page
     else:
-        intakes = intake.objects.all()
-        data = {'intakes': intakes}
-        return render(request, 'register.html', data)
+        intakes = intakeTable.objects.all()
+        return render(request, 'register.html', {'intakes': intakes})
 
 @login_required(login_url='login')
 def logoutUser (request):
@@ -284,7 +283,7 @@ def registerAdmin(request):
             messages.success(request, "User registered successfully.")
             return redirect('login')  # Redirect to the login page
     else:
-        intakes = intake.objects.all()
+        intakes = intakeTable.objects.all()
         data = {'intakes': intakes}
         return render(request, 'registerAdmin.html', data)
 
@@ -346,7 +345,7 @@ def registerUser(request):
             messages.success(request, "User registered successfully.")
             return redirect('login')  # Redirect to the login page
     else:
-        intakes = intake.objects.all()
+        intakes = intakeTable.objects.all()
         data = {'intakes': intakes}
         return render(request, 'registerUser.html', data)
 
@@ -355,11 +354,7 @@ def registerUser(request):
 def reviewLeaves(request):
   data = User.objects.all()
   leaveData = leave.objects.all()
-  #   leaveInfo = leave in html
-  for leaveInfo in leaveData:
-        leaveInfo.user = User.objects.get(id=leaveInfo.userID)
-        leaveInfo.first_name = leaveInfo.user.first_name
-  return render(request, 'reviewLeaves.html', {'users': data, 'leaves': leaveData, 'firstname':leaveInfo.first_name})
+  return render(request, 'reviewLeaves.html', {'users': data, 'leaves': leaveData})
 
 @login_required(login_url='login')
 def applyLeaves(request):
@@ -447,3 +442,75 @@ def save_attendance(name, classCode):
 
 def test(request):
     return render(request, 'test.html')
+
+@login_required(login_url='login')
+def subject(request):
+    data = User.objects.all()
+    subject = subjectTable.objects.all()
+    if request.method == "POST":
+        subjectCode = request.POST.get('subjectCode')
+        subjectName = request.POST.get('subjectName')
+        lecturerID = request.POST.get('lecturerID')
+        intakeCode = request.POST.get('intakeCode')
+
+        subjectData = subjectTable.objects.create( subjectCode= subjectCode, subjectName = subjectName, lecturerID = lecturerID, intakeCode = intakeCode)
+        subjectData.save
+        messages.success(request, "Subject create successful")
+        return render(request, 'subject.html', {'users': data, 'subjectData': subject})
+    else:
+        return render(request, 'subject.html', {'users': data, 'subjectData': subject})
+    
+@login_required(login_url='login')
+def intake(request):
+    data = User.objects.all()
+    intakeData = intakeTable.objects.all()
+    if request.method == "POST":
+        intakeCode = request.POST.get('intakeCode')
+
+        intakeUpload = intakeTable.objects.create(intakeCode = intakeCode)
+        intakeUpload.save
+        messages.success(request, "Intake has been created.")
+        return render(request, 'intake.html', {'users': data, 'intakes': intakeData})
+    else:
+        return render(request, 'intake.html', {'users': data, 'intakes': intakeData})
+    
+@login_required(login_url='login')
+def contactUs(request):
+    data = User.objects.all()
+    feedbackData = feedbackTable.objects.all()
+    if request.method == "POST":
+        feedbackTitle = request.POST.get('feedbackTitle')
+        feedbackDescription = request.POST.get('feedbackDescription')
+        feedbackAttachment = request.POST.get('feedbackAttachment')
+        adminID = request.POST.get('adminID')
+        user = get_user(request)
+
+        feedbackUpdate = feedbackTable.objects.create(feedbackTitle = feedbackTitle, feedbackDescription = feedbackDescription, feedbackAttachment = feedbackAttachment, adminID = adminID, userID = user.id)
+        feedbackUpdate.save
+        messages.success(request, "Feedback has been submitted.")
+        return render(request, 'contactUs.html', {'users': data, 'feedbacks': feedbackData})
+    else:
+        return render(request, 'contactUs.html', {'users': data, 'feedbacks': feedbackData})
+    
+@login_required(login_url='login')
+def reviewFeedback(request):
+    data = User.objects.all()
+    feedbackData = feedbackTable.objects.all()
+    return render(request, 'reviewFeedback.html', {'users': data, 'feedbacks': feedbackData})
+
+@login_required(login_url='login')
+def viewWarnings(request):
+    data = User.objects.all()
+    subject = subjectTable.objects.all()
+    if request.method == "POST":
+        subjectCode = request.POST.get('subjectCode')
+        subjectName = request.POST.get('subjectName')
+        lecturerID = request.POST.get('lecturerID')
+        intakeCode = request.POST.get('intakeCode')
+
+        subjectData = subjectTable.objects.create( subjectCode= subjectCode, subjectName = subjectName, lecturerID = lecturerID, intakeCode = intakeCode)
+        subjectData.save
+        messages.success(request, "Subject create successful")
+        return render(request, 'subject.html', {'users': data, 'subjectData': subject})
+    else:
+        return render(request, 'subject.html', {'users': data, 'subjectData': subject})

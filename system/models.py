@@ -14,13 +14,14 @@ class Profile(models.Model):
 class subject(models.Model):
     subjectCode = models.CharField(max_length=255, unique=True)
     subjectName = models.CharField(max_length=255, default='Not provided')
-
+    lecturerID = models.CharField(max_length=255, default='Not provided')
+    intakeCode = models.CharField(max_length=255, default='Not provided')
     def __str__(self):
         return self.subjectCode
     
 class intake(models.Model):
     intakeCode = models.CharField(max_length=255, unique=True)
-
+    coordinatorID = models.CharField(max_length=255, null = True, default = "Not provided")
     def __str__(self):
         return self.intakeCode
 
@@ -31,7 +32,7 @@ class leave(models.Model):
         ('denied', 'Denied'),
     )
 
-    leaveID = models.AutoField(primary_key=True)
+    leaveID = models.AutoField(primary_key=True, default="1")
     userID = models.IntegerField(null=True, default="1")
     leaveTitle = models.CharField(max_length=255)
     leaveDescription = models.CharField(max_length=255, null=True)
@@ -42,7 +43,7 @@ class leave(models.Model):
     applyDate = models.DateField(default=datetime.date.today)
 
     def __str__(self):
-        return f"Leave ID: {self.leaveID}, Title: {self.leaveTitle}"
+        return f"Leave ID: {self.leaveID}, Title: {self.leaveTitle}, ID {self.userID}"
 
 
 class Attendance(models.Model):
@@ -51,3 +52,13 @@ class Attendance(models.Model):
     attendanceSubjectCode = models.CharField(max_length=255, null=True, default="Not provided")
     def __str__(self):
         return f"ID:{self.id}, name: {self.name}, date time: {self.classDate}, subject code : {self.attendanceSubjectCode}"
+    
+class feedback(models.Model):
+    feedbackTitle = models.CharField(max_length=255)
+    feedbackDescription = models.CharField(max_length=2550)
+    feedbackAttachment = models.ImageField(null=True, blank=True, upload_to='feedbackAttachment')
+    userID = models.CharField(max_length=255, null=True, default="Not provided")
+    adminID = models.CharField(max_length=255, null=True, default="Not provided")
+    reply = models.CharField(max_length=2550, null=True, default="Not provided")
+    def __str__(self):
+        return f"feedbackID:{self.id}, feedbackTitle: {self.feedbackTitle}, From: {self.userID}, To: {self.adminID}"
