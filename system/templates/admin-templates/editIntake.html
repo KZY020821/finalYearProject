@@ -1,0 +1,59 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Intake Management</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <form method="POST" class="form-signin" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <h3 class="card-title">Create Intake - Intake Code</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="intakeCode" name="intakeCode" value="{{intake.intakeCode}}">
+                                </div>
+                                <h3 class="card-title">Coordinator</h3>
+                                <select class="form-control" name="adminId" required>
+                                    {% for admin in admins %}
+                                        <option value="{{ admin.adminprofile.adminId }}" {% if admin.adminprofile.adminId == intake.adminId.adminId %}selected{% endif %}>
+                                            {{ admin.adminprofile.adminId }}
+                                        </option>
+                                    {% endfor %}
+                                </select>                                
+                            </div>
+                        </div>
+                        <div class="text-center m-t-20">
+                            <button type="submit" class="btn btn-primary submit-btn">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

@@ -1,0 +1,75 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Edit Subject</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <form method="POST" class="form-signin" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <h3 class="card-title">Subject Code</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{subject.subjectCode}}">
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Subject Name</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{subject.subjectName}}">
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Lecturer</h3>
+                        <select class="form-control" name="lecturerId">
+                            {% for lecturer in lecturers %}
+                            <option value="{{ lecturer.lecturerprofile.lecturerId }}" {% if lecturer.lecturerprofile.lecturerId == subject.lecturerId.lecturerId %}selected{% endif %}>
+                                {{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <h3 class="card-title">Intake(s) - hold ctrl or cmd to select multiple intakes</h3>
+                        <select class="form-control" name="intakes" style="height: 250px;" multiple>
+                            {% for intake in intakes %}
+                                <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}" {% if intake.intakeCode in selected_intakes %}selected{% endif %}>
+                                    {{ intake.intakeCode }}
+                                </option>
+                            {% endfor %}
+                        </select>                        
+                        <div class="text-center m-t-20">
+                            <button type="submit" class="btn btn-primary submit-btn">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

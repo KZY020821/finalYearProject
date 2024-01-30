@@ -1,0 +1,60 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Attendance Management</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Code</th>
+                                        <th>Created by</th>
+                                        <th>Created on (date)</th>
+                                        <th>Created at (time)</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendance in attendances %}
+                                        {% for intake_table in attendance.subjectCode.intakeTables.all %}
+                                            {% if request.user.userprofile.intakeCode.intakeCode == intake_table.intakeCode %}
+                                                <tr>
+                                                    <td>{{ attendance.subjectCode }}</td>
+                                                    <td>{{ attendance.creator }}</td>
+                                                    <td>{{ attendance.classDate|date:"Y-m-d" }}</td>
+                                                    <td>{{ attendance.classDate|time:"H:i:s" }}</td>
+                                                    <td>
+                                                        {% if request.user.userprofile in attendance.attendedUser.all %}
+                                                            <span class="custom-badge status-green">Attended</span>
+                                                        {% else %}
+                                                            <span class="custom-badge status-red">Absent</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+    </script>
+</body>
+
+</html>

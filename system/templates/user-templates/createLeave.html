@@ -1,0 +1,108 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h4 class="page-title">Create Leave</h4>
+                    </div>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                    {{ message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% csrf_token %}
+                    <div class="card-box">
+                        <h3 class="card-title">From:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="user-username" value="{{request.user.username}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" name="userID" value="{{request.user.userprofile.userId}}" readonly>
+                        <h3 class="card-title">To:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="admin-username" value="{% for intake in intakes %}{% if intake.intakeCode == request.user.userprofile.intakeCode.intakeCode %}{{intake.adminId.user.username}}{% endif %}{% endfor %}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" class="form-control" name="adminID" value="{% for intake in intakes %}{% if intake.intakeCode == request.user.userprofile.intakeCode.intakeCode %}{{intake.adminId.adminId}}{% endif %}{% endfor %}" readonly>
+                        <h3 class="card-title">Leave Title (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="leaveTitle" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Leave Description (optional)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="leaveDescription"  required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Leave Attachment (Medical certificate or letter)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="file" class="form-control" id="leaveAttachment" name="leaveAttachment" accept="image/*" capture="user" required>
+                                </div>
+                            </div>            
+                        </div>
+                        <h3 class="card-title">leave start from:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="date" class="form-control" name="startDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Leave end at: </h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="date" class="form-control" name="endDate" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center m-t-20">
+                        <button type="submit" class="btn btn-primary submit-btn">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        // Function to automatically dismiss the alert after 3 seconds
+        setTimeout(function() {
+            $("#success-alert").alert('close');
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_lecturer.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">View Attendance - {{attendance.subjectCode}}</h4>
+                    </div>
+                </div>
+                <form method="POST" class="form-signin" enctype="multipart/form-data">
+                    <div class="card-box">
+                        {% csrf_token %}
+                        <h3 class="card-title">Subject Code</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{attendance.subjectCode}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="creator" value="{{request.user.username}}" readonly>
+                        <h3 class="card-title">Subject Name</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{attendance.subjectCode.subjectName}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Lecturer</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" value="{{attendance.subjectCode.lecturerId.user.username}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Intake(s)</h3>
+                        <select class="form-control" name="intakes" style="height: 150px;" multiple readonly>
+                            {% for intake in intakes %}
+                                {% if intake.intakeCode in selected_intakes %}
+                                    <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}">
+                                        {{ intake.intakeCode }}
+                                    </option>
+                                {% endif %}
+                            {% endfor %}
+                        </select> 
+                    </div>
+                    <h3 class="card-title">Student list</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="table-responsive">
+                                <table class="table table-striped custom-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student's name</th>
+                                            <th>Student's ID</th>
+                                            <th>Attended</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in users %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ user.userId }}</td>
+                                                <td>{{ user.user.username }}</td>
+                                                <td>
+                                                    <input type="checkbox" name="attendedUser" value="{{ user.userId }}" {% if user.userId in attended_users %}checked{% endif %}>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="totalUser" value="{{ users|length }}">
+                    <div class="text-center m-t-20">
+                        <button class="btn btn-primary submit-btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

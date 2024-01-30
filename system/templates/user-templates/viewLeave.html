@@ -1,0 +1,45 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <a href="{% url 'user-leave-management' %}" class="btn btn-primary"><i class="fa fa-arrow-left"></i> Back</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <h3 class="card-title">From: {{ leave.userID.user.first_name }} {{ leave.userID.user.last_name }}</h3>
+                    <h3 class="card-title">Apply Date: {{leave.applyDate}}</h3>
+                    <h3 class="card-title">Start Date: {{leave.startDate}}</h3>
+                    <h3 class="card-title">End Date: {{leave.endDate}}</h3>
+                    <h3 class="card-title">Leave Title: {{leave.leaveTitle}}</h3>
+                    <h3 class="card-title">Description: {{leave.leaveDescription}}</h3>
+                    <h3 class="card-title">Attachment:</h3>
+                    <img src="{{leave.leaveAttachment.url}}" style=" display:block; width: 90%; height: auto; border-style: solid; margin: auto auto 40px auto;">                   
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

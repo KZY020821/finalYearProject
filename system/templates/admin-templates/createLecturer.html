@@ -1,0 +1,108 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h4 class="page-title">Create Lecturer Account</h4>
+                    </div>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                    {{ message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% csrf_token %}
+                    <div class="card-box">
+                        <h3 class="card-title">LecturerID (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="lecturerID" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Lecturer Email (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="lecturerEmail" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Given name (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="first_name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Family name (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="last_name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">username (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="username" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Password (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="password" class="form-control" name="password1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Repeat Password (Required)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="password" class="form-control" name="password2" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Profile Image</h3>
+                        <input type="file" class="form-control" id="image" name="image" accept="image/*" capture="user" required>
+                    </div>
+                    <div class="text-center m-t-20">
+                        <button type="submit" class="btn btn-primary submit-btn">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        // Function to automatically dismiss the alert after 3 seconds
+        setTimeout(function() {
+            $("#success-alert").alert('close');
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+</body>
+
+</html>

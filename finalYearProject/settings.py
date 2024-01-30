@@ -14,6 +14,8 @@ import sys
 import os
 from pathlib import Path
 
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +29,7 @@ SECRET_KEY = 's-)d+c7=^8cwx&)8%a8+f9v6x4)elf5%()ag)_$&5(@*kvx72('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '192.168.1.104']
+ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44']
 
 
 # Application definition
@@ -65,6 +67,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'system.context_processors.notification_count',
+                'system.context_processors.unread_leave_count',
             ],
         },
     },
@@ -129,3 +133,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 sys.path.insert(0, '/Users/khorzeyi/code/finalYearProject/main.py')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'boltfras@gmail.com'
+EMAIL_HOST_PASSWORD = 'vson uncj eyzs imxe'

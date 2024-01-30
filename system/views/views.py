@@ -1,14 +1,15 @@
 from django.contrib.auth import get_user
+from django.db.models import Q
 from django.http import Http404, JsonResponse, StreamingHttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from .decorators import unauthenticated_user, allow_users
+from ..decorators import unauthenticated_user, allow_users
 from datetime import datetime
 from django.http import HttpResponse
-from .models import Profile as personalinfo, Attendance as attendanceModel, subject as subjectTable, intake as intakeTable, leave, feedback as feedbackTable
+from ..models import Profile as personalinfo, Attendance as attendanceModel, subject as subjectTable, intake as intakeTable, leave, feedback as feedbackTable, UserProfile, IntakeTable, AbsenceMonitoringTable, LecturerProfile, SubjectTable, AdminProfile
 import subprocess
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -19,7 +20,204 @@ import cv2
 import numpy as np
 import math
 
-@login_required(login_url='login')
+# login
+@unauthenticated_user
+def forgotPassword(request):
+  return render(request, 'forgot-password.html')
+
+@unauthenticated_user
+def loginPage(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+    
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            user_instance = User.objects.get(username=username)
+            if user_instance.groups.exists():
+                if user_instance.groups.first().name == 'admin':
+                    messages.success(request, "You have successfully logged in.") 
+                    return redirect('admin-dashboard')
+                elif user_instance.groups.first().name == 'lecturer':
+                    messages.success(request, "You have successfully logged in.") 
+                    return redirect('lecturer-dashboard')
+                else:
+                    messages.success(request, "You have successfully logged in.") 
+                    return redirect('user-dashboard')
+            else:
+                messages.error(request, "You have successfully logged in.") 
+                return redirect ('error')
+        else:
+            messages.error(request, "wrong email or password")
+            return redirect("/") 
+    else:
+        return render(request, 'login.html')
+
+@unauthenticated_user
+def registerPage(request):
+    if request.method == "POST":
+        id = request.POST['studentID']
+        email = request.POST['email']
+        password = request.POST['password']
+        password2 = request.POST['password2']
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        intakeCode = request.POST['intakeCode']
+        faceimage = request.FILES.get('image')  # Use request.FILES for file input
+
+        if password != password2:
+            messages.error(request, "Password not same")
+            return redirect('register') 
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already used")
+            return redirect('register') 
+        elif User.objects.filter(username=id).exists():
+            messages.error(request, "studentID already used")
+            return redirect('register') 
+        else:
+             # Get the username and user ID
+            username_id = f"{id}_{first_name}-{last_name}"
+
+            # Determine the file extension based on the user's uploaded file
+            file_extension = faceimage.name.split('.')[-1]
+
+            # Define the path to save the image with the appropriate extension
+            image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+
+            # Delete the existing image if it exists
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+            # Save the uploaded image with the new name and correct file extension
+            fs = FileSystemStorage()
+            fs.save(image_path, faceimage)
+
+            try:
+                intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
+            except IntakeTable.DoesNotExist:
+                intake_instance = None 
+            
+            try:
+                absenceMonitoring_instance = AbsenceMonitoringTable.objects.get(id=1)
+            except AbsenceMonitoringTable.DoesNotExist:
+                absenceMonitoring_instance = None 
+            
+            if intake_instance:
+                user = User.objects.create_user(username=id , email=email, password=password, first_name=first_name, last_name=last_name)
+                user.save()
+
+                user_profile = UserProfile(user=user, userId=id, intakeCode=intake_instance, absenceMonitoringId=absenceMonitoring_instance, faceImageUrl=image_path)
+                user_profile.save()
+
+                group = Group.objects.get(name='user')
+                user.groups.add(group)
+
+                messages.success(request, "User registered successfully.")
+                return redirect("/")
+            else: 
+                messages.error(request, "register failed.")
+                return redirect("register")
+            
+    else:
+        intakes = IntakeTable.objects.all()
+        return render(request, 'register.html', {'intakes': intakes})
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def editMyProfile(request, user_id):
+  try:
+      user = User.objects.get(id=user_id)
+      if request.method == 'POST':
+        userID = request.POST['userID']
+        userEmail = request.POST['userEmail']
+        firstName = request.POST['first_name']
+        lastName = request.POST['last_name']
+        username = request.POST['username']
+        profileImage = request.FILES.get('image')
+
+        if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
+            messages.error(request, 'Email used')
+        elif User.objects.filter(username=username).exclude(id=user_id).exists():
+            messages.error(request, 'Username used')
+        elif UserProfile.objects.filter(userId=userID).exclude(user=user).exists():
+            messages.error(request, 'user ID used')
+        else:
+          user.email = userEmail
+          user.first_name = firstName
+          user.last_name = lastName
+          user.username = username
+          user.save()
+          
+          user_profile = user.userprofile
+          user_profile.userId = userID
+          
+          
+          if profileImage:
+            user_profile_image_path = user_profile.faceImageUrl.path
+
+            if os.path.exists(user_profile_image_path):
+                os.remove(user_profile_image_path)
+
+            user_profile.faceImageUrl = profileImage
+
+          user_profile.save()
+          
+          messages.success(request, 'Modification have been saved successfully.')
+          return redirect('admin-user-management')
+      return render(request, 'admin-tamplates/editUser.html', {'user': user})
+  except User.DoesNotExist:
+      return render(request, 'error_page.html', {'error_message': 'User not found'})
+
+@login_required(login_url='/')
+def viewMyProfile(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        if user.groups.exists():
+            if user.groups.first().name == 'lecturer':
+                lecturer_user = LecturerProfile.objects.get(user = user)
+                subjects = SubjectTable.objects.filter(lecturerId = lecturer_user.lecturerId)
+                return render(request, 'viewMyProfile.html', {'user': user, 'subjects': subjects, })
+            elif user.groups.first().name == 'admin':
+                admin_user = AdminProfile.objects.get(user = user)
+                intakes = IntakeTable.objects.filter(adminId = admin_user.adminId)
+                return render(request, 'viewMyProfile.html', {'user': user, 'intakes': intakes, })
+            elif user.groups.first().name == 'user':
+                normal_user = UserProfile.objects.get(user=user)
+                subjects = SubjectTable.objects.filter(intakeTables__intakeCode = normal_user.intakeCode.intakeCode, status = "Active" or "active")
+                return render(request, 'viewMyProfile.html', {'user': user, 'subjects': subjects})
+
+        return render(request, 'viewMyProfile.html', {'user': user,})    
+        
+    except User.DoesNotExist:
+      return render(request, 'error_page.html', {'error_message': 'User not found'})
+
+@login_required(login_url='/')
+def deleteMyProfile(request, id):
+  if request.method == 'POST':
+      user_id = request.POST.get('user_id')
+      try:
+          user = User.objects.get(id=user_id)
+          user_profile_image_path = user.userprofile.faceImageUrl.path
+          
+          # Delete user and related profile
+          user.delete()
+          
+          # Remove the admin's profile image file
+          if os.path.exists(user_profile_image_path):
+              os.remove(user_profile_image_path)
+
+          messages.success(request, 'User removed successfully.')
+          return redirect('admin-user-management')
+      except User.DoesNotExist:
+          return JsonResponse({'success': False, 'message': 'User not found'})
+  return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+
+
+
+# old
+@login_required(login_url="/")
 def index(request):
     if request.method == "POST":
         classCode = request.POST['classCode']
@@ -33,14 +231,23 @@ def index(request):
         except subprocess.CalledProcessError as e:
             # Handle any errors or exceptions
             pass
-
+            
+        currentUserId = request.user.id
+        user_instance = User.objects.get(id = currentUserId)
+        if user_instance.groups.exists():
+            if user_instance.groups.first().name == 'admin':
+                return redirect('admin-dashboard')
+            elif user_instance.groups.first().name == 'lecturer':
+                return redirect('lecturer-dashboard')
+            else:
+                return redirect('user-dashboard')
         return render(request, 'dashboard.html')
 
     subjects = subjectTable.objects.all()
     data = {'subjects': subjects}
     return render(request, 'index.html', data)
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def attendance(request):
   current_year= datetime.now().year
   current_month= datetime.now().month
@@ -48,11 +255,7 @@ def attendance(request):
   context = {'users': data, 'current_year': current_year, 'current_month':current_month}
   return render(request, 'attendance.html', context)
 
-@login_required(login_url='login')
-def dashboard(request):
-  return render(request, 'dashboard.html')
-
-@login_required(login_url='login')
+@login_required(login_url="/")
 @allow_users(allow_roles=['admin'])
 def editProfile(request, user_id=None):
     user_id = request.GET.get('user_id')
@@ -85,99 +288,17 @@ def editProfile(request, user_id=None):
     data = {'intakes': intakes, 'user': user, 'profile': user.profile, 'selected_user': selected_user }
     return render(request, 'edit-profile.html', data)
 
-    
-
-@unauthenticated_user
-def forgotPassword(request):
-  return render(request, 'forgot-password.html')
-
-@unauthenticated_user
-def loginPage(request):
-  if request.method == 'POST':
-    username = request.POST['username']
-    password = request.POST['password']
-    
-    user = authenticate(request, username=username, password=password)
-    if user is not None:
-      login(request, user)
-      messages.success(request, "You have successfully logged in.")  # Add this line
-      return redirect('dashboard')
-    else:
-      messages.error(request, "wrong email or password")
-      return redirect('login') 
-  else:
-      return render(request, 'login.html')
-
-@login_required(login_url='login')
+@login_required(login_url="/")
 def profile(request):
   return render(request, 'profile.html')
 
-def registerPage(request):
-    if request.method == "POST":
-        # Extract user registration data from the POST request
-        studentID = request.POST['studentID']
-        email = request.POST['email']
-        password = request.POST['password']
-        password2 = request.POST['password2']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        intakeCode = request.POST['intakeCode']
-        phone_number = request.POST['phone_number']
-        faceimage = request.FILES.get('image')  # Use request.FILES for file input
-
-        if password != password2:
-            messages.error(request, "Password not same")
-            return redirect('register') 
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already used")
-            return redirect('register') 
-        elif User.objects.filter(username=studentID).exists():
-            messages.error(request, "studentID already used")
-            return redirect('register') 
-        elif personalinfo.objects.filter(phone_number=phone_number).exists():
-            messages.error(request, "Phone number already used")
-            return redirect('register') 
-        else:
-            # Create a new User instance
-            user = User.objects.create_user(username=studentID, email=email, password=password, first_name=first_name, last_name=last_name)
-            user.save()
-             # Get the username and user ID
-            username_id = f"{studentID}_{user.id}"
-
-            # Determine the file extension based on the user's uploaded file
-            file_extension = faceimage.name.split('.')[-1]
-
-            # Define the path to save the image with the appropriate extension
-            image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
-
-            # Delete the existing image if it exists
-            if os.path.exists(image_path):
-                os.remove(image_path)
-
-            # Save the uploaded image with the new name and correct file extension
-            fs = FileSystemStorage()
-            fs.save(image_path, faceimage)
-
-            # Create a new profile instance and associate it with the user
-            user_profile = personalinfo(user=user, intakeCode=intakeCode, phone_number=phone_number, image=image_path)
-            user_profile.save()
-
-            # Add the user to a group if needed (e.g., 'user' group)
-            group = Group.objects.get(name='user')
-            user.groups.add(group)
-
-            messages.success(request, "User registered successfully.")
-            return redirect('login')  # Redirect to the login page
-    else:
-        intakes = intakeTable.objects.all()
-        return render(request, 'register.html', {'intakes': intakes})
-
-@login_required(login_url='login')
+@login_required(login_url='/')
 def logoutUser (request):
-   logout(request)
-   return redirect ('login')
+    logout(request)
+    messages.success(request, 'You have succesfully logged out')
+    return redirect('/')
     
-@login_required(login_url='login')
+@login_required(login_url="/")
 @allow_users(allow_roles=['admin'])
 def users(request):
   data = User.objects.all()
@@ -203,17 +324,17 @@ def delete_user_image(request):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 @allow_users(allow_roles=['admin'])
 def warnings(request):
   data = User.objects.all()
   return render(request, 'warnings.html', {'users': data})
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def error(request):
   return render(request, 'error.html')
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def deleteUser(request):
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
@@ -225,7 +346,7 @@ def deleteUser(request):
             return JsonResponse({'error': 'User not found'}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def registerAdmin(request):
     if request.method == "POST":
         # Extract user registration data from the POST request
@@ -281,13 +402,13 @@ def registerAdmin(request):
             user.groups.add(group)
 
             messages.success(request, "User registered successfully.")
-            return redirect('login')  # Redirect to the login page
+            return redirect("/")  # Redirect to the login page
     else:
         intakes = intakeTable.objects.all()
         data = {'intakes': intakes}
         return render(request, 'registerAdmin.html', data)
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def registerUser(request):
     if request.method == "POST":
         # Extract user registration data from the POST request
@@ -343,20 +464,20 @@ def registerUser(request):
             user.groups.add(group)
 
             messages.success(request, "User registered successfully.")
-            return redirect('login')  # Redirect to the login page
+            return redirect("/")  # Redirect to the login page
     else:
         intakes = intakeTable.objects.all()
         data = {'intakes': intakes}
         return render(request, 'registerUser.html', data)
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 @allow_users(allow_roles=['admin'])
 def reviewLeaves(request):
   data = User.objects.all()
   leaveData = leave.objects.all()
   return render(request, 'reviewLeaves.html', {'users': data, 'leaves': leaveData})
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def applyLeaves(request):
     data = User.objects.all()
     leaveData = leave.objects.all()
@@ -375,7 +496,7 @@ def applyLeaves(request):
     else:
         return render(request, 'applyLeaves.html', {'users': data, 'leaves': leaveData})
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 @allow_users(allow_roles=['admin'])
 def changeImage(request):
     # Get the user to change the image for
@@ -443,7 +564,7 @@ def save_attendance(name, classCode):
 def test(request):
     return render(request, 'test.html')
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def subject(request):
     data = User.objects.all()
     subject = subjectTable.objects.all()
@@ -460,7 +581,7 @@ def subject(request):
     else:
         return render(request, 'subject.html', {'users': data, 'subjectData': subject})
     
-@login_required(login_url='login')
+@login_required(login_url="/")
 def intake(request):
     data = User.objects.all()
     intakeData = intakeTable.objects.all()
@@ -474,7 +595,7 @@ def intake(request):
     else:
         return render(request, 'intake.html', {'users': data, 'intakes': intakeData})
     
-@login_required(login_url='login')
+@login_required(login_url="/")
 def contactUs(request):
     data = User.objects.all()
     feedbackData = feedbackTable.objects.all()
@@ -492,13 +613,13 @@ def contactUs(request):
     else:
         return render(request, 'contactUs.html', {'users': data, 'feedbacks': feedbackData})
     
-@login_required(login_url='login')
+@login_required(login_url="/")
 def reviewFeedback(request):
     data = User.objects.all()
     feedbackData = feedbackTable.objects.all()
     return render(request, 'reviewFeedback.html', {'users': data, 'feedbacks': feedbackData})
 
-@login_required(login_url='login')
+@login_required(login_url="/")
 def viewWarnings(request):
     data = User.objects.all()
     subject = subjectTable.objects.all()
@@ -514,3 +635,6 @@ def viewWarnings(request):
         return render(request, 'subject.html', {'users': data, 'subjectData': subject})
     else:
         return render(request, 'subject.html', {'users': data, 'subjectData': subject})
+
+def camera(request):
+    return render(request, 'camera.html')

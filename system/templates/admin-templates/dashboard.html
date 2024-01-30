@@ -1,0 +1,196 @@
+﻿{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success" id="success-alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="content">
+                <h3 class="page-title">Admin Dashboard</h3>
+            </div>
+            <div class="row" style="margin: 15px;">
+              {% for intake_code, data in average_percentages.items %}
+                  
+                  <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                    <div class="dash-widget">
+                      <div class="chart-title">
+                        <h4>{{intake_code}} attendance - %</h4>
+                      </div>	
+                      <div id="intake{{forloop.counter}}" data-average-percentage="{{ data.average_percentage }}"></div>
+                    </div>
+                  </div>
+                {% endfor %}
+          </div>
+          <div class="row" style="margin: 15px;">
+              <div class="col-md-12">
+              <div class="card">
+                  <div class="card-body">
+                  <div class="chart-title">
+                      <h4>Line graph</h4>
+                  </div>	
+                  <div id="chart" ></div>
+                  </div>
+              </div>
+              </div>
+          </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+      $(document).ready(function() {
+        // Automatically close the success alert after 3 seconds
+        setTimeout(function() {
+          $("#success-alert").alert('close');
+        }, 3000);
+      });
+    </script>
+    <script>
+      $(document).ready(function() {
+        // Automatically close the success alert after 3 seconds
+        setTimeout(function() {
+          $("#success-alert").alert('close');
+        }, 3000);
+    
+        // Iterate through the elements and render charts
+        $('[id^="intake"]').each(function() {
+          var averagePercentage = parseFloat($(this).data('average-percentage')) || 0;
+    
+          var options = {
+            series: [averagePercentage],
+            chart: {
+              height: 350,
+              type: 'radialBar',
+              toolbar: {
+                show: true
+              }
+            },
+            plotOptions: {
+              radialBar: {
+                startAngle: -135,
+                endAngle: 225,
+                hollow: {
+                  margin: 0,
+                  size: '70%',
+                  background: '#fff',
+                  image: undefined,
+                  imageOffsetX: 0,
+                  imageOffsetY: 0,
+                  position: 'front',
+                  dropShadow: {
+                    enabled: true,
+                    top: 3,
+                    left: 0,
+                    blur: 4,
+                    opacity: 0.24
+                  }
+                },
+                track: {
+                  background: '#fff',
+                  strokeWidth: '67%',
+                  margin: 0,
+                  dropShadow: {
+                    enabled: true,
+                    top: -3,
+                    left: 0,
+                    blur: 4,
+                    opacity: 0.35
+                  }
+                },
+                dataLabels: {
+                  show: true,
+                  name: {
+                    offsetY: -10,
+                    show: true,
+                    color: '#888',
+                    fontSize: '17px'
+                  },
+                  value: {
+                    formatter: function(val) {
+                      return parseInt(val);
+                    },
+                    color: '#111',
+                    fontSize: '36px',
+                    show: true,
+                  }
+                }
+              }
+            },
+            fill: {
+              type: 'gradient',
+              gradient: {
+                shade: 'dark',
+                type: 'horizontal',
+                shadeIntensity: 0.5,
+                gradientToColors: ['#ABE5A1'],
+                inverseColors: true,
+                opacityFrom: 1,
+                opacityTo: 1,
+                stops: [0, 100]
+              }
+            },
+            stroke: {
+              lineCap: 'round'
+            },
+            labels: ['Percent'],
+          };
+    
+          var chart = new ApexCharts(this, options);
+          chart.render();
+        });
+      });
+    </script>    
+    <script>
+      var options = {
+          series: [{
+          name: 'Attended',
+          data: [44, 55, 41, 67, 22, 43, 21, 49]
+        }, {
+          name: 'Absent',
+          data: [13, 23, 20, 8, 13, 27, 33, 12]
+        }, {
+          name: 'Late',
+          data: [11, 17, 15, 15, 21, 14, 15, 13]
+        }],
+          chart: {
+          type: 'bar',
+          height: 350,
+          stacked: true,
+          stackType: '100%'
+        },
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            legend: {
+              position: 'bottom',
+              offsetX: -10,
+              offsetY: 0
+            }
+          }
+        }],
+        xaxis: {
+          categories: ['2011 Q1', '2011 Q2', '2011 Q3', '2011 Q4', '2012 Q1', '2012 Q2',
+            '2012 Q3', '2012 Q4'
+          ],
+        },
+        fill: {
+          opacity: 1
+        },
+        legend: {
+          position: 'right',
+          offsetX: 0,
+          offsetY: 50
+        },
+        };
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+    </script>
+</body>
+
+</html>

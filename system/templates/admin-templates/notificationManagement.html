@@ -1,0 +1,63 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Notification(s) Management</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Created on </th>
+                                        <th>Notification Message</th>
+                                        <th>Receiver</th>
+                                        <th>Status</th>
+                                        <th class="text-right disable-sort">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for notification in notifications %}
+                                        {% if notification.receiver == request.user.username %}
+                                            <tr>
+                                                <td>{{ notification.notifyDate }}</td>
+                                                <td>{{ notification.notifyMessage }}</td>
+                                                <td>{{ notification.receiver }}</td>
+                                                {% if notification.status == "delivered" or notification.status == "Delivered" %}
+                                                    <td><i class="fa-solid fa-check"></i> Delivered</td>
+                                                {% elif notification.status == "noted" or notification.status == "Noted" %}
+                                                    <td><i class="fa-solid fa-check-double"></i> Noted</td>
+                                                {% endif %}
+                                                <td class="text-right">
+                                                    {% if notification.status == "delivered" or notification.status == "Delivered" %}
+                                                    <a href="admin-noted-notification/{{notification.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> Noted</button></a>
+                                                    {% elif notification.status == "noted" or notification.status == "Noted" %}
+                                                        -
+                                                    {% endif %}
+                                                    
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+    </script>
+</body>
+
+</html>

@@ -5,7 +5,9 @@ import numpy as np
 import math
 import os
 import django
+import dlib
 import datetime
+from PIL import Image
 
 # Set the DJANGO_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
@@ -14,8 +16,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 django.setup()
 
 # Import Django models
-from system.views import save_attendance
-
+from system.views.views import save_attendance
+from system.views.admin_views import collect_attendance
 # Define a function to calculate face recognition confidence
 def face_confidence(face_distance, face_match_threshold=0.6):
     # Calculate confidence linearly based on face distance
@@ -43,9 +45,10 @@ class FaceRecognition():
         self.encode_faces()  # Call the face encoding function to load known faces
 
     def encode_faces(self):
+        if len(sys.argv) > 1:
+            subjectCode = sys.argv[1]
         # Specify the directory path where known face images are stored
-        directory = '/Users/khorzeyi/code/finalYearProject/media/faceImage/'
-
+        directory = f'/Users/khorzeyi/code/finalYearProject/media/{subjectCode}/'
         # List all files in the directory
         files = os.listdir(directory)
 
@@ -54,7 +57,7 @@ class FaceRecognition():
 
         # Loop through image files and encode known faces
         for image in image_files:
-            face_image = face_recognition.load_image_file(f'/Users/khorzeyi/code/finalYearProject/media/faceImage/{image}')
+            face_image = face_recognition.load_image_file(f'/Users/khorzeyi/code/finalYearProject/media/{subjectCode}/{image}')
             face_encoding = face_recognition.face_encodings(face_image)[0]
 
             self.known_face_encodings.append(face_encoding)
@@ -94,15 +97,14 @@ class FaceRecognition():
                     if matches[best_matches_index]:
                         full_name = self.known_face_names[best_matches_index]
                         name, _ = full_name.split('_') 
-                        confidence = face_confidence(face_distances[best_matches_index])
+                        confidence = face_confidence(face_distances[best_matches_index], face_match_threshold=0.7)
                         self.face_names.append(f'{name} ({confidence})')
                         if name not in self.processed_names:
-                            if len(sys.argv) > 1:
-                                classCode = sys.argv[1]
-                            print(f'{name}', classCode)
-                            save_attendance(f'{name}', classCode)
+                            # if len(sys.argv) > 1:
+                            #     subjectCode = sys.argv[1]
+                            # print(f'{name}', subjectCode)
+                            # save_attendance(f'{name}', subjectCode)
                             self.processed_names.add(f'{name}')
-
             self.process_current_frame = not self.process_current_frame
 
             # Draw rectangles and labels on the frame for recognized faces
@@ -120,6 +122,10 @@ class FaceRecognition():
             cv2.imshow('face recognition', frame)  # Display the frame with face recognition
 
             if cv2.waitKey(1) == ord('q'):
+                if len(sys.argv) > 1:
+                    subjectCode = sys.argv[1]
+                    creator = sys.argv[2]
+                collect_attendance(list(self.processed_names), subjectCode, creator)
                 break  # Press 'q' to quit the program
 
         video_capture.release()

@@ -1,0 +1,273 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_lecturer.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">{{user.username}}'s Profile Page</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box profile-header">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="profile-view">
+                                <div class="profile-img-wrap">
+                                    <div class="profile-img">
+                                        {% if user.groups.first.name == "admin" %}
+                                            <img class="avatar" src="{{ user.adminprofile.adminProfileImage.url }}" alt="profile_image">
+                                        {% elif user.groups.first.name == "lecturer" %}
+                                            <img class="avatar" src="{{ user.lecturerprofile.lecturerProfileImage.url }}" alt="profile_image">
+                                        {% elif user.groups.first.name == "user" %}
+                                            <img class="avatar" src="{{ user.userprofile.faceImageUrl.url }}" alt="profile_image">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="profile-basic">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <ul class="personal-info">
+                                                <li>
+                                                    <span class="title">Username:</span>
+                                                    <span class="text">{{ user.username}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Email:</span>
+                                                    <span class="text">{{user.email}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Given Name:</span>
+                                                    <span class="text">{{user.first_name}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Family name:</span>
+                                                    <span class="text">{{user.last_name}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Role:</span>
+                                                    <span class="text">{{user.groups.first.name}}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                        
+                        </div>
+                    </div>
+                </div>
+                {% if user.groups.first.name == "admin" %}
+                    <div class="card-box">
+                        <h3 class="card-title">Admin ID</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="intakeCode" value="{{user.adminprofile.adminId}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Intake(s)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {% for intake in intakes %}
+                                        <a href=""><span  {% if forloop.counter|divisibleby:2 %}class="custom-badge status-green"{% else %}class="custom-badge status-orange"{% endif %}  style="margin: 0px 20px; padding: 10px;">{{intake.intakeCode}}</span></a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% elif user.groups.first.name == "lecturer" %}
+                    <div class="card-box">
+                        <h3 class="card-title">Lecturer ID</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control"  value="{{user.lecturerprofile.lecturerId}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Subject(s)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {% for subject in subjects %}
+                                        <a href=""><span  {% if forloop.counter|divisibleby:2 %}class="custom-badge status-green"{% else %}class="custom-badge status-orange"{% endif %}  style="margin: 0px 20px; padding: 10px">{{subject.subjectName}}</span></a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>      
+                {% elif user.groups.first.name == "user" %}
+                    <div class="card-box">
+                        <h3 class="card-title">Student ID</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control"  value="{{user.userprofile.userId}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Intake Code</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" value="{{ user.userprofile.intakeCode.intakeCode }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Absence Monitoring Status</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" value="{{ user.userprofile.absenceMonitoringId.absenceLimitName }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Subject(s)</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {% if subjects %}
+                                        {% for subject in subjects %}
+                                            <a href=""><span  {% if forloop.counter|divisibleby:2 %}class="custom-badge status-green"{% else %}class="custom-badge status-orange"{% endif %}  style="margin: 0px 20px; padding: 10px">{{subject.subjectName}}</span></a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <h6 class="text">You have no subject yet</h6>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="row" style="margin: 15px;">
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                          <span class="dash-widget-bg1"><i class="fa fa-users" aria-hidden="true"></i></span>
+                          <div class="dash-widget-info text-right">
+                            <h3>60%</h3>
+                            <span class="widget-title1">Classcode 1 <i class="fa fa-check" aria-hidden="true"></i></span>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg2"><i class="fa fa-users"></i></span>
+                            <div class="dash-widget-info text-right">
+                              <h3>70%</h3>
+                              <span class="widget-title2">Classcode 2 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg3"><i class="fa fa fa-users" aria-hidden="true"></i></span>
+                            <div class="dash-widget-info text-right">
+                                <h3>80%</h3>
+                                <span class="widget-title3">Classcode 3 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                        <div class="dash-widget">
+                            <span class="dash-widget-bg4"><i class="fa fa-users" aria-hidden="true"></i></span>
+                            <div class="dash-widget-info text-right">
+                                <h3>90%</h3>
+                                <span class="widget-title4">Classcode 4 <i class="fa fa-check" aria-hidden="true"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin: 15px;">
+                    <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                        <div class="chart-title">
+                            <h4>Line graph</h4>
+                        </div>	
+                        <canvas id="linegraph"></canvas>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                        <div class="chart-title">
+                            <h4>Attendance Based on Subject</h4>
+                        </div>	
+                        <canvas id="myChart"></canvas>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        var xValues = ["Subject 1", "Subject 2", "Subject 3"];
+        var yValues = [55, 49, 44];
+        var barColors = [
+          "#009efb",
+          "#fbbf02",
+          "#ff5349",
+        ];
+        
+        new Chart("myChart", {
+          type: "doughnut",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+        });
+      </script>
+      <script>
+          const x = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+          
+          new Chart("linegraph", {
+            type: "line",
+            data: {
+              labels: x,
+              datasets: [{ 
+                data: [20,15,20,15,20,15,20,15,20,15,23,18],
+                borderColor: "red",
+                fill: false
+              }, { 
+                data: [23,18,23,18,23,18,23,18,23,18,12,25],
+                borderColor: "green",
+                fill: false
+              }, { 
+                data: [12,25,12,25,12,25,12,25,12,25,20,15,],
+                borderColor: "blue",
+                fill: false
+              }]
+            },
+            options: {
+              legend: {display: false}
+            }
+          });
+      </script>
+</body>
+
+</html>

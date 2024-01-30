@@ -1,0 +1,50 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Choose Subject to take attendance</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <form method="POST" class="form-signin" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <h3 class="card-title">Subject Code</h3>
+                        <select class="form-control" name="subjectCode" required>
+                            <option value="">---</option>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.subjectCode }}">{{ subject.subjectCode }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="text-center m-t-20">
+                            <button class="btn btn-primary submit-btn">Create</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

@@ -1,0 +1,134 @@
+﻿{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_lecturer.html' %}
+        <div class="page-wrapper">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success" id="success-alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            <div class="content">
+                <h3 class="page-title">Admin Dashboard</h3>
+            </div>
+            <div class="row" style="margin: 15px;">
+              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                  <div class="dash-widget">
+                    <span class="dash-widget-bg1"><i class="fa fa-users" aria-hidden="true"></i></span>
+                    <div class="dash-widget-info text-right">
+                      <h3>60%</h3>
+                      <span class="widget-title1">Classcode 1 <i class="fa fa-check" aria-hidden="true"></i></span>
+                    </div>
+                  </div>
+              </div>
+              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                  <div class="dash-widget">
+                      <span class="dash-widget-bg2"><i class="fa fa-users"></i></span>
+                      <div class="dash-widget-info text-right">
+                        <h3>70%</h3>
+                        <span class="widget-title2">Classcode 2 <i class="fa fa-check" aria-hidden="true"></i></span>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                  <div class="dash-widget">
+                      <span class="dash-widget-bg3"><i class="fa fa fa-users" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right">
+                          <h3>80%</h3>
+                          <span class="widget-title3">Classcode 3 <i class="fa fa-check" aria-hidden="true"></i></span>
+                      </div>
+                  </div>
+              </div>
+              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
+                  <div class="dash-widget">
+                      <span class="dash-widget-bg4"><i class="fa fa-users" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right">
+                          <h3>90%</h3>
+                          <span class="widget-title4">Classcode 4 <i class="fa fa-check" aria-hidden="true"></i></span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="row" style="margin: 15px;">
+              <div class="col-md-6">
+              <div class="card">
+                  <div class="card-body">
+                  <div class="chart-title">
+                      <h4>Line graph</h4>
+                  </div>	
+                  <canvas id="linegraph"></canvas>
+                  </div>
+              </div>
+              </div>
+              <div class="col-md-6">
+              <div class="card">
+                  <div class="card-body">
+                  <div class="chart-title">
+                      <h4>Attendance Based on Subject</h4>
+                  </div>	
+                  <canvas id="myChart"></canvas>
+                  </div>
+              </div>
+              </div>
+          </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+      var xValues = ["Subject 1", "Subject 2", "Subject 3"];
+      var yValues = [55, 49, 44];
+      var barColors = [
+        "#009efb",
+        "#fbbf02",
+        "#ff5349",
+      ];
+      
+      new Chart("myChart", {
+        type: "doughnut",
+        data: {
+          labels: xValues,
+          datasets: [{
+            backgroundColor: barColors,
+            data: yValues
+          }]
+        },
+      });
+    </script>
+    <script>
+        const x = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        
+        new Chart("linegraph", {
+          type: "line",
+          data: {
+            labels: x,
+            datasets: [{ 
+              data: [20,15,20,15,20,15,20,15,20,15,23,18],
+              borderColor: "red",
+              fill: false
+            }, { 
+              data: [23,18,23,18,23,18,23,18,23,18,12,25],
+              borderColor: "green",
+              fill: false
+            }, { 
+              data: [12,25,12,25,12,25,12,25,12,25,20,15,],
+              borderColor: "blue",
+              fill: false
+            }]
+          },
+          options: {
+            legend: {display: false}
+          }
+        });
+    </script>
+    <script>
+        // Function to automatically dismiss the alert after 3 seconds
+        setTimeout(function() {
+            $("#success-alert").alert('close');
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+</body>
+
+</html>

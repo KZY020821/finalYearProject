@@ -1,0 +1,58 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">View Leave From {{ leave.userID.user.username }}</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <h3 class="card-title">From: {{ leave.userID.user.first_name }} {{ leave.userID.user.last_name }}</h3>
+                    <h3 class="card-title">Apply Date: {{leave.applyDate}}</h3>
+                    <h3 class="card-title">Start Date: {{leave.startDate}}</h3>
+                    <h3 class="card-title">End Date: {{leave.endDate}}</h3>
+                    <h3 class="card-title">Leave Title: {{leave.leaveTitle}}</h3>
+                    <h3 class="card-title">Description: {{leave.leaveDescription}}</h3>
+                    <h3 class="card-title">Attachment:</h3>
+                    <img src="{{leave.leaveAttachment.url}}" style=" display:block; width: 90%; height: auto; border-style: solid; margin: auto auto 40px auto;">
+                    <div class="row">
+                        <div class="col d-flex justify-content-center">
+                            <a href="{% url 'admin-approve-leave' leave.id %}">
+                                <button type="button" class="btn btn-success"><i class="fa fa-check"></i> Approve</button>
+                            </a>
+                        </div>
+                        
+                        <div class="col d-flex justify-content-center">
+                            <a href="{% url 'admin-deny-leave' leave.id %}">
+                                <button type="button" class="btn btn-danger"><i class="fa fa-ban"></i> Deny</button>
+                            </a>
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

@@ -1,8 +1,3 @@
-/*
-Author       : Dreamguys
-最新最全最好的Bootstrap模板：http://www.bootstrapmb.com
-Version      : 1.0
-*/
 $(document).ready(function($) {
 	
 	// Variables declarations

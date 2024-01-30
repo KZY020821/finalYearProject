@@ -1,0 +1,102 @@
+{% load static %}
+<div class="header">
+    <div class="header-left">
+        <a href="{% url 'admin-dashboard' %}" class="logo">
+            <img src=" {% static 'assets/img/bolt.png' %} " width="35" height="35" alt=""> <span>Bolt-FRAS</span>
+        </a>
+    </div>
+    <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
+    <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
+    <ul class="nav user-menu float-right">
+        <li class="nav-item dropdown has-arrow">
+            <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
+                <span class="user-img">
+                    <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
+                    <span class="status online"></span>
+                </span>
+                <span>{{request.user.username}}</span>
+            </a>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="{% url 'profile' %}">My Profile</a>
+                <a class="dropdown-item" href="{% url 'edit-profile' %}">Edit Profile</a>
+                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
+            </div>
+        </li>
+    </ul>
+</div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-inner slimscroll">
+            <div id="sidebar-menu" class="sidebar-menu">
+                <ul>
+                    <li {% if request.path == '/admin-dashboard' %}class="active"{% endif %}>
+                        <a href="{% url 'admin-dashboard' %}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                    </li>
+                    <li {% if '/admin-admin-management' in request.path or '/admin-edit-admin' in request.path or '/admin-view-admin' in request.path or '/admin-create-admin' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-admin-management' %}"><i class="fa fa-user"></i> <span>Admin Management</span></a>
+                    </li>                    
+                    <li {% if '/admin-lecturer-management' in request.path or '/admin-edit-lecturer' in request.path or '/admin-view-lecturer' in request.path or '/admin-create-lecturer' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-lecturer-management' %}"><i class="fa fa-user"></i> <span>Lecturer Management</span></a>
+                    </li>
+                    <li {% if '/admin-user-management' in request.path or '/admin-edit-user' in request.path or '/admin-view-user' in request.path or '/admin-create-user' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-user-management' %}"><i class="fa fa-user"></i> <span>User Management</span></a>
+                    </li>
+                    <li {% if '/admin-intake-management' in request.path or '/admin-edit-intake' in request.path or '/admin-view-intake' in request.path or '/admin-create-intake' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-intake-management' %}"><i class="fa-solid fa-user-group"></i> <span>Intake Management</span></a>
+                    </li>
+                    <li {% if '/admin-subject-management' in request.path or '/admin-edit-subject' in request.path or '/admin-view-subject' in request.path or '/admin-create-subject' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
+                    </li>
+                    <li {% if '/admin-attendance-management' in request.path or '/admin-edit-attendance' in request.path or '/admin-view-attendance' in request.path or '/admin-create-attendance' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-attendance-management' %}"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
+                    </li>
+                    <li {% if '/admin-absenceMonitoring-management' in request.path or '/admin-edit-absenceMonitoring' in request.path or '/admin-view-absenceMonitoring' in request.path or '/admin-create-absenceMonitoring' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-absenceMonitoring-management' %}"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
+                    </li>
+                    <li {% if '/admin-leave-management' in request.path or '/admin-view-leave' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-leave-management' %}">
+                            <i class="fa-solid fa-envelope-open"></i></i> 
+                            <span>Leave(s)</span>
+                            {% if leave_count > 0 %}
+                                <span class="badge badge-pill bg-danger float-right">{{ leave_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li {% if '/view-myProfileAdmin' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    </li>
+                    <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>Report issue(s)</span></a>
+                    </li>
+                    <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-notification-management' %}">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Notification(s)</span>
+                            {% if notification_count > 0 %}
+                                <span class="badge badge-pill bg-danger float-right">{{ notification_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>  
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>Logout</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+<body>
+    <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                    <h3>You are about to logout. Are you sure?</h3>
+                    <div class="m-t-20">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">Sure</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>

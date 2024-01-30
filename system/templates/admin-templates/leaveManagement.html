@@ -1,0 +1,81 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Leave Manaagement</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages" id="alert">
+                        {% for message in messages %}
+                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li> 
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Leave's Title</th>
+                                        <th>Request by</th>
+                                        <th>Request On</th>
+                                        <th>Start Date</th>
+                                        <th>End date Date</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for leave in leaves %}
+                                        {% if leave.adminID.adminId == request.user.adminprofile.adminId %}
+                                            <tr>
+                                                <td>{{ leave.leaveTitle }}</td>
+                                                <td>{{ leave.userID.user.username }}</td>
+                                                <td>{{ leave.applyDate|date:"d-m-Y"}}</td>
+                                                <td>{{ leave.startDate|date:"d-m-Y" }}</td>
+                                                <td>{{ leave.endDate|date:"d-m-Y" }}</td>
+                                                <td>
+                                                    {% if leave.status == "pending"%}
+                                                        <span class="custom-badge status-orange">Pending</span>
+                                                    {% elif leave.status == "approved"%}
+                                                        <span class="custom-badge status-green">Approved</span>
+                                                    {% elif leave.status == "denied"%}
+                                                        <span class="custom-badge status-red">Denied</span>
+                                                    {% endif%}
+                                                </td>
+                                                <td class="text-right">
+                                                    <a href="admin-view-leave/{{leave.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                    <a href="admin-approve-leave/{{leave.id}}"><button type="button" class="btn btn-success" style="width: 105px;"><i class="fa fa-check"></i> Approve</button></a>
+                                                    <a href="admin-deny-leave/{{leave.id}}"><button type="button" class="btn btn-danger" style="width: 105px;"><i class="fa fa-ban"></i> Deny</button></a>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+
+</html>

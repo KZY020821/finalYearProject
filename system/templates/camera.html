@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition</title>
+</head>
+<body>
+    <h1>Face Recognition</h1>
+
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const video = document.getElementById('video');
+            const startButton = document.getElementById('startButton');
+            const stopButton = document.getElementById('stopButton');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            let mediaRecorder;
+            let recordedChunks = [];
+
+            // Access the device camera and stream the video
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+
+                    // Initialize MediaRecorder with the video stream
+                    mediaRecorder = new MediaRecorder(stream);
+
+                    // Handle dataavailable event when recording
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+
+                    // Handle stop event when recording is stopped
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        const url = URL.createObjectURL(blob);
+                        window.location.href = url;  // You can send this video blob to the server for further processing.
+                    };
+                })
+                .catch((error) => {
+                    console.error('Error accessing camera:', error);
+                });
+
+            // Start recording when the start button is clicked
+            startButton.addEventListener('click', () => {
+                mediaRecorder.start();
+                startButton.disabled = true;
+                stopButton.disabled = false;
+            });
+
+            // Stop recording when the stop button is clicked
+            stopButton.addEventListener('click', () => {
+                mediaRecorder.stop();
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>

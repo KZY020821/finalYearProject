@@ -1,0 +1,127 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">User Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="admin-create-user" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Add User</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <form method="POST" action="admin-user-management">
+                    {% csrf_token %}
+                    <div class="row filter-row">
+                        <div class="col-8">
+                            <div class="form-group form-focus">
+                                <label class="focus-label">Search User (ID or name)</label>
+                                <input type="text" class="form-control floating" name="searchUser" id="searchUser">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <button class="btn btn-primary btn-block" type="sumbit"> Search </button>
+                        </div>
+                    </div>
+                </form>
+				<div class="row">
+                    {% if searched %}
+                        {% for user in lists %}
+                        <div class="col-md-4 col-sm-4 col-lg-3">
+                            <div class="profile-widget">
+                                <div class="doctor-img">
+                                    <a class="avatar" style="cursor: default" ><img alt="" src="{{ user.faceImageUrl.url }}" style="object-fit: contain;"></a>
+                                </div>
+                                <h4 class="text-ellipsis">{{ user.user.username }}</h4>
+                                <div class="doc-prof">User</div>
+                                <div class="user-country">ID: {{ user.userId }}</div>
+                                <br>
+                                <a href="{% url 'admin-view-user' user.user.id %}"><button type="button" class="btn btn-primary" style="width: 90px; margin: 3px;"><i class="fa fa-eye"></i> View</button></a>
+                                <a href="{% url 'admin-edit-user' user.user.id %}"><button type="button" class="btn btn-secondary" style="width: 90px; margin: 3px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ user.user.id }}" style="width: 90px; margin: 3px;"><i class="fa fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    
+                        <div id="popup_modal_{{ user.id }}" class="modal fade delete-modal" role="dialog">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-body text-center">
+                                        <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                                        <h3>Are you sure you want to delete the user account?</h3>
+                                        <div class="m-t-20">
+                                            <form method="post" action="{% url 'admin-remove-user' %}">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-danger">Sure</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% else %}
+                        {% for user in users %}
+                            <div class="col-md-4 col-sm-4 col-lg-3">
+                                    <div class="profile-widget">
+                                        <div class="doctor-img">
+                                            <a class="avatar" style="cursor: default" ><img alt="" src="{{ user.userprofile.faceImageUrl.url }}" style="object-fit: contain;"></a>
+                                        </div>
+                                        <h4 class="text-ellipsis">{{ user.username }}</h4>
+                                        <div class="doc-prof">User</div>
+                                        <div class="user-country">ID: {{ user.userprofile.userId }}</div>
+                                        <br>
+                                        <a href="admin-view-user/{{ user.id }}"><button type="button" class="btn btn-primary" style="width: 90px; margin: 3px;"><i class="fa fa-eye"></i> View</button></a>
+                                        <a href="{% url 'admin-edit-user' user.id %}"><button type="button" class="btn btn-secondary" style="width: 90px; margin: 3px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                        <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ user.id }}" style="width: 90px; margin: 3px;"><i class="fa fa-trash"></i> Delete</button>
+                                    </div>  
+                            </div>
+                        
+                            <div id="popup_modal_{{ user.id }}" class="modal fade delete-modal" role="dialog">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-body text-center">
+                                            <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                                            <h3>Are you sure you want to delete the user account?</h3>
+                                            <div class="m-t-20">
+                                                <form method="post" action="{% url 'admin-remove-user' %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-danger">Sure</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

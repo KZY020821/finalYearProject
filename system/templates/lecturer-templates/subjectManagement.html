@@ -1,0 +1,71 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_lecturer.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Subject Management</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Code</th>
+                                        <th>Subject Name</th>
+                                        <th>Lecturer</th>
+                                        <th>Intake(s)</th>
+                                        <th>Subject's Status</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subject in subjects %}
+                                        {% if subject.lecturerId.user == request.user %}
+                                            <tr>
+                                                <td>{{ subject.subjectCode }}</td>
+                                                <td>{{ subject.subjectName }}</td>
+                                                <td>{{ subject.lecturerId.user.username }}</td>
+                                                <td>
+                                                    {% for intake in subject.intakeTables.all %}
+                                                        {{ intake.intakeCode }}
+                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    {% if subject.status == "Active" or subject.status == "active" %}
+                                                        <span class="custom-badge status-green">Active</span>
+                                                    {% else %}
+                                                        <span class="custom-badge status-red">Deactive</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-right">
+                                                    {% if subject.status == "Active" or subject.status == "active" %}
+                                                        <a href="lecturer-view-subject/{{subject.subjectCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Absence Monitoring Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="admin-create-absenceMonitoring" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Add Absence Limit</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0 sortable">
+                                <thead>
+                                    <tr>
+                                        <th>Absence Limit Name</th>
+                                        <th>Day(s) allow to absence</th>
+                                        <th>Set by</th>
+                                        <th>Number of student</th>
+                                        <th class="text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for limit in limits %}
+                                            <tr>
+                                                <td>{{ limit.absenceLimitName }}</td>
+                                                <td>{% if limit.absenceLimitDays == 0 %} - {% else %} {{ limit.absenceLimitDays }} {% endif%}</td>
+                                                <td>{% if limit.absenceLimitDays == 0 %} Default {% else %} {{ limit.adminID.user.username }} {% endif%}</td>
+                                                <td>{{ limit.userprofile_set.count }}</td>
+                                                {% if limit.absenceLimitDays != 0 %} 
+                                                    <td class="text-right">
+                                                        <a href="admin-view-absenceMonitoring/{{limit.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                        <a href="admin-edit-absenceMonitoring/{{limit.id}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                                        <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ limit.id }}" style="width: 105px;"><i class="fa fa-trash"></i> Delete</button>
+                                                    </td>
+                                                {% else %}
+                                                    <td class="text-right">
+                                                        <a href="admin-view-absenceMonitoring/{{limit.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                    </td>
+                                                {% endif%}
+                                            </tr>
+                                            <div id="popup_modal_{{ limit.id }}" class="modal fade delete-modal" role="dialog">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body text-center">
+                                                            <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                                                            <h3>Are you sure you want the selected Absence Limit?</h3>
+                                                            <div class="m-t-20">
+                                                                <form method="post" action="{% url 'admin-remove-absenceMonitoring' %}">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="user_id" value="{{ limit.id }}">
+                                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                                    <button type="submit" class="btn btn-danger">Sure</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+
+</html>

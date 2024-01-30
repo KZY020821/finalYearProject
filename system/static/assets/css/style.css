@@ -101,6 +101,15 @@ a:focus {
 	color: #009ce7;
 	outline: none;
 }
+
+body .messages .error {
+    color: red;
+}
+
+body .messages .success {
+    color: green;
+}
+
 .form-control {
 	border-radius: 0;
 	box-shadow: none;
@@ -184,6 +193,7 @@ textarea.form-control {
 table.table td .avatar {
 	margin: 0 5px 0 0;
 	object-fit: contain;
+	cursor: default;
 }
 table.table td h2 {
 	display: inline-block;
@@ -4915,4 +4925,3 @@ blockquote p {
 		margin-bottom: 10px;
 	}
 }
-

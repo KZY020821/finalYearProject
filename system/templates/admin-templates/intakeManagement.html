@@ -1,0 +1,86 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Intake Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="admin-create-intake" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Add Intake</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages" id="alert">
+                        {% for message in messages %}
+                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li> 
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table  id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Intake Code</th>
+                                        <th>Coordinate by</th>
+                                        <th>Number of student</th>
+                                        <th class="text-right disable-sort">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for intake in intakes %}
+                                            <tr>
+                                                <td>{{ intake.intakeCode }}</td>
+                                                <td>{{ intake.adminId.user.username }}</td>
+                                                <td>{{ intake.userprofile_set.count }}</td>
+                                                <td class="text-right">
+                                                    <a href="admin-view-intake/{{intake.intakeCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                    <a href="admin-edit-intake/{{intake.intakeCode}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                                    <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ intake.intakeCode }}" style="width: 105px;"><i class="fa fa-trash"></i> Delete</button>
+                                                </td>
+                                            </tr>
+                                            <div id="popup_modal_{{ intake.intakeCode }}" class="modal fade delete-modal" role="dialog">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body text-center">
+                                                            <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                                                            <h3>Are you sure you want the selected Intake?</h3>
+                                                            <div class="m-t-20">
+                                                                <form method="post" action="{% url 'admin-remove-intake' %}">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="intakeCode" value="{{ intake.intakeCode }}">
+                                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                                    <button type="submit" class="btn btn-danger">Sure</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+
+</html>

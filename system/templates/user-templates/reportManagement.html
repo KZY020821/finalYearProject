@@ -1,0 +1,78 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Report(s) Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="{% url 'user-create-report' request.user.id %}" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Create Report</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages" id="alert">
+                        {% for message in messages %}
+                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li> 
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Created on </th>
+                                        <th>Created by</th>
+                                        <th>Report title</th>
+                                        <th>Receiver</th>
+                                        <th>Status</th>
+                                        <th class="text-right disable-sort">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in reports %}
+                                        {% if report.creator == request.user.username %}
+                                            <tr>
+                                                <td>{{ report.reportDate }}</td>
+                                                <td>{{ report.creator }}</td>
+                                                <td>{{ report.reportTitle }}</td>
+                                                <td>{{ report.receiver.user.username }}</td>
+                                                {% if report.status == "delivered" or report.status == "Delivered" %}
+                                                    <td><i class="fa-solid fa-check"></i> Delivered</td>
+                                                {% elif report.status == "read" or report.status == "Read" %}
+                                                    <td><i class="fa-solid fa-check-double"></i> Read</td>
+                                                {% else %}
+                                                    <td><i class="fa-solid fa-check-double" style="color: #53bdea;"></i> Replied</td>
+                                                {% endif %}
+                                                <td class="text-right">
+                                                    <a href="user-view-report/{{report.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+
+</html>

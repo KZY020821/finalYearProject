@@ -1,0 +1,90 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <h4 class="page-title">Edit Admin Account - {{user.username}}</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="{% url 'admin-edit-admin' user.id %}" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Edit Lecturer</a>
+                    </div>
+                </div>
+                <form method="POST" enctype="multipart/form-data">
+                    {% if messages %}
+                        <ul class="messages">
+                            {% for message in messages %}
+                                <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                    {{ message }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% csrf_token %}
+                    <div class="card-box">
+                        <h3 class="card-title">AdminID</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="adminID" value="{{user.adminprofile.adminId}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Admin Email</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="adminEmail" value="{{user.email}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Given name</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="first_name"  value="{{user.first_name}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Family name</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="last_name"  value="{{user.last_name}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">username</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="username" value="{{user.username}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        // Function to automatically dismiss the alert after 3 seconds
+        setTimeout(function() {
+            $("#success-alert").alert('close');
+        }, 3000); // 3000 milliseconds = 3 seconds
+    </script>
+</body>
+
+</html>

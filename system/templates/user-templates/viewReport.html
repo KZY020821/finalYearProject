@@ -1,0 +1,57 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">View Report From {{ report.creator }}</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <h3 class="card-title">From: {{ report.creator }}</h3>
+                    <h3 class="card-title">Report on: {{ report.reportDate }}</h3>
+                    <h3 class="card-title">Report to: {{ report.receiver.user.username }}</h3>
+                    <h3 class="card-title">Report Title: {{ report.reportTitle }}</h3>
+                    <h3 class="card-title">Report Description: {{ report.reportMessage }}</h3>
+                    {% if report.status == "delivered" or report.status == "Delivered" %}
+                        <h3 class="card-title">Status:<i class="fa-solid fa-check" style="margin-left: 10px;"></i> Delivered</h3>
+                    {% elif report.status == "read" or report.status == "Read" %}
+                        <h3 class="card-title">Status:<i class="fa-solid fa-check-double" style="margin-left: 10px;"></i> Read</h3>
+                    {% elif report.status == "replied" or report.status == "Replied" %}
+                        <h3 class="card-title">Status:<i class="fa-solid fa-check-double" style="color: #53bdea; margin-left: 10px;"></i> Replied</h3>
+                        <h3 class="card-title">Reply Message:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="replyMessage" style="height: 150px;" {% if report.status == "replied" or report.status == "Replied" %} value="{{ report.replyMessage }}" {% endif %} readonly>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}</h3>
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

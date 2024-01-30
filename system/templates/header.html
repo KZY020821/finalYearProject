@@ -1,7 +1,17 @@
 {% load static %}
 <div class="header">
     <div class="header-left">
-        <a href="dashboard" class="logo">
+        {% if request.user.groups.exists %}
+            {% with group=request.user.groups.first.name %}
+                {% if group == 'admin' %}
+                    <a href="{% url 'admin-dashboard' %}" class="logo">
+                {% elif group == 'lecturer' %}
+                    <a href="{% url 'lecturer-dashboard' %}" class="logo">
+                {% elif group == 'user' %}
+                    <a href="{% url 'user-dashboard' %}" class="logo">
+                {% endif %}
+            {% endwith %}
+        {% endif %}
             <img src=" {% static 'assets/img/bolt.png' %} " width="35" height="35" alt=""> <span>Bolt-FRAS</span>
         </a>
     </div>
@@ -9,51 +19,34 @@
     <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
     <ul class="nav user-menu float-right">
         <li class="nav-item dropdown has-arrow">
-            
-            <a href="#" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
+            <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                 <span class="user-img">
-                    <img class="rounded-circle" src="{{user.profile.image.url}}" width="24" alt="Admin">
+                    <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
                     <span class="status online"></span>
                 </span>
                 <span>{{request.user.first_name}}</span>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item" href="profile">My Profile</a>
+                <a class="dropdown-item" href="{% url 'profile' %}">My Profile</a>
                 {% if request.user.groups.exists %}
                 {% with group=request.user.groups.first.name %}
                 {% if group == 'admin' %}
-                <a class="dropdown-item" href="edit-profile">Edit Profile</a>
-                <a class="dropdown-item" href="settings">Settings</a>
+                <a class="dropdown-item" href="{% url 'edit-profile' %}">Edit Profile</a>
                 {% endif %}
                 {% endwith %}
                 {% endif %}
-                <a class="dropdown-item" href="logout">Logout</a>
+                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
                 {% if request.user.groups.exists %}
                 {% with group=request.user.groups.first.name %}
-                {% if group == 'admin' %}
+                {% if group == 'admin' or group == 'lecturer' %}
                 <!-- Display the line if the user is in the 'admin' group -->
-                <a class="dropdown-item" href="/">Take Attendance</a>
+                <a class="dropdown-item" href="{% url 'index' %}">Take Attendance</a>
                 {% endif %}
                 {% endwith %}
                 {% endif %}
             </div>
         </li>
     </ul>
-    <div class="dropdown mobile-user-menu float-right">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
-        <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" href="profile">My Profile</a>
-            {% if request.user.groups.exists %}
-            {% with group=request.user.groups.first.name %}
-            {% if group == 'admin' %}
-            <a class="dropdown-item" href="edit-profile">Edit Profile</a>
-            <a class="dropdown-item" href="settings">Settings</a>
-            {% endif %}
-            {% endwith %}
-            {% endif %}
-            <a class="dropdown-item" href="logout">Logout</a>
-        </div>
-    </div>
 </div>
 {% if request.user.groups.exists %}
 {% with group=request.user.groups.first.name %}
@@ -62,64 +55,110 @@
         <div class="sidebar-inner slimscroll">
             <div id="sidebar-menu" class="sidebar-menu">
                 <ul>
-                    <li class="menu-title">Main</li>
-                    <li {% if request.path == '/user-dashboard' or request.path == '/dashboard' %}class="active"{% endif %}>
-                        <a href="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                    <li {% if request.path == '/admin-dashboard' %}class="active"{% endif %}>
+                        <a href="{% url 'admin-dashboard' %}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
                     </li>
-                    <li {% if request.path == '/users' %}class="active"{% endif %}>
-                        <a href="users"><i class="fa fa-user"></i> <span>Account Management</span></a>
+                    <li {% if '/admin-admin-management' in request.path or '/admin-edit-admin' in request.path or '/admin-view-admin' in request.path or '/admin-create-admin' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-admin-management' %}"><i class="fa fa-user"></i> <span>Admin Management</span></a>
+                    </li>                    
+                    <li {% if '/admin-lecturer-management' in request.path or '/admin-edit-lecturer' in request.path or '/admin-view-lecturer' in request.path or '/admin-create-lecturer' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-lecturer-management' %}"><i class="fa fa-user"></i> <span>Lecturer Management</span></a>
                     </li>
-                    <li {% if request.path == '/attendance' %}class="active"{% endif %}>
-                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
+                    <li {% if '/admin-user-management' in request.path or '/admin-edit-user' in request.path or '/admin-view-user' in request.path or '/admin-create-user' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-user-management' %}"><i class="fa fa-user"></i> <span>User Management</span></a>
                     </li>
-                    <li {% if request.path == '/warnings' %}class="active"{% endif %}>
-                        <a href="warnings"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
+                    <li {% if '/admin-intake-management' in request.path or '/admin-edit-intake' in request.path or '/admin-view-intake' in request.path or '/admin-create-intake' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-intake-management' %}"><i class="fa-solid fa-user-group"></i> <span>Intake Management</span></a>
                     </li>
-                    <li {% if request.path == '/profile' %}class="active"{% endif %}>
-                        <a href="profile"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    <li {% if '/admin-subject-management' in request.path or '/admin-edit-subject' in request.path or '/admin-view-subject' in request.path or '/admin-create-subject' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
                     </li>
-                    <li {% if request.path == '/reviewLeaves' %}class="active"{% endif %}>
-                        <a href="reviewLeaves"><i class="fa-solid fa-envelope-open"></i></i> <span>Review Leaves</span></a>
+                    <li {% if '/admin-attendance-management' in request.path or '/admin-edit-attendance' in request.path or '/admin-view-attendance' in request.path or '/admin-create-attendance' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-attendance-management' %}"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
                     </li>
-                    <li {% if request.path == '/intake' %}class="active"{% endif %}>
-                        <a href="intake"><i class="fa-solid fa-user-group"></i> <span>Intake Management</span></a>
+                    <li {% if '/admin-absenceMonitoring-management' in request.path or '/admin-edit-absenceMonitoring' in request.path or '/admin-view-absenceMonitoring' in request.path or '/admin-create-absenceMonitoring' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-absenceMonitoring-management' %}"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
                     </li>
-                    <li {% if request.path == '/subject' %}class="active"{% endif %}>
-                        <a href="subject"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
+                    <li {% if '/admin-leave-management' in request.path or '/admin-view-leave' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-leave-management' %}">
+                            <i class="fa-solid fa-envelope-open"></i></i> 
+                            <span>Leave(s)</span>
+                        </a>
                     </li>
-                    <li {% if request.path == '/reviewFeedback' %}class="active"{% endif %}>
-                        <a href="reviewFeedback"><i class="fa-solid fa-info"></i> <span>Contact Us</span></a>
+                    <li {% if '/view-myProfile' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'view-myProfile' request.user.id %}"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    </li>
+                    <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>Report issue(s)</span></a>
+                    </li>
+                    <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'admin-notification-management' %}">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Notification(s)</span>
+                        </a>
+                    </li>  
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>Logout</span></a>
                     </li>
                 </ul>
             </div>
         </div>
     </div>
-    {% else %}
+    {% elif group == 'lecturer'%}
     <div class="sidebar" id="sidebar">
         <div class="sidebar-inner slimscroll">
             <div id="sidebar-menu" class="sidebar-menu">
                 <ul>
-                    <li class="menu-title">Main</li>
+                    <li {% if request.path == '/lecturer-dashboard' %}class="active"{% endif %}>
+                        <a href="{% url 'lecturer-dashboard' %}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                    </li>
+                    <li {% if '/lecturer-attendance-management' in request.path or '/lecturer-edit-attendance' in request.path or '/lecturer-view-attendance' in request.path or '/lecturer-create-attendance' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'lecturer-attendance-management' %}"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
+                    </li>
+                    <li {% if '/lecturer-subject-management' in request.path or '/lecturer-view-subject' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'lecturer-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
+                    </li>
+                    <li {% if '/view-myProfile' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'view-myProfile' request.user.id %}"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    </li>
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>Logout</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% elif group == 'user'%}
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-inner slimscroll">
+            <div id="sidebar-menu" class="sidebar-menu">
+                <ul>
                     <li {% if request.path == '/user-dashboard' or request.path == '/dashboard' %}class="active"{% endif %}>
-                        <a href="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
+                        <a href="{% url 'user-dashboard' %}"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a>
                     </li>
-                    <li {% if request.path == '/attendance' %}class="active"{% endif %}>
-                        <a href="attendance"><i class="fa fa-calendar"></i> <span>Attendance</span></a>
+                    <li {% if '/user-attendance-management' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-attendance-management' %}"><i class="fa fa-calendar"></i> <span>Attendance Management</span></a>
                     </li>
-                    <li {% if request.path == '/profile' %}class="active"{% endif %}>
-                        <a href="profile"><i class="fa fa-user"></i> <span>My Profile</span></a>
+                    <li {% if '/user-subject-management' in request.path or '/user-view-subject' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>Subject Management</span></a>
                     </li>
-                    <li {% if request.path == '/applyLeaves' %}class="active"{% endif %}>
-                        <a href="applyLeaves"><i class="fa fa-envelope"></i> <span>Apply Leaves</span></a>
+                    <li {% if '/user-leave-management' in request.path or '/user-view-leave' in request.path or '/user-create-leave' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-leave-management' %}"><i class="fa-solid fa-envelope-open"></i></i> <span>Leaves Management</span></a>
                     </li>
-                    <li {% if request.path == '/subject' %}class="active"{% endif %}>
-                        <a href="subject"><i class="fas fa-chalkboard-teacher"></i><span>View Subjects</span></a>
+                    <li {% if '/view-myProfile' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'view-myProfile' request.user.id %}"><i class="fa fa-user"></i> <span>My Profile</span></a>
                     </li>
-                    <li {% if request.path == '/warnings' %}class="active"{% endif %}>
-                        <a href="warnings"><i class="fa-solid fa-triangle-exclamation"></i><span>Absence Monitoring</span></a>
+                    <li {% if '/user-report-management' in request.path or '/user-view-report' in request.path or '/user-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>Report issue(s)</span></a>
                     </li>
-                    <li {% if request.path == '/contactUs' %}class="active"{% endif %}>
-                        <a href="contactUs"><i class="fa-solid fa-info"></i> <span>Contact Us</span></a>
+                    <li {% if '/user-notification-management' in request.path or '/user-noted-notification' in request.path or '/user-reply-report' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-notification-management' %}">
+                            <i class="fa-solid fa-bell"></i>
+                            <span>Notification(s)</span>
+                        </a>
+                    </li>       
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>Logout</span></a>
                     </li>
                 </ul>
             </div>
@@ -128,3 +167,19 @@
 {% endif %}
 {% endwith %}
 {% endif %}
+<body>
+    <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                    <h3>You are about to logout. Are you sure?</h3>
+                    <div class="m-t-20">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">Sure</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>

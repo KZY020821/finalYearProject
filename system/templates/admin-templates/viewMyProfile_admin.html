@@ -1,0 +1,80 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">{{user.username}}'s Profile Page</h4>
+                    </div>
+                </div>
+                <div class="card-box profile-header">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="profile-view">
+                                <div class="profile-img-wrap">
+                                    <div class="profile-img">
+                                        <img class="avatar" src="{{ user.adminprofile.adminProfileImage.url }}" alt="profile_image">
+                                    </div>
+                                </div>
+                                <div class="profile-basic">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <ul class="personal-info">
+                                                <li>
+                                                    <span class="title">Username:</span>
+                                                    <span class="text">{{ user.username}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Email:</span>
+                                                    <span class="text">{{user.email}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Given Name:</span>
+                                                    <span class="text">{{user.first_name}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Family name:</span>
+                                                    <span class="text">{{user.last_name}}</span>
+                                                </li>
+                                                <li>
+                                                    <span class="title">Role:</span>
+                                                    <span class="text">{{user.groups.first.name}}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>                        
+                        </div>
+                    </div>
+                </div>
+                <div class="card-box">
+                    <h3 class="card-title">Admin ID</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="text" class="form-control" name="intakeCode" value="{{user.adminprofile.adminId}}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <h3 class="card-title">Intake(s)</h3>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                {% for intake in intakes %}
+                                    <a href="{% url 'admin-view-intake' intake.intakeCode %}"><span {% if forloop.counter|divisibleby:2 %}class="custom-badge status-green"{% else %}class="custom-badge status-orange"{% endif %}  style="margin: 10px 20px; padding: 10px;">{{intake.intakeCode}}</span></a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

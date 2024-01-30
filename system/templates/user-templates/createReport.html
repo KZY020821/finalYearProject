@@ -1,0 +1,63 @@
+{% load static %}
+{% include 'head.html' %}
+<style>
+    .messages .error {
+        color: red;
+    }
+    .messages .success {
+        color: green;
+    }
+</style>
+<body>
+    <div class="main-wrapper">
+        {% include 'header_user.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">View Report From {{ report.creator }}</h4>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <h3 class="card-title">From: {{ request.user.username }}</h3>
+                        <h3 class="card-title">Report to: {{ intake.adminId.user.username }}</h3>
+                        <h3 class="card-title">Report Title:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="reportTitle" required>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">Report Description:</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="reportDescription" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center m-t-20">
+                            <button type="submit" class="btn btn-primary submit-btn">Create</button>
+                        </div>
+                        <input type="hidden" value="{{ admin }}" name="receiver">
+                        <input type="hidden" value="{{ request.user.username }}" name="creator">
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% include 'jsreferences.html' %}
+</body>
+
+</html>

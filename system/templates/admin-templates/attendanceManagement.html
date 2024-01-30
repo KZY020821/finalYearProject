@@ -1,0 +1,71 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Attendance Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="admin-choose-subject" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Create Attendance</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages" id="alert">
+                        {% for message in messages %}
+                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li> 
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Code</th>
+                                        <th>Created by</th>
+                                        <th>No. of student attended</th>
+                                        <th>Created on (date)</th>
+                                        <th>Created at (time)</th>
+                                        <th class="text-right disable-sort">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendance in attendances %}
+                                        <tr>
+                                            <td>{{ attendance.subjectCode }}</td>
+                                            <td>{{ attendance.creator }}</td>
+                                            <td> {{attendance.noAttendedUser}}/{{attendance.totalUser}} </td>
+                                            <td>{{ attendance.classDate|date:"Y-m-d" }}</td>
+                                            <td>{{ attendance.classDate|time:"H:i:s" }}</td>
+                                            <td class="text-right">
+                                                <a href="admin-view-attendance/{{attendance.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                <a href="admin-edit-attendance/{{attendance.id}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+
+</html>
