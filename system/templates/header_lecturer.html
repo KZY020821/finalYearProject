@@ -17,10 +17,8 @@
                 <span>{{request.user.username}}</span>
             </a>
             <div class="dropdown-menu">
-                <a class="dropdown-item" href="{% url 'profile' %}">My Profile</a>
-                <a class="dropdown-item" href="{% url 'edit-profile' %}">Edit Profile</a>
                 <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                <a class="dropdown-item" href="{% url 'index' %}">Take Attendance</a>
+                <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
             </div>
         </li>
     </ul>

@@ -1,42 +1,38 @@
-import math
 import os
 import shutil
 import subprocess
-import sys
 from datetime import datetime
 
-import cv2
-import face_recognition
-import numpy as np
-from django.conf import settings
-from django.db import transaction
+from django.http import HttpResponse
 from django.contrib import messages
-from django.contrib.auth import authenticate, get_user, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.core.files.storage import FileSystemStorage, default_storage
 from django.db.models import Q
-from django.http import (Http404, HttpResponse, JsonResponse,
-                         StreamingHttpResponse)
+from django.http import (JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.core.files.storage import FileSystemStorage
 
-from ..decorators import allow_users, unauthenticated_user
+from ..decorators import allow_users
 from ..models import AbsenceMonitoringTable
-from ..models import Attendance as attendanceModel
 from ..models import IntakeTable
-from ..models import Profile as personalinfo
 from ..models import UserProfile
-from ..models import feedback as feedbackTable
-from ..models import intake as intakeTable
-from ..models import leave
 from ..models import AdminProfile
 from ..models import LecturerProfile
 from ..models import IntakeTable
 from ..models import SubjectTable
+from ..models import ClassTable
 from ..models import LeaveTable
 from ..models import AttendanceTable
 from ..models import ReportTable
 from ..models import NotificationTable
+from ..models import AttendanceStatus
+
+
+from django.shortcuts import redirect
+from django.contrib import messages
+import face_recognition
+import csv
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -52,7 +48,7 @@ def adminDashboard(request):
 
     for attendance in attendances:
         for intake in intakes:
-            if intake in attendance.subjectCode.intakeTables.all():
+            if intake in attendance.classCode.intakeTables.all():
                 intake_total = UserProfile.objects.filter(intakeCode=intake.intakeCode)
                 intake_attended = attendance.attendedUser.filter(intakeCode=intake.intakeCode)
 
@@ -79,8 +75,9 @@ def adminDashboard(request):
             'average_percentage': average_percentage,
             'occurrences': count
         }
+    context =  {'average_percentages': average_percentages}
 
-    return render(request, 'admin-templates/dashboard.html', {'average_percentages': average_percentages})
+    return render(request, 'admin-templates/dashboard.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -116,13 +113,32 @@ def admin_createAdmin(request):
         elif password1 != password2:
             messages.error(request, 'Passwords do not match')
         else:
+            try:
+                face_image = face_recognition.load_image_file(profileImage)
+                face_encoding = face_recognition.face_encodings(face_image)[0]
+            except Exception as ex:
+                messages.error(request, f"Failed to detect face from the image you uploaded.")
+                return redirect('admin-create-admin')
+            
+            username_id = f"{adminID}_{firstName}-{lastName}"
+            file_extension = profileImage.name.split('.')[-1]
+            image_path = os.path.join('adminProfileImage', f"{username_id}.{file_extension}")
+
+            if os.path.exists(image_path):
+                os.remove(image_path)
+
+            # Save the uploaded image with the new name and correct file extension
+            fs = FileSystemStorage()
+            fs.save(image_path, profileImage)
+
+            
             user = User.objects.create_user(username=username, email=adminEmail, password=password1, first_name=firstName, last_name=lastName)
             user.save()
 
             group = Group.objects.get(name='admin')
             user.groups.add(group)
-
-            admin_profile = AdminProfile(user=user, adminId=adminID, adminProfileImage=profileImage)
+            
+            admin_profile = AdminProfile(user=user, adminId=adminID, adminProfileImage=image_path)
             admin_profile.save()
 
             messages.success(request, 'Admin created successfully.')
@@ -142,39 +158,50 @@ def admin_editAdmin(request, user_id):
           lastName = request.POST['last_name']
           username = request.POST['username']
           profileImage = request.FILES.get('image')
+          
+          admin_profile = AdminProfile.objects.get(user=user)
 
-          if User.objects.filter(email=adminEmail).exclude(id=user_id).exists():
-              messages.error(request, 'Email used')
-          elif User.objects.filter(username=username).exclude(id=user_id).exists():
-              messages.error(request, 'Username used')
-          elif AdminProfile.objects.filter(adminId=adminID).exclude(user=user).exists():
-              messages.error(request, 'Admin ID used')
-          else:
+          if profileImage:
+            try:
+                # Attempt to detect face from the new image
+                face_image = face_recognition.load_image_file(profileImage)
+                face_encoding = face_recognition.face_encodings(face_image)[0]
+            except Exception as ex:
+                messages.error(request, "Failed to detect face from the image you uploaded.")
+                return redirect('admin-edit-admin', user_id=user_id)
+            old_image_path = admin_profile.adminProfileImage.path  # Get the current image path
+            # Remove the old image file
+            if os.path.exists(old_image_path):
+                os.remove(old_image_path)
+
+            # Update user details
             user.email = adminEmail
             user.first_name = firstName
             user.last_name = lastName
             user.username = username
             user.save()
-            
-            admin_profile = user.adminprofile
-            admin_profile.adminId = adminID
-            
-            
-            if profileImage:
-              admin_profile_image_path = admin_profile.adminProfileImage.path
 
-              if os.path.exists(admin_profile_image_path):
-                  os.remove(admin_profile_image_path)
+            # Update admin profile details
+            adminID = admin_profile.adminId
+            
+            # Save the new image file
+            username_id = f"{adminID}_{firstName}-{lastName}"
+            file_extension = profileImage.name.split('.')[-1]
+            image_pathway = os.path.join('adminProfileImage', f"{username_id}.{file_extension}")
 
-              admin_profile.adminProfileImage = profileImage
+            fs = FileSystemStorage()
+            fs.save(image_pathway, profileImage)
 
+            admin_profile.adminProfileImage = image_pathway
             admin_profile.save()
-            
-            messages.success(request, 'Modification have been saved successfully.')
+
+            messages.success(request, 'Modification has been saved successfully.')
             return redirect('admin-admin-management')
+          
         return render(request, 'admin-templates/editAdmin.html', {'user': user})
     except User.DoesNotExist:
         return render(request, 'error.html', {'message': 'User not found'})
+
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -240,13 +267,32 @@ def admin_createLecturer(request):
     elif password1 != password2:
         messages.error(request, 'Passwords do not match')
     else:
+        try:
+            face_image = face_recognition.load_image_file(profileImage)
+            face_encoding = face_recognition.face_encodings(face_image)[0]
+        except Exception as ex:
+            messages.error(request, f"Failed to detect face from the image you uploaded.")
+            return redirect('admin-create-lecturer')
+        
+        username_id = f"{lecturerID}_{firstName}-{lastName}"
+        file_extension = profileImage.name.split('.')[-1]
+        image_path = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
+
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+        # Save the uploaded image with the new name and correct file extension
+        fs = FileSystemStorage()
+        fs.save(image_path, profileImage)
+
+            
         user = User.objects.create_user(username=username, email=lecturerEmail, password=password1, first_name=firstName, last_name=lastName)
         user.save()
 
         group = Group.objects.get(name='lecturer')
         user.groups.add(group)
 
-        lecturer_profile = LecturerProfile(user=user, lecturerId=lecturerID, lecturerProfileImage=profileImage)
+        lecturer_profile = LecturerProfile(user=user, lecturerId=lecturerID, lecturerProfileImage=image_path)
         lecturer_profile.save()
         messages.success(request, 'Lecturer created successfully.')
         return redirect('admin-lecturer-management')
@@ -255,48 +301,58 @@ def admin_createLecturer(request):
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_editLecturer(request, user_id):
-  try:
-      user = User.objects.get(id=user_id)
-      if request.method == 'POST':
-        lecturerID = request.POST['lecturerID']
-        lecturerEmail = request.POST['lecturerEmail']
-        firstName = request.POST['first_name']
-        lastName = request.POST['last_name']
-        username = request.POST['username']
-        profileImage = request.FILES.get('image')
+    try:
+        user = User.objects.get(id=user_id)
+        if request.method == 'POST':
+            lecturerID = request.POST['lecturerID']
+            lecturerEmail = request.POST['lecturerEmail']
+            firstName = request.POST['first_name']
+            lastName = request.POST['last_name']
+            username = request.POST['username']
+            profileImage = request.FILES.get('image')
 
-        if User.objects.filter(email=lecturerEmail).exclude(id=user_id).exists():
-            messages.error(request, 'Email used')
-        elif User.objects.filter(username=username).exclude(id=user_id).exists():
-            messages.error(request, 'Username used')
-        elif LecturerProfile.objects.filter(lecturerId=lecturerID).exclude(user=user).exists():
-            messages.error(request, 'lecturer ID used')
-        else:
-          user.email = lecturerEmail
-          user.first_name = firstName
-          user.last_name = lastName
-          user.username = username
-          user.save()
           
-          lecturer_profile = user.lecturerprofile
-          lecturer_profile.lecturerId = lecturerID
-          
-          
-          if profileImage:
-            lecturer_profile_image_path = lecturer_profile.lecturerProfileImage.path
+            lecturer_profile = LecturerProfile.objects.get(user=user)
 
-            if os.path.exists(lecturer_profile_image_path):
-                os.remove(lecturer_profile_image_path)
+            if profileImage:
+                try:
+                    # Attempt to detect face from the new image
+                    face_image = face_recognition.load_image_file(profileImage)
+                    face_encoding = face_recognition.face_encodings(face_image)[0]
+                except Exception as ex:
+                    messages.error(request, "Failed to detect face from the image you uploaded.")
+                    return redirect('admin-edit-lecturer', user_id=user_id)
+                old_image_path = lecturer_profile.lecturerProfileImage.path  # Get the current image path
+                # Remove the old image file
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
 
-            lecturer_profile.lecturerProfileImage = profileImage
+            # Update user details
+            user.email = lecturerEmail
+            user.first_name = firstName
+            user.last_name = lastName
+            user.username = username
+            user.save()
 
-          lecturer_profile.save()
-          
-          messages.success(request, 'Modification have been saved successfully.')
-          return redirect('admin-lecturer-management')
-      return render(request, 'admin-templates/editLecturer.html', {'user': user})
-  except User.DoesNotExist:
-      return render(request, 'error.html', {'message': 'User not found'})
+
+            lecturerID = lecturer_profile.lecturerId
+            
+            # Save the new image file
+            username_id = f"{lecturerID}_{firstName}-{lastName}"
+            file_extension = profileImage.name.split('.')[-1]
+            image_pathway = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
+
+            fs = FileSystemStorage()
+            fs.save(image_pathway, profileImage)
+
+            lecturer_profile.lecturerProfileImage = image_pathway
+            lecturer_profile.save()
+            
+            messages.success(request, 'Modification have been saved successfully.')
+            return redirect('admin-lecturer-management')
+        return render(request, 'admin-templates/editLecturer.html', {'user': user})
+    except User.DoesNotExist:
+        return render(request, 'error.html', {'message': 'User not found'})
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -375,15 +431,49 @@ def admin_createUser(request):
             except AbsenceMonitoringTable.DoesNotExist:
                 absenceMonitoring_instance = None 
             
+            try:
+                face_image = face_recognition.load_image_file(faceimage)
+                face_encoding = face_recognition.face_encodings(face_image)[0]
+            except Exception as ex:
+                messages.error(request, f"Failed to detect face from the image you uploaded.")
+                return redirect('admin-create-user')
+
             if intake_instance:
+
+                username_id = f"{id}_{first_name}-{last_name}"
+                file_extension = faceimage.name.split('.')[-1]
+                image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+
+                # Save the uploaded image with the new name and correct file extension
+                fs = FileSystemStorage()
+                fs.save(image_path, faceimage)
+
                 user = User.objects.create_user(username=username , email=email, password=password, first_name=first_name, last_name=last_name)
                 user.save()
 
-                user_profile = UserProfile(user=user, userId=id, intakeCode=intake_instance, absenceMonitoringId=absenceMonitoring_instance, faceImageUrl=faceimage)
+                user_profile = UserProfile(user=user, userId=id, intakeCode=intake_instance, absenceMonitoringId=absenceMonitoring_instance, faceImageUrl=image_path)
                 user_profile.save()
 
                 group = Group.objects.get(name='user')
                 user.groups.add(group)
+                
+                selected_intake = IntakeTable.objects.get(intakeCode = intakeCode)
+                classes = ClassTable.objects.all()
+                for kelas in classes:
+                    if selected_intake in kelas.intakeTables.all():
+                        username_id = f"{id}_{first_name}-{last_name}"
+                        file_extension = faceimage.name.split('.')[-1]
+                        image_path = os.path.join(f'{kelas.classCode}', f"{username_id}.{file_extension}")
+
+                        if os.path.exists(image_path):
+                            os.remove(image_path)
+
+                        # Save the uploaded image with the new name and correct file extension
+                        fs = FileSystemStorage()
+                        fs.save(image_path, faceimage)
 
                 messages.success(request, "User created successfully.")
                 return redirect("admin-user-management")
@@ -400,6 +490,8 @@ def admin_editUser(request, user_id):
     intakes = IntakeTable.objects.all()
     try:
         user = User.objects.get(id=user_id)
+        user_profile = UserProfile.objects.get(user=user)
+
         if request.method == 'POST':
             userID = request.POST['userID']
             userEmail = request.POST['userEmail']
@@ -408,18 +500,79 @@ def admin_editUser(request, user_id):
             username = request.POST['username']
             profileImage = request.FILES.get('image')
             intakeCode = request.POST['intakeCode']
+
             if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
                 messages.error(request, 'Email used')
             elif User.objects.filter(username=username).exclude(id=user_id).exists():
                 messages.error(request, 'Username used')
             elif UserProfile.objects.filter(userId=userID).exclude(user=user).exists():
-                messages.error(request, 'user ID used')
+                messages.error(request, 'User ID used')
             else:
+                old_image_path = user_profile.faceImageUrl.path
+                old_image_filename = os.path.basename(old_image_path)
+                classes = ClassTable.objects.all()
+
+                if intakeCode != user_profile.intakeCode.intakeCode:
+                    for kelas in classes:
+                        old_folder = f'{kelas.classCode}' if user_profile.intakeCode in kelas.intakeTables.all() else None
+                        new_folder = f'{kelas.classCode}' if IntakeTable.objects.get(intakeCode=intakeCode) in kelas.intakeTables.all() else None
+
+                        if old_folder:
+                            old_image_path_in_old_folder = os.path.join(old_folder, old_image_filename)
+                            print('old-image - ', old_image_path_in_old_folder)
+                            
+                            print(os.path.exists(old_image_path_in_old_folder))
+                            if os.path.exists(old_image_path_in_old_folder):
+                                print('old-image - ', old_image_path_in_old_folder, 'is exist')
+                                os.remove(old_image_path_in_old_folder)
+                                print('old-image - ', old_image_path_in_old_folder, 'is removed')
+
+                        if new_folder:
+
+                            username_id = f"{userID}_{firstName}-{lastName}"
+                            file_extension = old_image_filename.split('.')[-1]
+                            new_image_path = os.path.join(new_folder, f"{username_id}.{file_extension}")
+                            print('new-image - ',new_image_path)
+
+                            # Check if the new image path is a file before removing
+                            if os.path.isfile(new_image_path):
+                                os.remove(new_image_path)
+
+                            # Save the uploaded image with the new name and correct file extension
+                            fs = FileSystemStorage()
+                            fs.save(new_image_path, user_profile.faceImageUrl)
+                            print('new-image - ',old_image_path_in_old_folder, 'is added')
+
+
+                    # Update the UserProfile model with the new intake code
+                    user_profile.intakeCode = IntakeTable.objects.get(intakeCode=intakeCode)
+                    user_profile.save()
+
+
+                if profileImage:
+                    try:
+                        # Attempt to detect face from the new image
+                        face_image = face_recognition.load_image_file(profileImage)
+                        face_encoding = face_recognition.face_encodings(face_image)[0]
+                    except Exception as ex:
+                        messages.error(request, "Failed to detect face from the image you uploaded.")
+                        return redirect('admin-edit-lecturer', user_id=user_id)
+
+                    selected_intake = IntakeTable.objects.get(intakeCode = intakeCode)
+                    for kelas in classes:
+                        if selected_intake in kelas.intakeTables.all():
+                            username_id = f"{id}_{firstName}-{lastName}"
+                            file_extension = profileImage.name.split('.')[-1]
+                            image_path = os.path.join(f'{kelas.classCode}', f"{username_id}.{file_extension}")
+
+                            if os.path.exists(image_path):
+                                os.remove(image_path)
+
                 try:
                     intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
                 except IntakeTable.DoesNotExist:
                     intake_instance = None 
-
+                
                 user.email = userEmail
                 user.first_name = firstName
                 user.last_name = lastName
@@ -433,16 +586,30 @@ def admin_editUser(request, user_id):
                 user_profile = user.userprofile
                 user_profile.userId = userID
 
-                if profileImage:
-                    user_profile_image_path = user_profile.faceImageUrl.path
 
-                    if os.path.exists(user_profile_image_path):
-                        os.remove(user_profile_image_path)
+                # lecturerID = lecturer_profile.lecturerId
+            
+            # # Save the new image file
+            # username_id = f"{lecturerID}_{firstName}-{lastName}"
+            # file_extension = profileImage.name.split('.')[-1]
+            # image_pathway = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
+
+            # fs = FileSystemStorage()
+            # fs.save(image_pathway, profileImage)
+
+            # lecturer_profile.lecturerProfileImage = image_pathway
+            # lecturer_profile.save()
+
+            #     if profileImage:
+            #         user_profile_image_path = user_profile.faceImageUrl.path
+
+            #         if os.path.exists(user_profile_image_path):
+            #             os.remove(user_profile_image_path)
 
 
-                    user_profile.faceImageUrl = profileImage
+            #         user_profile.faceImageUrl = profileImage
 
-                    user_profile.save()
+            #         user_profile.save()
 
                 messages.success(request, 'Modification have been saved successfully.')
                 return redirect('admin-user-management')
@@ -566,107 +733,55 @@ def admin_removeIntake(request):
 @allow_users(allow_roles=['admin'])
 def admin_subjectManagement(request):
     subjects = SubjectTable.objects.all()
-    return render(request, 'admin-templates/subjectManagement.html', {'subjects': subjects})
+    classes = ClassTable.objects.all()
+    context = {'subjects': subjects, 'classes': classes}
+    return render(request, 'admin-templates/subjectManagement.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_createSubject(request):
-    intakes = IntakeTable.objects.all()
-    lecturer_group = Group.objects.get(name='lecturer')
-    lecturer_users = User.objects.filter(groups=lecturer_group)
-
     if request.method == 'POST':
         subjectCode = request.POST['subjectCode']
         subjectName = request.POST['subjectName']
-        lecturerId = request.POST['lecturerId']
-        selected_intakes = request.POST.getlist('intakes')
         if SubjectTable.objects.filter(subjectCode=subjectCode).exists():
             messages.error(request, 'Subject code is already in use')
             return redirect('admin-create-subject')
-        try:
-            lecturer_instance = LecturerProfile.objects.get(lecturerId=lecturerId)
-        except LecturerProfile.DoesNotExist:
-            lecturer_instance = None 
 
-        subject = SubjectTable.objects.create(subjectCode=subjectCode, subjectName=subjectName, lecturerId=lecturer_instance, status = 'Active')
-        subject.intakeTables.set(IntakeTable.objects.filter(intakeCode__in=selected_intakes))
-        
-        folder_path = os.path.join('media', subjectCode)
-        os.makedirs(folder_path, exist_ok=True)
-        
-        for intake_code in selected_intakes:
-            users_to_copy = UserProfile.objects.filter(intakeCode=intake_code)
-            for user in users_to_copy:
-                source_path = os.path.join('media', user.faceImageUrl.name)
-                destination_path = os.path.join(folder_path, os.path.basename(user.faceImageUrl.name))
-                shutil.copy2(source_path, destination_path)
-
-        subject.noOfUser = UserProfile.objects.filter(intakeCode__in=subject.intakeTables.all()).count()
+        subject = SubjectTable.objects.create(subjectCode=subjectCode, subjectName=subjectName, status = 'Active')
         subject.save()
+
         messages.success(request, 'Subject created successfully')
         return redirect('admin-subject-management')
 
-    return render(request, 'admin-templates/createSubject.html', {'intakes': intakes, 'lecturers': lecturer_users})
+    return render(request, 'admin-templates/createSubject.html')
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_editSubject(request, subjectCode):
     subject = SubjectTable.objects.get(subjectCode=subjectCode)
-    intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
-    lecturer_group = Group.objects.get(name='lecturer')
-    lecturer_users = User.objects.filter(groups=lecturer_group)
+    classes = ClassTable.objects.all()
+    context = {'subject': subject, 'classes': classes}
     if request.method == 'POST':
         subjectCoder = request.POST['subjectCode']
         subjectName = request.POST['subjectName']
-        lecturerId = request.POST['lecturerId']
-        selected_intakes = request.POST.getlist('intakes')
         
         if SubjectTable.objects.filter(subjectCode=subjectCoder).exclude(subjectCode=subjectCoder).exists():
             messages.error(request, 'Subject code is already in use')
             return redirect('admin-edit-subject')
-        try:
-            lecturer_instance = LecturerProfile.objects.get(lecturerId=lecturerId)
-        except LecturerProfile.DoesNotExist:
-            lecturer_instance = None 
-
+        
         subject.subjectCode = subjectCoder
         subject.subjectName = subjectName
-        subject.lecturerId = lecturer_instance
-        subject.intakeTables.set(IntakeTable.objects.filter(intakeCode__in=selected_intakes))
-        subject.noOfUser = UserProfile.objects.filter(intakeCode__in=subject.intakeTables.all()).count()
         subject.save()
-
-        folder_path = os.path.join('media', subjectCoder)
-
-        # Remove the existing folder and its content
-        shutil.rmtree(folder_path, ignore_errors=True)
-
-        # Recreate the folder
-        os.makedirs(folder_path, exist_ok=True)
-
-        for intake_code in selected_intakes:
-            users_to_copy = UserProfile.objects.filter(intakeCode=intake_code)
-            for user in users_to_copy:
-                source_path = os.path.join('media', user.faceImageUrl.name)
-                destination_path = os.path.join(folder_path, os.path.basename(user.faceImageUrl.name))
-                shutil.copy2(source_path, destination_path)
-
         messages.success(request, 'Subject updated successfully')
         return redirect('admin-subject-management')
-    
-    return render(request, 'admin-templates/editSubject.html', {'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes':selected_intakes})
+    return render(request, 'admin-templates/editSubject.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_viewSubject(request, subjectCode):
     subject = SubjectTable.objects.get(subjectCode=subjectCode)
-    intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
-    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
-    lecturer_group = Group.objects.get(name='lecturer')
-    lecturer_users = User.objects.filter(groups=lecturer_group)
-    return render(request, 'admin-templates/viewSubject.html', {'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes':selected_intakes, 'users':selected_users, })
+    context = {'subject': subject}
+    return render(request, 'admin-templates/viewSubject.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -692,15 +807,195 @@ def admin_removeSubject(request):
     if request.method == 'POST':
         subjectCode = request.POST['subjectCode']
         subject = get_object_or_404(SubjectTable, subjectCode=subjectCode) 
-        folder_path = os.path.join('media', subjectCode)
-
-        # Remove the existing folder and its content
-        shutil.rmtree(folder_path, ignore_errors=True)
-
         subject.delete()
         
         messages.success(request, 'Subject removed successfully.')
         return redirect('admin-subject-management')
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_classManagement(request):
+    classes = ClassTable.objects.all()
+    context = {'classes': classes}
+    return render(request, 'admin-templates/classManagement.html', context)
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_createClass(request):
+    intakes = IntakeTable.objects.all()
+    subjects = SubjectTable.objects.all()
+    lecturer_group = Group.objects.get(name='lecturer')
+    lecturer_users = User.objects.filter(groups=lecturer_group)
+    context = {'intakes': intakes, 'lecturers': lecturer_users, 'subjects': subjects}
+    
+    if request.method == 'POST':
+        classCode = request.POST['classCode']
+        subjectCode = request.POST['subjectCode']
+        lecturerId = request.POST['lecturerId']
+        selected_intakes = request.POST.getlist('intakes')
+        if ClassTable.objects.filter(classCode=classCode).exists():
+            messages.error(request, 'Class code is already in use')
+            return redirect('admin-create-class')
+        try:
+            lecturer_instance = LecturerProfile.objects.get(lecturerId=lecturerId)
+        except LecturerProfile.DoesNotExist:
+            lecturer_instance = None 
+
+        try:
+            subject_instance = SubjectTable.objects.get(subjectCode = subjectCode)
+        except SubjectTable.DoesNotExist:
+            subject_instance = None
+
+        kelas = ClassTable.objects.create(classCode = classCode, subjectCode = subject_instance, lecturerId = lecturer_instance, status = 'Active')
+        kelas.intakeTables.set(IntakeTable.objects.filter(intakeCode__in=selected_intakes))
+        
+        folder_path = os.path.join('media', classCode)
+        os.makedirs(folder_path, exist_ok=True)
+        
+        for intake_code in selected_intakes:
+            users_to_copy = UserProfile.objects.filter(intakeCode=intake_code)
+            for user in users_to_copy:
+                source_path = os.path.join('media', user.faceImageUrl.name)
+                destination_path = os.path.join(folder_path, os.path.basename(user.faceImageUrl.name))
+                shutil.copy2(source_path, destination_path)
+
+        kelas.noOfUser = UserProfile.objects.filter(intakeCode__in = kelas.intakeTables.all()).count()
+        kelas.save()
+
+        if subject_instance.noOfUser is None:
+            subject_instance.noOfUser = 0
+        
+        subject_instance.noOfUser += kelas.noOfUser
+        subject_instance.save()
+
+        messages.success(request, 'Class created successfully')
+        return redirect('admin-class-management')
+
+    return render(request, 'admin-templates/createClass.html', context)
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_editClass(request, classCode):
+    kelas = ClassTable.objects.get(classCode=classCode)
+    intakes = IntakeTable.objects.all()
+    subjects = SubjectTable.objects.all()
+    lecturer_group = Group.objects.get(name='lecturer')
+    lecturer_users = User.objects.filter(groups=lecturer_group)
+    selected_intakes = kelas.intakeTables.all()
+    context = {'kelas' : kelas, 'intakes': intakes, 'lecturers': lecturer_users, 'subjects': subjects, 'selected_intakes': selected_intakes, }
+    if request.method == 'POST':
+        classCoder = request.POST['classCode']
+        subjectCode = request.POST['subjectCode']
+        lecturerId = request.POST['lecturerId']
+        selected_intakes = request.POST.getlist('intakes')
+        
+        if ClassTable.objects.filter(classCode = classCoder).exclude(classCode = classCoder).exists():
+            messages.error(request, 'Class code is already in use')
+            return redirect('admin-edit-class')
+        try:
+            lecturer_instance = LecturerProfile.objects.get(lecturerId=lecturerId)
+        except LecturerProfile.DoesNotExist:
+            lecturer_instance = None 
+
+        try:
+            subject_instance = SubjectTable.objects.get(subjectCode = subjectCode)
+        except SubjectTable.DoesNotExist:
+            subject_instance = None
+
+        kelas.classCode = classCoder
+        kelas.subjectCode = subject_instance
+        kelas.lecturerId = lecturer_instance
+        kelas.intakeTables.set(IntakeTable.objects.filter(intakeCode__in=selected_intakes))
+        kelas.noOfUser = UserProfile.objects.filter(intakeCode__in = kelas.intakeTables.all()).count()
+        kelas.save()
+
+        folder_path = os.path.join('media', classCoder)
+
+        # Remove the existing folder and its content
+        shutil.rmtree(folder_path, ignore_errors=True)
+
+        # Recreate the folder
+        os.makedirs(folder_path, exist_ok=True)
+
+        for intake_code in selected_intakes:
+            users_to_copy = UserProfile.objects.filter(intakeCode=intake_code)
+            for user in users_to_copy:
+                source_path = os.path.join('media', user.faceImageUrl.name)
+                destination_path = os.path.join(folder_path, os.path.basename(user.faceImageUrl.name))
+                shutil.copy2(source_path, destination_path)
+
+        subject_instance.noOfUser = 0
+        subject_instance.save()
+        
+        selected_intakes = kelas.intakeTables.all()
+        userprofile = UserProfile.objects.all()
+        for user in userprofile:
+            if user.intakeCode in selected_intakes:
+                subject_instance.noOfUser +=1
+
+        subject_instance.noOfUser
+        subject_instance.save()
+
+        messages.success(request, 'Class updated successfully')
+        return redirect('admin-class-management')
+    
+    return render(request, 'admin-templates/editClass.html', context)
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_viewClass(request, classCode):
+    kelas = ClassTable.objects.get(classCode=classCode)
+    intakes = IntakeTable.objects.all()
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
+    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+    lecturer_group = Group.objects.get(name='lecturer')
+    lecturer_users = User.objects.filter(groups=lecturer_group)
+    context = {'kelas': kelas, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes':selected_intakes, 'users':selected_users, }
+    return render(request, 'admin-templates/viewClass.html', context)
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_activeClass(request, classCode):
+    kelas = get_object_or_404(ClassTable, classCode=classCode) 
+    kelas.status = "Active"
+    kelas.save()
+    messages.success(request, 'Class has been activated.')
+    return redirect('admin-class-management')
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_deactiveClass(request, classCode):
+    kelas = get_object_or_404(ClassTable, classCode=classCode) 
+    kelas.status = "Deactive"
+    kelas.save()
+    messages.success(request, 'Class has been activated.')
+    return redirect('admin-class-management')
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_removeClass(request):
+    if request.method == 'POST':
+        classCode = request.POST['classCode']
+        kelas = get_object_or_404(ClassTable, classCode=classCode) 
+        folder_path = os.path.join('media', classCode)
+
+        # Remove the existing folder and its content
+        shutil.rmtree(folder_path, ignore_errors=True)
+        
+        subject = SubjectTable.objects.get(subjectCode = kelas.subjectCode.subjectCode)
+        
+        if subject.noOfUser is None:
+            subject.noOfUser = 0
+
+        subject.noOfUser -= kelas.noOfUser
+        subject.save()
+
+        kelas.delete()
+        
+        messages.success(request, 'Class removed successfully.')
+        return redirect('admin-class-management')
 
     return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
@@ -822,7 +1117,54 @@ def admin_viewLeave(request, id):
         return render(request, 'admin-templates/viewLeave.html', {'leave': leave})
     except User.DoesNotExist:
         return render(request, 'error.html', {'message': 'User not found'})
-    
+
+def createCsv(request):
+        response = HttpResponse(content_type = 'text/csv')
+        current_date = datetime.now()
+        formatted_date = current_date.strftime("%Y%m%d")
+        response['Content-Disposition'] = f'attachment; filename={formatted_date}-attendance-report.csv'
+
+        writer = csv.writer(response)
+
+        attendances = AttendanceTable.objects.all()
+        status = AttendanceStatus.objects.all()
+        
+        writer.writerow([
+            "Date", 
+            "Class Code", 
+            "Subject Code", 
+            "Subject Name",
+            "Lecturer's Name",
+            "Check In Time",
+            "Status",
+            "User's Id", 
+            "User's Name",
+            ])
+        
+        for attendance in attendances:
+            for state in status:
+                if state.relation_id.id == attendance.id:
+                    # Assuming state.checkIn is an aware datetime
+                    aware_datetime = state.checkIn
+
+                    # Convert UTC time to the desired time zone
+                    local_time = timezone.localtime(aware_datetime)
+
+                    formatted_time = local_time.strftime('%H:%M:%S')
+
+                    writer.writerow([
+                        f"{attendance.classDate.strftime('%d-%m-%Y')}",
+                        attendance.classCode.classCode,
+                        attendance.classCode.subjectCode.subjectCode,
+                        attendance.classCode.subjectCode.subjectName,
+                        f"{attendance.classCode.lecturerId.user.first_name} {attendance.classCode.lecturerId.user.last_name}",
+                        formatted_time,
+                        state.status, 
+                        state.userId.userId, 
+                        f"{state.userId.user.first_name} {state.userId.user.last_name}"
+                    ])
+        return response
+
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_attendanceManagement(request):
@@ -833,70 +1175,101 @@ def admin_attendanceManagement(request):
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_chooseSubject(request):
-    subjects = SubjectTable.objects.all()
+    kelas = ClassTable.objects.all()
+    context = {'kelas': kelas}
     if request.method == 'POST':
-        subjectCode = request.POST['subjectCode']
-        print(subjectCode)
-        return redirect('admin-create-attendance', subjectCode=subjectCode)        
-    return render(request, 'admin-templates/chooseSubject.html', {'subjects':subjects})
+        classCode = request.POST['classCode']
+        return redirect('admin-create-attendance', classCode)        
+    return render(request, 'admin-templates/chooseSubject.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
-def admin_createAttendance(request, subjectCode):
+def admin_createAttendance(request, classCode):
     count_userAbsence()
-    subject = SubjectTable.objects.get(subjectCode=subjectCode)
+    kelas = ClassTable.objects.get(classCode = classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = kelas.intakeTables.all()
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
     lecturer_group = Group.objects.get(name='lecturer')
     lecturer_users = User.objects.filter(groups=lecturer_group)
-
+    subject = SubjectTable.objects.get(subjectCode = kelas.subjectCode.subjectCode)
+    context = {
+        'kelas': kelas, 
+        'lecturers': lecturer_users, 
+        'intakes': intakes, 
+        'selected_intakes': selected_intakes, 
+        'users': selected_users, 
+        'subject': subject,
+        }
     if request.method == "POST":
-        subjectCoder = request.POST['subjectCode']
+        classCoder = request.POST['classCode']
         creator = request.POST['creator']
         attendedUser = request.POST.getlist('attendedUser')
         totalUser = request.POST['totalUser']
-        
+        method = "manual"
         noAttendedUser = len(attendedUser)
         classDate = datetime.now()
 
         try:
-            subject_instance = SubjectTable.objects.get(subjectCode=subjectCoder)
-        except SubjectTable.DoesNotExist:
-            subject_instance = None 
+            class_instance = ClassTable.objects.get(classCode = classCoder)
+        except ClassTable.DoesNotExist:
+            class_instance = None 
 
         attendance_instance = AttendanceTable.objects.create(
-            subjectCode=subject_instance,
-            creator=creator,
-            totalUser=totalUser,
-            noAttendedUser=noAttendedUser,
-            classDate=classDate
+            classCode = class_instance,
+            creator = creator,
+            totalUser = totalUser,
+            noAttendedUser = noAttendedUser,
+            classDate = classDate,
+            method = "Manual"
         )
+        
+        relation_instance = AttendanceTable.objects.get(id=attendance_instance.id)
+        for id in attendedUser:
+            relation_instance.attendedUser.add(id)
+
+        for user_id in selected_users:
+            relation_instance.nameList.add(user_id)
+
+        for user in selected_users:
+            AttendanceStatus.objects.create(
+                relation_id=relation_instance,
+                userId=user,
+            )
 
         for user_id in attendedUser:
-            user_instance = UserProfile.objects.get(userId=user_id)
-            attendance_instance.attendedUser.add(user_instance)
+            user = UserProfile.objects.get(userId=user_id)
+            specific_attendance = AttendanceStatus.objects.get(
+                relation_id=relation_instance,
+                userId=user,
+            )
+            specific_attendance.status = 'attended'
+            specific_attendance.save()
 
-        return redirect('admin-attendance-management')  # Make sure this URL name is defined in your urls.py
 
-    return render(request, 'admin-templates/createAttendance.html', {'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users})
+        return redirect('admin-attendance-management')
+
+    return render(request, 'admin-templates/createAttendance.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_viewAttendance(request, id):
     count_userAbsence()
     attendance = AttendanceTable.objects.get(id=id)
-    subject = SubjectTable.objects.get(subjectCode=attendance.subjectCode)
+    kelas = ClassTable.objects.get(classCode = attendance.classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
-    lecturer_group = Group.objects.get(name='lecturer')
-    lecturer_users = User.objects.filter(groups=lecturer_group)
-
-    # Get a list of attended user IDs
-    attended_users_ids = list(attendance.attendedUser.values_list('userId', flat=True))
-
-    return render(request, 'admin-templates/viewAttendance.html', {'attendance': attendance, 'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users, 'attended_users': attended_users_ids})
+    attendance_status = AttendanceStatus.objects.filter(relation_id = attendance.id)
+    context = {
+        'attendance': attendance, 
+        'kelas': kelas, 
+        'intakes': intakes, 
+        'selected_intakes': selected_intakes, 
+        'users': selected_users, 
+        'attendance_status' : attendance_status
+        }
+    return render(request, 'admin-templates/viewAttendance.html', context)
 
 
 @login_required(login_url='/')
@@ -904,39 +1277,54 @@ def admin_viewAttendance(request, id):
 def admin_editAttendance(request, id):
     count_userAbsence()
     attendance = AttendanceTable.objects.get(id=id)
-    subject = SubjectTable.objects.get(subjectCode=attendance.subjectCode)
+    kelas = ClassTable.objects.get(classCode = attendance.classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+    attendance_status = AttendanceStatus.objects.filter(relation_id = attendance.id)
     lecturer_group = Group.objects.get(name='lecturer')
     lecturer_users = User.objects.filter(groups=lecturer_group)
-
-    # Get a list of attended user IDs
-    attended_users_ids = list(attendance.attendedUser.values_list('userId', flat=True))
+    intakeTables = kelas.intakeTables.all()
+    subjects = SubjectTable.objects.all()
+    context = {
+        'attendance': attendance, 
+        'kelas': kelas, 
+        'intakes': intakes, 
+        'selected_intakes': selected_intakes, 
+        'users': selected_users, 
+        'attendance_status' : attendance_status,
+        'intakeTables' : intakeTables,
+        'lecturers' : lecturer_users,
+        'subjects' : subjects,
+        }
+    
+    name_list = []
     if request.method == "POST":
-        attendedUser = request.POST.getlist('attendedUser')
-        totalUser = request.POST['totalUser']
+        student_statuses = {}
 
-        noAttendedUser = len(attendedUser)
+        noOfAttendedUser = 0
+        attendedUser = []
+        for status in attendance_status:
+            student_id = status.userId.userId
+            status_value = request.POST.get(f"status_{student_id}")
+            status.status= status_value.lower()
+            if status_value.lower() == 'attended':
+                noOfAttendedUser += 1
+                attendedUser.append(student_id)
+            status.save()
 
-        # Clear existing attended users not present in the form
-        for user_id in set(attended_users_ids) - set(attendedUser):
-            user_instance = UserProfile.objects.get(userId=user_id)
-            attendance.attendedUser.remove(user_instance)
-
-        # Update attendance details
-        attendance.totalUser = totalUser
-        attendance.noAttendedUser = noAttendedUser
+        attendance.attendedUser.set('')
         attendance.save()
 
-        # Add new attended users
-        with transaction.atomic():
-            for user_id in attendedUser:
-                user_instance = UserProfile.objects.get(userId=user_id)
-                attendance.attendedUser.add(user_instance)
+        for user in attendedUser:
+            user_instance = UserProfile.objects.get(userId = user)
+            attendance.attendedUser.add(user_instance)
 
+        attendance.noAttendedUser = noOfAttendedUser
+        attendance.save()
+        
         return redirect('admin-attendance-management')  # Make sure this URL name is defined in your urls.py
-    return render(request, 'admin-templates/editAttendance.html', {'attendance': attendance, 'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users, 'attended_users': attended_users_ids})
+    return render(request, 'admin-templates/editAttendance.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1021,12 +1409,12 @@ def count_userAbsence ():
 
     absent_students_count = {}
     for attendance in AttendanceTable.objects.all():
-        subject = attendance.subjectCode
-        intake_tables = subject.intakeTables.all()
+        kelas = attendance.classCode
+        intake_tables = kelas.intakeTables.all()
         for intake_table in intake_tables:
             students = UserProfile.objects.filter(intakeCode=intake_table)
             # Get students who are absent
-            absent_students = students.exclude(attendance_tables=attendance)
+            absent_students = students.exclude(attended_user_tables=attendance)
             # Update the absent count for each student
             for student in absent_students:
                 if student.userId not in absent_students_count:
@@ -1057,12 +1445,12 @@ def count_userAbsence ():
 def admin_face (request, user_id):
     if user_id == request.user.id :
         if request.method == "POST":
-            subjectCode = request.POST['subjectCode']
+            classCode = request.POST['classCode']
             virtualenv_path = "myenv"
             python_path = os.path.join(virtualenv_path, "bin", "python")
             main_script_path = "main.py"
             creator = request.user.username
-            command = [python_path, main_script_path, subjectCode, creator]
+            command = [python_path, main_script_path, classCode, creator]
             try:
                 subprocess.run(command, capture_output=True, text=True, shell=False)
             except subprocess.CalledProcessError as e:
@@ -1077,41 +1465,59 @@ def admin_face (request, user_id):
                 else:
                     return redirect('user-dashboard')
         
-        subjects = SubjectTable.objects.all()
-        return render(request, 'admin-templates/admin_face.html', {'subjects': subjects})
+        kelas = ClassTable.objects.all()
+        return render(request, 'admin-templates/admin_face.html', {'kelas': kelas})
     else:
         message = 'Sorry, you are not allowed to view this page'
         return render(request, 'error.html', {'message': message})
     
-def collect_attendance(processed_names_list, subjectCode, creator):
-        subjecter = SubjectTable.objects.get(subjectCode=subjectCode)
-        intakes = IntakeTable.objects.all()
-        selected_intakes = list(subjecter.intakeTables.values_list('intakeCode', flat=True))
-        selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+def collect_attendance(processed_names_list, classCode, creator):
+    try:
+        class_instance = ClassTable.objects.get(classCode=classCode)
+    except ClassTable.DoesNotExist:
+        return HttpResponse("Class not found", status=404)
 
-        subjectCoder = subjectCode
-        creatorer = creator
-        attendedUser = processed_names_list
-        subject = SubjectTable.objects.filter(subjectCode = subjectCode)
-        totalUser = selected_users.count()
-        
-        noAttendedUser = len(attendedUser)
-        classDate = datetime.now()
+    selected_intakes = list(class_instance.intakeTables.values_list('intakeCode', flat=True))
+    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
 
-        try:
-            subject_instance = SubjectTable.objects.get(subjectCode=subjectCoder)
-        except SubjectTable.DoesNotExist:
-            subject_instance = None 
+    classDate = datetime.now()
+    noAttendedUser = len(processed_names_list)
+    totalUser = class_instance.noOfUser
 
-        attendance_instance = AttendanceTable.objects.create(
-            subjectCode=subject_instance,
-            creator=creator,
-            totalUser=totalUser,
-            noAttendedUser=noAttendedUser,
-            classDate=classDate
+    attendance_instance = AttendanceTable.objects.create(
+        classCode=class_instance,
+        creator=creator,
+        totalUser=totalUser,
+        noAttendedUser=noAttendedUser,
+        classDate=classDate,
+        method="face recognition"
+    )
+
+    relation_instance = AttendanceTable.objects.get(id=attendance_instance.id)
+
+    user_ids = [name.split('_')[0] for name in processed_names_list]
+    users_dict = UserProfile.objects.in_bulk(user_ids)
+
+    for user_id in user_ids:
+        user = users_dict.get(user_id)
+        if user:
+            relation_instance.attendedUser.add(user)
+
+    for user in selected_users:
+        relation_instance.nameList.add(user)
+
+    for user_id in selected_users:
+        AttendanceStatus.objects.create(
+            relation_id=relation_instance,
+            userId=user_id,
         )
 
-        for user_id in attendedUser:
-            user_instance = UserProfile.objects.get(userId=user_id)
-            attendance_instance.attendedUser.add(user_instance)
-    
+    for user_id in processed_names_list:
+        user = users_dict.get(user_id.split('_')[0])
+        if user:
+            specific_attendance = AttendanceStatus.objects.get(
+                relation_id=relation_instance,
+                userId=user,
+            )
+            specific_attendance.status = 'attended'
+            specific_attendance.save()

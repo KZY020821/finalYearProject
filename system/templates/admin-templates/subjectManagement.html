@@ -30,8 +30,7 @@
                                     <tr>
                                         <th>Subject Code</th>
                                         <th>Subject Name</th>
-                                        <th>Lecturer</th>
-                                        <th>Intake(s)</th>
+                                        <th>Class</th>
                                         <th>No. of Student</th>
                                         <th>Subject's Status</th>
                                         <th class="text-right disable-sort">Action</th>
@@ -42,11 +41,12 @@
                                             <tr>
                                                 <td>{{ subject.subjectCode }}</td>
                                                 <td>{{ subject.subjectName }}</td>
-                                                <td>{{ subject.lecturerId.user.username }}</td>
                                                 <td>
-                                                    {% for intake in subject.intakeTables.all %}
-                                                        {{ intake.intakeCode }}
-                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% for class in classes %}
+                                                        {% if class.subjectCode.subjectCode == subject.subjectCode %}
+                                                            {{ class.classCode }}
+                                                            {% if not forloop.last %}, {% endif %} 
+                                                        {% endif %}
                                                     {% endfor %}
                                                 </td>
                                                 <td>{{ subject.noOfUser }}</td>

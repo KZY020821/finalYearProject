@@ -30,11 +30,11 @@
                 <div class="card-box">
                     <form method="POST" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <h3 class="card-title">Subject Code</h3>
-                        <select class="form-control" name="subjectCode" required>
+                        <h3 class="card-title">Class Code</h3>
+                        <select class="form-control" name="classCode" required>
                             <option value="">---</option>
-                            {% for subject in subjects %}
-                                <option value="{{ subject.subjectCode }}">{{ subject.subjectCode }}</option>
+                            {% for class in kelas %}
+                                <option value="{{ class.classCode }}">{{ class.classCode }}</option>
                             {% endfor %}
                         </select>
                         <div class="text-center m-t-20">

@@ -45,23 +45,7 @@
                                     <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{subject.subjectName}}">
                                 </div>
                             </div>
-                        </div>
-                        <h3 class="card-title">Lecturer</h3>
-                        <select class="form-control" name="lecturerId">
-                            {% for lecturer in lecturers %}
-                            <option value="{{ lecturer.lecturerprofile.lecturerId }}" {% if lecturer.lecturerprofile.lecturerId == subject.lecturerId.lecturerId %}selected{% endif %}>
-                                {{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.username }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <h3 class="card-title">Intake(s) - hold ctrl or cmd to select multiple intakes</h3>
-                        <select class="form-control" name="intakes" style="height: 250px;" multiple>
-                            {% for intake in intakes %}
-                                <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}" {% if intake.intakeCode in selected_intakes %}selected{% endif %}>
-                                    {{ intake.intakeCode }}
-                                </option>
-                            {% endfor %}
-                        </select>                        
+                        </div>                       
                         <div class="text-center m-t-20">
                             <button type="submit" class="btn btn-primary submit-btn">Create</button>
                         </div>

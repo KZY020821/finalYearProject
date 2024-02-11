@@ -15,47 +15,43 @@
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">View Attendance - {{attendance.subjectCode}}</h4>
+                        <h4 class="page-title">Edit Attendance - {{attendance.classCode}}</h4>
                     </div>
                 </div>
                 <form method="POST" class="form-signin" enctype="multipart/form-data">
                     <div class="card-box">
                         {% csrf_token %}
-                        <h3 class="card-title">Subject Code</h3>
+                        <h3 class="card-title">Class Code</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{attendance.subjectCode}}" readonly>
+                                    <input type="text" class="form-control" name="classCode" value="{{attendance.classCode}}">
                                 </div>
                             </div>
                         </div>
                         <input type="hidden" name="creator" value="{{request.user.username}}" readonly>
-                        <h3 class="card-title">Subject Name</h3>
+                        <h3 class="card-title">Subject</h3>
                         <div class="row">
                             <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{attendance.subjectCode.subjectName}}" readonly>
-                                </div>
+                                <select class="form-control" name="subjectCode" required>
+                                    {% for subject in subjects %}
+                                        <option value="{{ subject.subjectCode }}"{% if attendance.classCode.subjectCode == subject %} selected {% endif %}>{{ subject.subjectCode }} - {{ subject.subjectName }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                         </div>
                         <h3 class="card-title">Lecturer</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" value="{{attendance.subjectCode.lecturerId.user.username}}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <h3 class="card-title">Intake(s)</h3>
-                        <select class="form-control" name="intakes" style="height: 150px;" multiple readonly>
-                            {% for intake in intakes %}
-                                {% if intake.intakeCode in selected_intakes %}
-                                    <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}">
-                                        {{ intake.intakeCode }}
-                                    </option>
-                                {% endif %}
+                        <select class="form-control" name="lecturerId" required>
+                            {% for lecturer in lecturers %}
+                                <option value="{{ lecturer.lecturerprofile.lecturerId}}" {% if lecturer.lecturerprofile == attendance.classCode.lecturerId %} selected {% endif %}>{{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.username }}</option>
                             {% endfor %}
-                        </select> 
+                        </select>
+                        <h3 class="card-title">Intake(s) - hold ctrl or cmd to select multiple intakes</h3>
+                        <select class="form-control" name="intakes" style="height: 250px;" required multiple>
+                            {% for intake in intakes %}
+                                <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}" {% if intake in intakeTables %} selected {% endif %}>{{ intake.intakeCode }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <h3 class="card-title">Student list</h3>
                     <div class="row">
@@ -71,13 +67,21 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for user in users %}
+                                        {% for status in attendance_status %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>{{ user.userId }}</td>
-                                                <td>{{ user.user.username }}</td>
+                                                <td>{{ status.userId.userId }}</td>
+                                                <td>{{ status.userId.user.first_name }} {{ status.userId.user.last_name }}</td>
                                                 <td>
-                                                    <input type="checkbox" name="attendedUser" value="{{ user.userId }}" {% if user.userId in attended_users %}checked{% endif %}>
+                                                    <select name="status_{{ status.userId.userId }}">
+                                                        <option value="Attended" {% if status.status == "attended" %}selected{% endif %}>Attended</option>
+                                                        <option value="Absent" {% if status.status == "absent" %}selected{% endif %}>Absent</option>
+                                                        <option value="Late" {% if status.status == "late" %}selected{% endif %}>Late</option>
+                                                        <option value="MC" {% if status.status == "mc" %}selected{% endif %}>MC</option>
+                                                        <option value="excuses" {% if status.status == "excuses" %}selected{% endif %}>Excuses</option>
+                                                        <option value="emergency" {% if status.status == "emergency" %}selected{% endif %}>Emergency</option>
+                                                        <option value="curriculum" {% if status.status == "curicullum" %}selected{% endif %}>Curriculum</option>
+                                                    </select>
                                                 </td>
                                             </tr>
                                         {% endfor %}

@@ -1,13 +1,19 @@
-from .models import Profile, Attendance as attendanceModel, subject, intake, leave, feedback, UserProfile, AdminProfile, AbsenceMonitoringTable, AttendanceTable, LeaveTable, LecturerProfile, SubjectTable, IntakeTable, ReportTable, NotificationTable
-from django.contrib import admin
+from .models import UserProfile
+from .models import AdminProfile
+from .models import AbsenceMonitoringTable
+from .models import AttendanceTable
+from .models import LeaveTable
+from .models import LecturerProfile
+from .models import SubjectTable
+from .models import IntakeTable
+from .models import ReportTable
+from .models import NotificationTable
+from .models import ClassTable
+from .models import AttendanceStatus
 
+
+from django.contrib import admin
 # Register your models here.
-admin.site.register(Profile)
-admin.site.register(attendanceModel)
-admin.site.register(subject)
-admin.site.register(intake)
-admin.site.register(leave)
-admin.site.register(feedback)
 admin.site.register(UserProfile)
 admin.site.register(AdminProfile)
 admin.site.register(AbsenceMonitoringTable)
@@ -18,3 +24,5 @@ admin.site.register(SubjectTable)
 admin.site.register(IntakeTable)
 admin.site.register(ReportTable)
 admin.site.register(NotificationTable)
+admin.site.register(ClassTable)
+admin.site.register(AttendanceStatus)

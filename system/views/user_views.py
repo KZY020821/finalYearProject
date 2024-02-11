@@ -1,38 +1,18 @@
-import math
-import os
-import subprocess
-import sys
 from datetime import datetime
 
-import cv2
-import face_recognition
-import numpy as np
-from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate, get_user, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.core.files.storage import FileSystemStorage, default_storage
 from django.db.models import Q
-from django.http import (Http404, HttpResponse, JsonResponse,
-                         StreamingHttpResponse)
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.utils import timezone
-from django.db.models import Count, Case, When, BooleanField
 
 
 
-from ..decorators import allow_users, unauthenticated_user
-from ..models import AbsenceMonitoringTable
-from ..models import Attendance as attendanceModel
+from ..decorators import allow_users
 from ..models import IntakeTable
-from ..models import Profile as personalinfo
 from ..models import UserProfile
-from ..models import feedback as feedbackTable
-from ..models import intake as intakeTable
-from ..models import leave
 from ..models import AdminProfile
-from ..models import LecturerProfile
 from ..models import IntakeTable
 from ..models import SubjectTable
 from ..models import LeaveTable

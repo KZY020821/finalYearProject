@@ -4,15 +4,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
-
 urlpatterns = [
     # main
     path('', views.loginPage, name='login-page'),
     path('registerPage', views.registerPage, name='register'),
-    path('forgot-password', views.forgotPassword, name='forgot-password'),
     path('view-myProfile/<int:user_id>/', views.viewMyProfile, name='view-myProfile'),
     path('edit-myProfile/<int:user_id>/', views.editMyProfile, name='edit-myProfile'),
-    path('delete-myProfile', views.deleteMyProfile, name='delete-myProfile'),
+    path('logout', views.logoutUser, name='logout'),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(template_name = "password_reset.html"), name='reset_password'),
     path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(template_name = "password_reset_sent.html"), name='password_reset_done'),
@@ -55,6 +53,15 @@ urlpatterns = [
     path('admin-deactive-subject/<str:subjectCode>/', admin_views.admin_deactiveSubject, name='admin-deactive-subject'),
     path('admin-remove-subject', admin_views.admin_removeSubject, name='admin-remove-subject'),
 
+    path('admin-class-management', admin_views.admin_classManagement, name='admin-class-management'),
+    path('admin-create-class', admin_views.admin_createClass, name='admin-create-class'),
+    path('admin-edit-class/<str:classCode>/', admin_views.admin_editClass, name='admin-edit-class'),
+    path('admin-view-class/<str:classCode>/', admin_views.admin_viewClass, name='admin-view-class'),
+    path('admin-active-class/<str:classCode>/', admin_views.admin_activeClass, name='admin-active-class'),
+    path('admin-deactive-class/<str:classCode>/', admin_views.admin_deactiveClass, name='admin-deactive-class'),
+    path('admin-remove-class', admin_views.admin_removeClass, name='admin-remove-class'),
+
+
     path('admin-absenceMonitoring-management', admin_views.admin_absenceMonitoringManagement, name='admin-absenceMonitoring-management'),
     path('admin-create-absenceMonitoring', admin_views.admin_createAbsenceMonitoring, name='admin-create-absenceMonitoring'),
     path('admin-edit-absenceMonitoring/<int:id>/', admin_views.admin_editAbsenceMonitoring, name='admin-edit-absenceMonitoring'),
@@ -67,8 +74,9 @@ urlpatterns = [
     path('admin-deny-leave/<int:id>/', admin_views.admin_denyLeave, name='admin-deny-leave'),
     
     path('admin-attendance-management', admin_views.admin_attendanceManagement, name='admin-attendance-management'),
+    path('createCsv', admin_views.createCsv, name='createCsv'),
     path('admin-choose-subject', admin_views.admin_chooseSubject, name='admin-choose-subject'),
-    path('admin-create-attendance/<str:subjectCode>/', admin_views.admin_createAttendance, name='admin-create-attendance'),
+    path('admin-create-attendance/<str:classCode>/', admin_views.admin_createAttendance, name='admin-create-attendance'),
     path('admin-edit-attendance/<int:id>/', admin_views.admin_editAttendance, name='admin-edit-attendance'),
     path('admin-view-attendance/<int:id>/', admin_views.admin_viewAttendance, name='admin-view-attendance'),
 
@@ -125,29 +133,5 @@ urlpatterns = [
     path('view-myProfileUser/<int:user_id>/', user_views.viewMyProfileUser, name='view-myProfileUser'),
     # error
     path('error', views.error, name='error'),
-    
-    #face
-    path('index', views.index, name='index'),
-    
-    path('attendance', views.attendance, name='attendance'),
-    path('edit-profile', views.editProfile, name='edit-profile'),
-    path('logout', views.logoutUser, name='logout'),
-    path('profile', views.profile, name='profile'),
-    path('users', views.users, name='users'),
-    path('warnings', views.warnings, name='warnings'),
-    path('error', views.error, name='error'),
-    path('deleteUser', views.deleteUser, name='deleteUser'),
-    path('registerUser', views.registerUser, name='registerUser'),
-    path('registerAdmin', views.registerAdmin, name='registerAdmin'),
-    path('applyLeaves', views.applyLeaves, name='applyLeaves'),
-    path('reviewLeaves', views.reviewLeaves, name='reviewLeaves'),
-    path('changeImage', views.changeImage, name='changeImage'),
-    path('subject', views.subject, name='subject'),
-    path('intake', views.intake, name='intake'),
-    path('contactUs', views.contactUs, name='contactUs'),
-    path('reviewFeedback', views.reviewFeedback, name='reviewFeedback'),
-    path('delete-user-image/', views.delete_user_image, name='delete_user_image'),
-    path('test', views.test, name='test'),
-    path('camera/',views.camera, name='camera_view'),
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 

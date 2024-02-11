@@ -24,20 +24,20 @@
                 <form method="POST" class="form-signin" enctype="multipart/form-data">
                     <div class="card-box">
                         {% csrf_token %}
-                        <h3 class="card-title">Subject Code</h3>
+                        <h3 class="card-title">Class Code</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{attendance.subjectCode}}" readonly>
+                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{attendance.classCode}}" readonly>
                                 </div>
                             </div>
                         </div>
                         <input type="hidden" name="creator" value="{{request.user.username}}" readonly>
-                        <h3 class="card-title">Subject Name</h3>
+                        <h3 class="card-title">Subject</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{attendance.subjectCode.subjectName}}" readonly>
+                                    <input type="text" class="form-control" name="subjectName" value="{{attendance.classCode.subjectCode}} - {{attendance.classCode.subjectCode.subjectName}}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -45,7 +45,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" value="{{attendance.subjectCode.lecturerId.user.username}}" readonly>
+                                    <input type="text" class="form-control" value="{{attendance.classCode.lecturerId.user.first_name}} {{attendance.classCode.lecturerId.user.last_name}}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -74,13 +74,21 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for user in users %}
+                                        {% for status in attendance_status %}
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
-                                                <td>{{ user.userId }}</td>
-                                                <td>{{ user.user.username }}</td>
+                                                <td>{{ status.userId.userId }}</td>
+                                                <td>{{ status.userId.user.first_name }} {{ status.userId.user.last_name }}</td>
                                                 <td>
-                                                    <input type="checkbox" name="attendedUser" value="{{ user.userId }}" {% if user.userId in attended_users %}checked{% endif %} disabled>
+                                                    <select name="status" disabled>
+                                                        <option value="Attended" {% if status.status == "attended" %}selected{% endif %}>Attended</option>
+                                                        <option value="Absent" {% if status.status == "absent" %}selected{% endif %}>Absent</option>
+                                                        <option value="Late" {% if status.status == "late" %}selected{% endif %}>Late</option>
+                                                        <option value="MC" {% if status.status == "mc" %}selected{% endif %}>MC</option>
+                                                        <option value="excuses" {% if status.status == "excuses" %}selected{% endif %}>Excuses</option>
+                                                        <option value="emergency" {% if status.status == "emergency" %}selected{% endif %}>Emergency</option>
+                                                        <option value="curriculum" {% if status.status == "curicullum" %}selected{% endif %}>Curriculum</option>
+                                                    </select>
                                                 </td>
                                             </tr>
                                         {% endfor %}

@@ -2,67 +2,6 @@ import datetime
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db import models
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
-    intakeCode = models.CharField(max_length=255, default="Not provided")
-    phone_number = models.CharField(max_length=15, default='Not provided')
-    image = models.ImageField(null=True, blank=True, upload_to='faceImage', default='faceImage/default.png')
-
-    def __str__(self):
-        return str(self.user.username)
-    
-class subject(models.Model):
-    subjectCode = models.CharField(max_length=255, unique=True)
-    subjectName = models.CharField(max_length=255, default='Not provided')
-    lecturerID = models.CharField(max_length=255, default='Not provided')
-    intakeCode = models.CharField(max_length=255, default='Not provided')
-    def __str__(self):
-        return self.subjectCode
-    
-class intake(models.Model):
-    intakeCode = models.CharField(max_length=255, unique=True)
-    coordinatorID = models.CharField(max_length=255, null = True, default = "Not provided")
-    def __str__(self):
-        return self.intakeCode
-
-class leave(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('denied', 'Denied'),
-    )
-
-    leaveID = models.AutoField(primary_key=True, default="1")
-    userID = models.IntegerField(null=True, default="1")
-    leaveTitle = models.CharField(max_length=255)
-    leaveDescription = models.CharField(max_length=255, null=True)
-    leaveAttachment = models.ImageField(null=True, blank=True, upload_to='leaveAttatchment')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    startDate = models.DateField(default=datetime.date.today)
-    endDate = models.DateField(default=datetime.date.today)
-    applyDate = models.DateField(default=datetime.date.today)
-
-    def __str__(self):
-        return f"Leave ID: {self.leaveID}, Title: {self.leaveTitle}, ID {self.userID}"
-
-
-class Attendance(models.Model):
-    name = models.CharField(max_length=255)
-    classDate = models.DateTimeField(default=datetime.datetime.now)
-    attendanceSubjectCode = models.CharField(max_length=255, null=True, default="Not provided")
-    def __str__(self):
-        return f"ID:{self.id}, name: {self.name}, date time: {self.classDate}, subject code : {self.attendanceSubjectCode}"
-    
-class feedback(models.Model):
-    feedbackTitle = models.CharField(max_length=255)
-    feedbackDescription = models.CharField(max_length=2550)
-    feedbackAttachment = models.ImageField(null=True, blank=True, upload_to='feedbackAttachment')
-    userID = models.CharField(max_length=255, null=True, default="Not provided")
-    adminID = models.CharField(max_length=255, null=True, default="Not provided")
-    reply = models.CharField(max_length=2550, null=True, default="Not provided")
-    def __str__(self):
-        return f"feedbackID:{self.id}, feedbackTitle: {self.feedbackTitle}, From: {self.userID}, To: {self.adminID}"
     
 class LecturerProfile(models.Model):
     lecturerId = models.CharField(max_length=50, primary_key=True, default="Not provided")
@@ -107,14 +46,26 @@ class SubjectTable(models.Model):
         ('deactive', 'Deactive'),
     )
     subjectCode = models.CharField(max_length=50, primary_key=True, default="Not provided")
-    lecturerId = models.ForeignKey(LecturerProfile, on_delete=models.CASCADE, default="Not provided")
-    intakeTables = models.ManyToManyField('IntakeTable', related_name='subjects', blank=True)
     subjectName = models.CharField(max_length=50, default="Not provided")
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    noOfUser = models.IntegerField(default=0)
-
+    adminTables = models.ManyToManyField('AdminProfile', related_name = 'admin', blank = True)
+    noOfUser = models.IntegerField(blank = True, null = True)
     def __str__(self):
         return self.subjectCode
+    
+class ClassTable(models.Model):
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('deactive', 'Deactive'),
+    )
+    classCode = models.CharField(max_length=50, primary_key = True, default = "Not provided")
+    subjectCode = models.ForeignKey(SubjectTable, on_delete = models.CASCADE, default = "Not provided")
+    lecturerId = models.ForeignKey(LecturerProfile, on_delete=models.CASCADE, default="Not provided")
+    intakeTables = models.ManyToManyField('IntakeTable', related_name='subjects', blank = True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    noOfUser = models.IntegerField(blank = True, null = True)
+    def __str__(self):
+        return self.classCode
     
 class LeaveTable(models.Model):
     STATUS_CHOICES = (
@@ -136,14 +87,37 @@ class LeaveTable(models.Model):
         return f"Leave ID: {self.id}, Title: {self.leaveTitle}, ID {self.userID}"
 
 class AttendanceTable(models.Model):
-    subjectCode = models.ForeignKey(SubjectTable, on_delete=models.CASCADE, default="Not provided")
+    METHOD_CHOICES = (
+        ('manual', 'Manual'),
+        ('face recognition', 'Face Recognition')
+    )
+    classCode = models.ForeignKey(ClassTable, on_delete=models.CASCADE, default="Not provided")
     creator = models.CharField(max_length=255, default="Not provided")
-    attendedUser = models.ManyToManyField('UserProfile', related_name='attendance_tables', blank=True)
-    noAttendedUser= models.IntegerField(default=0)
+    attendedUser = models.ManyToManyField('UserProfile', related_name='attended_user_tables', blank=True)
+    noAttendedUser = models.IntegerField(default=0)
+    nameList = models.ManyToManyField('UserProfile', related_name='name_list_tables', blank=True)
     totalUser = models.IntegerField(default=0)
     classDate = models.DateTimeField(default=datetime.datetime.now)
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES, default="manual")
+
     def __str__(self):
-        return f"ID:{self.id}, date time: {self.classDate}, subject code : {self.subjectCode}"
+        return f"ID:{self.id}, date time: {self.classDate}"
+class AttendanceStatus(models.Model):
+    STATUS_CHOICES = (
+        ('absent', 'Absent'),
+        ('attended', 'Attended'),
+        ('mc', 'MC'),
+        ('excuse', 'Excuse'),
+        ('Emergency', 'Emergency'),
+        ('curriculum', 'Curriculum'),
+        ('late', 'Late'),
+    )
+    relation_id = models.ForeignKey(AttendanceTable, on_delete = models.CASCADE, default=1)
+    userId = models.ForeignKey(UserProfile, on_delete = models.CASCADE, default="Not provided")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='absent')
+    checkIn = models.DateTimeField(default=datetime.datetime.now)
+    def __str__(self):
+        return f"ID:{self.id}, date time: {self.checkIn}"
     
 class ReportTable(models.Model):
     TITLE_CHOICES = (
@@ -179,4 +153,4 @@ class NotificationTable(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='delivered')
 
     def __str__(self):
-        return f"ID:{self.id}"
+        return f"ID:{self.id, self.notifyMessage, self.receiver}"

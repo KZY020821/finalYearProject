@@ -1,0 +1,108 @@
+{% load static %}
+{% include 'head.html' %}
+<body>
+    <div class="main-wrapper">
+        {% include 'header_admin.html' %}
+        <div class="page-wrapper">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">Class Management</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <a href="admin-create-class" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Add Class</a>
+                    </div>
+                </div>
+                {% if messages %}
+                    <ul class="messages" id="alert">
+                        {% for message in messages %}
+                            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li> 
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table  id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Class Code</th>
+                                        <th>Subject Name</th>
+                                        <th>Lecturer</th>
+                                        <th>Intake(s)</th>
+                                        <th>No. of Student</th>
+                                        <th>Subject's Status</th>
+                                        <th class="text-right disable-sort">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for class in classes %}
+                                            <tr>
+                                                <td>{{ class.classCode }}</td>
+                                                <td>{{ class.subjectCode.subjectCode }} - {{ class.subjectCode.subjectName }}</td>
+                                                <td>{{ class.lecturerId.user.first_name }} {{ class.lecturerId.user.last_name }}</td>
+                                                <td>
+                                                    {% for intake in class.intakeTables.all %}
+                                                        {{ intake.intakeCode }}
+                                                        {% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                </td>
+                                                <td>{{ class.noOfUser }}</td>
+                                                <td>
+                                                    {% if class.status == "Active" or class.status == "active" %}
+                                                        <span class="custom-badge status-green">Active</span>
+                                                    {% else %}
+                                                        <span class="custom-badge status-red">Deactive</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-right">
+                                                    <a href="admin-view-class/{{class.classCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                    <a href="admin-edit-class/{{class.classCode}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                                    {% if class.status == "Active" or class.status == "active" %}
+                                                        <a href="admin-deactive-class/{{class.classCode}}"><button type="button" class="btn btn-warning" style="width: 105px;"><i class="fas fa-toggle-off"></i> Deactive</button></a>
+                                                    {% else %}
+                                                        <a href="admin-active-class/{{class.classCode}}"><button type="button" class="btn btn-success" style="width: 105px;"><i class="fas fa-toggle-on"></i> Active</button></a>
+                                                    {% endif %}
+                                                    
+                                                    <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ class.classCode }}" style="width: 105px;"><i class="fa fa-trash"></i> Delete</button>
+                                                </td>
+                                            </tr>
+                                            <div id="popup_modal_{{ class.classCode }}" class="modal fade delete-modal" role="dialog">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-body text-center">
+                                                            <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                                                            <h3>Are you sure you want the selected Class?</h3>
+                                                            <div class="m-t-20">
+                                                                <form method="post" action="{% url 'admin-remove-class' %}">
+                                                                    {% csrf_token %}
+                                                                    <input type="hidden" name="classCode" value="{{ class.classCode }}">
+                                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                                                                    <button type="submit" class="btn btn-danger">Sure</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'jsreferences.html' %}
+    <script>
+        new DataTable('#example');
+        
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
+</body>
+</html>

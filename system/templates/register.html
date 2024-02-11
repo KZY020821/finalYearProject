@@ -6,7 +6,7 @@
             <div class="account-center">
                 <div class="account-box">
                     {% for message in messages %}
-                    <h5 style="color: red;"> {{ message }} </h5>
+                        <h5 style="color: red;"> {{ message }}</h5>
                     {% endfor %}
                     <form method="POST" action="" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}
@@ -24,6 +24,13 @@
                         <div class="form-group">
                             <label>Password</label>
                             <input type="password" class="form-control" name="password" required>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must more than 8 letters.</h5>
+                            <br>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must have a combination of capital letters and lowercase letters. </h5>
+                            <br>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must have a combination of alphabets and numeric case.</h5>
+                            <br>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password cannot too similar with your email or name.</h5>
                         </div>
                         <div class="form-group">
                             <label>Repeat password</label>
