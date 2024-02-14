@@ -13,12 +13,13 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import sys
 import os
 from pathlib import Path
+from django.utils.translation import gettext_lazy as _
+
 
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -30,9 +31,6 @@ SECRET_KEY = 's-)d+c7=^8cwx&)8%a8+f9v6x4)elf5%()ag)_$&5(@*kvx72('
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44']
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -47,12 +45,28 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+USE_I18N = True
+
+LANGUAGE_CODE = "en"
+
+LANGUAGES = [
+    ('en', _('English')),
+    ('ms', _('Malay')),
+]
+USE_L10N = True
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, 'locale'),
+)
+
+
 
 ROOT_URLCONF = 'finalYearProject.urls'
 

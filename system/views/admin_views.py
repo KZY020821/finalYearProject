@@ -12,6 +12,7 @@ from django.http import (JsonResponse)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import default_storage
 
 from ..decorators import allow_users
 from ..models import AbsenceMonitoringTable
@@ -27,6 +28,7 @@ from ..models import AttendanceTable
 from ..models import ReportTable
 from ..models import NotificationTable
 from ..models import AttendanceStatus
+from ..models import FaceImage
 
 
 from django.shortcuts import redirect
@@ -500,6 +502,7 @@ def admin_editUser(request, user_id):
             username = request.POST['username']
             profileImage = request.FILES.get('image')
             intakeCode = request.POST['intakeCode']
+            images = request.FILES.getlist('additional_images')
 
             if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
                 messages.error(request, 'Email used')
@@ -519,20 +522,15 @@ def admin_editUser(request, user_id):
 
                         if old_folder:
                             old_image_path_in_old_folder = os.path.join(old_folder, old_image_filename)
-                            print('old-image - ', old_image_path_in_old_folder)
                             
-                            print(os.path.exists(old_image_path_in_old_folder))
-                            if os.path.exists(old_image_path_in_old_folder):
-                                print('old-image - ', old_image_path_in_old_folder, 'is exist')
-                                os.remove(old_image_path_in_old_folder)
-                                print('old-image - ', old_image_path_in_old_folder, 'is removed')
+                            if default_storage.exists(old_image_path_in_old_folder):
+                                default_storage.delete(old_image_path_in_old_folder)
 
                         if new_folder:
 
                             username_id = f"{userID}_{firstName}-{lastName}"
                             file_extension = old_image_filename.split('.')[-1]
                             new_image_path = os.path.join(new_folder, f"{username_id}.{file_extension}")
-                            print('new-image - ',new_image_path)
 
                             # Check if the new image path is a file before removing
                             if os.path.isfile(new_image_path):
@@ -541,13 +539,11 @@ def admin_editUser(request, user_id):
                             # Save the uploaded image with the new name and correct file extension
                             fs = FileSystemStorage()
                             fs.save(new_image_path, user_profile.faceImageUrl)
-                            print('new-image - ',old_image_path_in_old_folder, 'is added')
 
 
                     # Update the UserProfile model with the new intake code
                     user_profile.intakeCode = IntakeTable.objects.get(intakeCode=intakeCode)
                     user_profile.save()
-
 
                 if profileImage:
                     try:
@@ -558,15 +554,89 @@ def admin_editUser(request, user_id):
                         messages.error(request, "Failed to detect face from the image you uploaded.")
                         return redirect('admin-edit-lecturer', user_id=user_id)
 
-                    selected_intake = IntakeTable.objects.get(intakeCode = intakeCode)
-                    for kelas in classes:
-                        if selected_intake in kelas.intakeTables.all():
-                            username_id = f"{id}_{firstName}-{lastName}"
-                            file_extension = profileImage.name.split('.')[-1]
-                            image_path = os.path.join(f'{kelas.classCode}', f"{username_id}.{file_extension}")
+                    # Remove the old image from the UserProfile folder
+                    old_image_path = user_profile.faceImageUrl.path
+                    if default_storage.exists(old_image_path):
+                        default_storage.delete(old_image_path)
 
-                            if os.path.exists(image_path):
-                                os.remove(image_path)
+                    # Save the uploaded image with the new name and correct file extension
+                    username_id = f"{userID}_{firstName}-{lastName}"
+                    file_extension = profileImage.name.split('.')[-1]
+                    image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+
+                    fs = FileSystemStorage()
+                    fs.save(image_path, profileImage)
+                    
+                    user_profile.faceImageUrl = image_path
+                    user_profile.save()
+
+                    classes = ClassTable.objects.all()
+                    old_image_path = user_profile.faceImageUrl.path
+                    old_image_filename = os.path.basename(old_image_path)
+                    classes = ClassTable.objects.all()
+                
+                    for kelas in classes:
+                        old_folder = f'{kelas.classCode}' if user_profile.intakeCode in kelas.intakeTables.all() else None
+                        new_folder = f'{kelas.classCode}' if IntakeTable.objects.get(intakeCode=intakeCode) in kelas.intakeTables.all() else None
+
+                        if old_folder:
+                            old_image_path_in_old_folder = os.path.join(old_folder, old_image_filename)
+                            
+                            if default_storage.exists(old_image_path_in_old_folder):
+                                default_storage.delete(old_image_path_in_old_folder)
+                        
+                        if new_folder:
+                            username_id = f"{userID}_{firstName}-{lastName}"
+                            file_extension = old_image_filename.split('.')[-1]
+                            new_image_path = os.path.join(new_folder, f"{username_id}.{file_extension}")
+
+                            # Check if the new image path is a file before removing
+                            if os.path.isfile(new_image_path):
+                                os.remove(new_image_path)
+
+                            # Save the uploaded image with the new name and correct file extension
+                            fs = FileSystemStorage()
+                            fs.save(new_image_path, user_profile.faceImageUrl)
+
+                if images:
+                    for profileImage in images:
+                        try:
+                            # Attempt to detect face from the new image
+                            face_image = face_recognition.load_image_file(profileImage)
+                            face_encoding = face_recognition.face_encodings(face_image)[0]
+                        except Exception as ex:
+                            messages.error(request, "Failed to detect face from the image you uploaded.")
+                            return redirect('admin-edit-lecturer', user_id=user_id)
+
+                        # Save the uploaded image with the new name and correct file extension
+                        username_id = f"{userID}_{firstName}-{lastName}"
+                        file_extension = profileImage.name.split('.')[-1]
+                        image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+
+                        fs = FileSystemStorage()
+                        fs.save(image_path, profileImage)
+                        
+                        user_profile.faceImageUrl = image_path
+                        user_profile.save()
+
+                        classes = ClassTable.objects.all()
+                        old_image_path = user_profile.faceImageUrl.path
+                        old_image_filename = os.path.basename(old_image_path)
+                        classes = ClassTable.objects.all()
+                    
+
+
+                        for kelas in classes:
+                            new_folder = f'{kelas.classCode}' if IntakeTable.objects.get(intakeCode=intakeCode) in kelas.intakeTables.all() else None
+                            image_path = os.path.join(f"{kelas.classCode}", f"{username_id}.{file_extension}")
+                            if new_folder:
+                                fs = FileSystemStorage()
+                                fs.save(image_path, profileImage)
+                                face_image_instance = FaceImage.objects.create(image=image_path)
+                                user_profile.face_images.add(face_image_instance)
+
+
+
 
                 try:
                     intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
@@ -585,31 +655,6 @@ def admin_editUser(request, user_id):
 
                 user_profile = user.userprofile
                 user_profile.userId = userID
-
-
-                # lecturerID = lecturer_profile.lecturerId
-            
-            # # Save the new image file
-            # username_id = f"{lecturerID}_{firstName}-{lastName}"
-            # file_extension = profileImage.name.split('.')[-1]
-            # image_pathway = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
-
-            # fs = FileSystemStorage()
-            # fs.save(image_pathway, profileImage)
-
-            # lecturer_profile.lecturerProfileImage = image_pathway
-            # lecturer_profile.save()
-
-            #     if profileImage:
-            #         user_profile_image_path = user_profile.faceImageUrl.path
-
-            #         if os.path.exists(user_profile_image_path):
-            #             os.remove(user_profile_image_path)
-
-
-            #         user_profile.faceImageUrl = profileImage
-
-            #         user_profile.save()
 
                 messages.success(request, 'Modification have been saved successfully.')
                 return redirect('admin-user-management')
@@ -632,20 +677,33 @@ def admin_removeUser(request):
   if request.method == 'POST':
       user_id = request.POST.get('user_id')
       try:
-          user = User.objects.get(id=user_id)
-          user_profile_image_path = user.userprofile.faceImageUrl.path
-          
-          # Delete user and related profile
-          user.delete()
-          
-          # Remove the admin's profile image file
-          if os.path.exists(user_profile_image_path):
-              os.remove(user_profile_image_path)
+        user = User.objects.get(id=user_id)
+        user_profile = UserProfile.objects.get(user=user)
+        user_profile_image_path = user.userprofile.faceImageUrl.path
+    
+        user.delete()
 
-          messages.success(request, 'User removed successfully.')
-          return redirect('admin-user-management')
+
+        old_image_filename = os.path.basename(user_profile_image_path)
+        classes = ClassTable.objects.all()
+    
+        for kelas in classes:
+            old_folder = f'{kelas.classCode}' if user_profile.intakeCode in kelas.intakeTables.all() else None
+
+            if old_folder:
+                old_image_path_in_old_folder = os.path.join(old_folder, old_image_filename)
+                
+                if default_storage.exists(old_image_path_in_old_folder):
+                    default_storage.delete(old_image_path_in_old_folder)
+                    
+        # Remove the admin's profile image file
+        if os.path.exists(user_profile_image_path):
+            os.remove(user_profile_image_path)
+
+        messages.success(request, 'User removed successfully.')
+        return redirect('admin-user-management')
       except User.DoesNotExist:
-          return JsonResponse({'success': False, 'message': 'User not found'})
+        return JsonResponse({'success': False, 'message': 'User not found'})
   return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 @login_required(login_url='/')

@@ -48,7 +48,7 @@ class FaceRecognition():
     def encode_faces(self):
         if len(sys.argv) > 1:
             subjectCode = sys.argv[1]
-        directory = f'/Users/khorzeyi/code/finalYearProject/media/7700YOM/'
+        directory = f'/Users/khorzeyi/code/finalYearProject/media/6700YCOM/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
 

@@ -3,8 +3,9 @@ from .views import views, admin_views, lecturer_views, user_views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.conf.urls.i18n import i18n_patterns
 
-urlpatterns = [
+urlpatterns =[
     # main
     path('', views.loginPage, name='login-page'),
     path('registerPage', views.registerPage, name='register'),
