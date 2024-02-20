@@ -19,6 +19,7 @@ from ..models import LeaveTable
 from ..models import ReportTable
 from ..models import NotificationTable
 from ..models import AttendanceTable
+from ..models import ClassTable
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
@@ -179,7 +180,7 @@ def viewMyProfileUser(request, user_id):
     try:
         user = User.objects.get(id=user_id)
         normal_user = UserProfile.objects.get(user=user)
-        subjects = SubjectTable.objects.filter(intakeTables__intakeCode = normal_user.intakeCode.intakeCode, status = "Active" or "active")
+        subjects = ClassTable.objects.filter(intakeTables__intakeCode = normal_user.intakeCode.intakeCode, status = "Active" or "active")
         return render(request, 'user-templates/viewMyProfile_user.html', {'user': user, 'subjects': subjects})
     
     except User.DoesNotExist:

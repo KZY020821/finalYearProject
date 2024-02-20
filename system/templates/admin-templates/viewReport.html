@@ -51,6 +51,9 @@
                             </div>
                         </div>
                     {% endif %}</h3>
+                    {% if report.reportAttachment %}
+                        <img src="{{ report.reportAttachment.url }}" style=" display:block; width: 90%; height: auto; border-style: solid; margin: auto auto 40px auto;">
+                    {% endif %}
                 </div>
             </div>
         </div>

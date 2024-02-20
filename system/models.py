@@ -144,6 +144,7 @@ class ReportTable(models.Model):
     replyMessage = models.CharField(max_length=255, default="Not provided", blank=True, null = True)
     replyDate = models.DateTimeField(default=datetime.datetime.now, blank =True, null = True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='delivered')
+    reportAttachment = models.ImageField(null=True, blank=True, upload_to='reportAttachment')
 
     def __str__(self):
         return f"ID:{self.id}"

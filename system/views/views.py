@@ -1,3 +1,5 @@
+import datetime as dt
+from datetime import datetime
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User, Group
@@ -10,6 +12,7 @@ import face_recognition
 import os
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from ..models import ReportTable
 
 @unauthenticated_user
 def loginPage(request):
@@ -202,5 +205,38 @@ def logoutUser (request):
 def error(request):
   return render(request, 'error.html')
 
+def reportAttendance(request):
+    admins = AdminProfile.objects.all()
+    context = {'admins': admins}
+    
+    if request.method == "POST":
+        id = request.POST['id']
+        adminId = request.POST['adminId']
+        classCode = request.POST['classCode']
+        reportAttachment = request.FILES['image']
+        current_date = dt.datetime.now().strftime("%Y-%m-%d")
+        current_time = dt.datetime.now().strftime("%H:%M:%S")
+        
+        try:
+            user = UserProfile.objects.get(userId=id)
+        except UserProfile.DoesNotExist:
+            messages.error(request, 'ID does not exit')
+            return redirect('reportAttendance')
+        
+        try:
+            adminId_instance = AdminProfile.objects.get(adminId=adminId)
+        except AdminProfile.DoesNotExist:
+            adminId_instance = None 
+        reportMessage = f"Hi {adminId_instance.user.first_name} {adminId_instance.user.last_name}, I am {user.user.first_name} {user.user.last_name}. I would like to report that I have attended {classCode} class on {current_date} at {current_time}, but the BOLF-FRAS could not recognize me."
+        report = ReportTable.objects.create(
+            reportMessage = reportMessage,
+            creator = id,
+            receiver = adminId_instance,
+            reportDate = datetime.now(),
+            reportAttachment = reportAttachment
+        )
+        messages.success(request, 'Report has been created and will be review by your admin.')
+        return redirect('reportAttendance')
+    return render(request, 'report_attendance.html', context)
 
 

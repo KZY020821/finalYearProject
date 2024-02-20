@@ -1,4 +1,5 @@
 ﻿{% load static %}
+{% load i18n %}
 {% include 'head.html' %}
 <body>
     <div class="main-wrapper">
@@ -12,50 +13,82 @@
                 {% endfor %}
             {% endif %}
             <div class="content">
-                <h3 class="page-title">Admin Dashboard</h3>
+                <h3 class="page-title">{% trans 'Admin Dashboard'%}</h3>
             </div>
             <div class="row" style="margin: 15px;">
-              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-                  <div class="dash-widget">
-                      <span class="dash-widget-bg1"><i class="fa fa-stethoscope" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right">
-                        <h3>98</h3>
-                        <span class="widget-title1">Doctors <i class="fa fa-check" aria-hidden="true"></i></span>
+              <div class="col-sm ">
+                <a href="{% url 'admin-intake-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg1"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total intakes</h4>
+                        <h3>{{intake_count}}</h3>
                       </div>
                   </div>
+                </a>
               </div>
-              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-                  <div class="dash-widget">
-                      <span class="dash-widget-bg2"><i class="fa fa-user-o"></i></span>
-                      <div class="dash-widget-info text-right">
-                          <h3>1072</h3>
-                          <span class="widget-title2">Patients <i class="fa fa-check" aria-hidden="true"></i></span>
+              <div class="col-sm ">
+                <a href="{% url 'admin-subject-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg2"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total subjects</h4>
+                        <h3>{{subject_count}}</h3>
                       </div>
                   </div>
+                </a>
               </div>
-              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-                  <div class="dash-widget">
-                      <span class="dash-widget-bg3"><i class="fa fa-user-md" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right">
-                          <h3>72</h3>
-                          <span class="widget-title3">Attend <i class="fa fa-check" aria-hidden="true"></i></span>
+              <div class="col-sm ">
+                <a href="{% url 'admin-class-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg3"><i class="fa fa-users" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total classes</h4>
+                        <h3>{{class_count}}</h3>
                       </div>
                   </div>
+                </a>
               </div>
-              <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-                  <div class="dash-widget">
-                      <span class="dash-widget-bg4"><i class="fa fa-heartbeat" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right">
-                          <h3>618</h3>
-                          <span class="widget-title4">Pending <i class="fa fa-check" aria-hidden="true"></i></span>
+            </div>
+            <div class="row" style="margin: 15px;">
+              <div class="col-sm ">
+                <a href="{% url 'admin-admin-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg4"><i class="fa fa-user" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total admins</h4>
+                        <h3>{{ admin_count }}</h3>
                       </div>
                   </div>
+                </a>
+              </div>
+              <div class="col-sm ">
+                <a href="{% url 'admin-subject-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg1"><i class="fa fa-user" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total lecturer</h4>
+                        <h3>{{ lecturer_count }}</h3>
+                      </div>
+                  </div>
+                </a>
+              </div>
+              <div class="col-sm ">
+                <a href="{% url 'admin-class-management' %}" style="text-decoration: none;">
+                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                      <span class="dash-widget-bg2"><i class="fa fa-user" aria-hidden="true"></i></span>
+                      <div class="dash-widget-info text-right" style="color: #656565;">
+                        <h4>Total student </h4>
+                        <h3>{{user_count}}</h3>
+                      </div>
+                  </div>
+                </a>
               </div>
             </div>
             <div class="row" style="margin: 15px;">
               {% for intake_code, data in average_percentages.items %}    
-                  <div class="col-md-6 col-sm-6 col-lg-6 col-xl-3">
-                    <div class="dash-widget">
+                  <div class="col-sm">
+                    <div class="dash-widget"  style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
                       <div class="chart-title">
                         <h4>{{intake_code}} attendance - %</h4>
                       </div>	
@@ -63,18 +96,6 @@
                     </div>
                   </div>
               {% endfor %}
-          </div>
-          <div class="row" style="margin: 15px;">
-              <div class="col-md-12">
-              <div class="card">
-                  <div class="card-body">
-                  <div class="chart-title">
-                      <h4>Line graph</h4>
-                  </div>	
-                  <div id="chart" ></div>
-                  </div>
-              </div>
-              </div>
           </div>
         </div>
     </div>
@@ -159,17 +180,7 @@
               }
             },
             fill: {
-              type: 'gradient',
-              gradient: {
-                shade: 'dark',
-                type: 'horizontal',
-                shadeIntensity: 0.5,
-                gradientToColors: ['#ABE5A1'],
-                inverseColors: true,
-                opacityFrom: 1,
-                opacityTo: 1,
-                stops: [0, 100]
-              }
+              type: 'solid'
             },
             stroke: {
               lineCap: 'round'
@@ -182,52 +193,6 @@
         });
       });
     </script>    
-    <script>
-      var options = {
-          series: [{
-          name: 'Attended',
-          data: [44, 55, 41, 67, 22, 43, 21, 49]
-        }, {
-          name: 'Absent',
-          data: [13, 23, 20, 8, 13, 27, 33, 12]
-        }, {
-          name: 'Late',
-          data: [11, 17, 15, 15, 21, 14, 15, 13]
-        }],
-          chart: {
-          type: 'bar',
-          height: 350,
-          stacked: true,
-          stackType: '100%'
-        },
-        responsive: [{
-          breakpoint: 480,
-          options: {
-            legend: {
-              position: 'bottom',
-              offsetX: -10,
-              offsetY: 0
-            }
-          }
-        }],
-        xaxis: {
-          categories: ['2011 Q1', '2011 Q2', '2011 Q3', '2011 Q4', '2012 Q1', '2012 Q2',
-            '2012 Q3', '2012 Q4'
-          ],
-        },
-        fill: {
-          opacity: 1
-        },
-        legend: {
-          position: 'right',
-          offsetX: 0,
-          offsetY: 50
-        },
-        };
-
-        var chart = new ApexCharts(document.querySelector("#chart"), options);
-        chart.render();
-    </script>
 </body>
 
 </html>

@@ -25,10 +25,10 @@
                                 </thead>
                                 <tbody>
                                     {% for attendance in attendances %}
-                                        {% for intake_table in attendance.subjectCode.intakeTables.all %}
+                                        {% for intake_table in attendance.classCode.intakeTables.all %}
                                             {% if request.user.userprofile.intakeCode.intakeCode == intake_table.intakeCode %}
                                                 <tr>
-                                                    <td>{{ attendance.subjectCode }}</td>
+                                                    <td>{{ attendance.classCode }}</td>
                                                     <td>{{ attendance.creator }}</td>
                                                     <td>{{ attendance.classDate|date:"Y-m-d" }}</td>
                                                     <td>{{ attendance.classDate|time:"H:i:s" }}</td>

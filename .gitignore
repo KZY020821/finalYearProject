@@ -4,3 +4,15 @@ __pycache__/
 
 # ignore ALL files in ANY directory named temp
 finalYearProject/__pycache__
+
+# .gitignore
+
+# Exclude virtual environment
+myenv/
+
+# Exclude compiled Python files
+*.pyc
+__pycache__/
+
+# Exclude non-source code files
+media/

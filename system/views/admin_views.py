@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
+from django.utils.translation import gettext_lazy as _
 
 from ..decorators import allow_users
 from ..models import AbsenceMonitoringTable
@@ -77,7 +78,21 @@ def adminDashboard(request):
             'average_percentage': average_percentage,
             'occurrences': count
         }
-    context =  {'average_percentages': average_percentages}
+    intake_count = IntakeTable.objects.count()
+    subject_count = SubjectTable.objects.count()
+    class_count = ClassTable.objects.count()
+    admin_count = AdminProfile.objects.count()
+    lecturer_count = LecturerProfile.objects.count()
+    user_count = UserProfile.objects.count()
+    context =  {
+        'average_percentages': average_percentages, 
+        'intake_count' : intake_count,
+        'subject_count' : subject_count,
+        'class_count' : class_count, 
+        'admin_count' : admin_count, 
+        'lecturer_count' : lecturer_count, 
+        'user_count' : user_count, 
+        }
 
     return render(request, 'admin-templates/dashboard.html', context)
 
@@ -101,14 +116,13 @@ def admin_createAdmin(request):
         adminEmail = request.POST['adminEmail']
         firstName = request.POST['first_name']
         lastName = request.POST['last_name']
-        username = request.POST['username']
         password1 = request.POST['password1']
         password2 = request.POST['password2']
         profileImage = request.FILES.get('image')
 
         if User.objects.filter(email=adminEmail).exists():
             messages.error(request, 'Email used')
-        elif User.objects.filter(username=username).exists():
+        elif User.objects.filter(username=adminID).exists():
             messages.error(request, 'Username used')
         elif AdminProfile.objects.filter(adminId=adminID).exists():
             messages.error(request, 'Admin ID used')
@@ -134,7 +148,7 @@ def admin_createAdmin(request):
             fs.save(image_path, profileImage)
 
             
-            user = User.objects.create_user(username=username, email=adminEmail, password=password1, first_name=firstName, last_name=lastName)
+            user = User.objects.create_user(username=adminID, email=adminEmail, password=password1, first_name=firstName, last_name=lastName)
             user.save()
 
             group = Group.objects.get(name='admin')
@@ -255,14 +269,13 @@ def admin_createLecturer(request):
     lecturerEmail = request.POST['lecturerEmail']
     firstName = request.POST['first_name']
     lastName = request.POST['last_name']
-    username = request.POST['username']
     password1 = request.POST['password1']
     password2 = request.POST['password2']
     profileImage = request.FILES.get('image')
 
     if User.objects.filter(email=lecturerEmail).exists():
         messages.error(request, 'Email used')
-    elif User.objects.filter(username=username).exists():
+    elif User.objects.filter(username=lecturerID).exists():
         messages.error(request, 'Username used')
     elif LecturerProfile.objects.filter(lecturerId=lecturerID).exists():
         messages.error(request, 'Lecturer ID used')
@@ -288,7 +301,7 @@ def admin_createLecturer(request):
         fs.save(image_path, profileImage)
 
             
-        user = User.objects.create_user(username=username, email=lecturerEmail, password=password1, first_name=firstName, last_name=lastName)
+        user = User.objects.create_user(username=lecturerID, email=lecturerEmail, password=password1, first_name=firstName, last_name=lastName)
         user.save()
 
         group = Group.objects.get(name='lecturer')
@@ -409,7 +422,6 @@ def admin_createUser(request):
         password2 = request.POST['password2']
         first_name = request.POST['first_name']
         last_name = request.POST['last_name']
-        username = request.POST['username']
         intakeCode = request.POST['intakeCode']
         faceimage = request.FILES.get('image')  # Use request.FILES for file input
 
@@ -453,7 +465,7 @@ def admin_createUser(request):
                 fs = FileSystemStorage()
                 fs.save(image_path, faceimage)
 
-                user = User.objects.create_user(username=username , email=email, password=password, first_name=first_name, last_name=last_name)
+                user = User.objects.create_user(username=id , email=email, password=password, first_name=first_name, last_name=last_name)
                 user.save()
 
                 user_profile = UserProfile(user=user, userId=id, intakeCode=intake_instance, absenceMonitoringId=absenceMonitoring_instance, faceImageUrl=image_path)
@@ -1154,6 +1166,7 @@ def admin_approveLeave(request, id):
     leave = LeaveTable.objects.get(id=id)
     leave.status = "approved"
     leave.save()
+    
     messages.success(request, 'Leave approved')
     return redirect('admin-leave-management')
 
@@ -1272,7 +1285,7 @@ def admin_createAttendance(request, classCode):
             class_instance = ClassTable.objects.get(classCode = classCoder)
         except ClassTable.DoesNotExist:
             class_instance = None 
-
+        
         attendance_instance = AttendanceTable.objects.create(
             classCode = class_instance,
             creator = creator,
@@ -1459,44 +1472,65 @@ def viewMyProfile_admin(request, user_id):
             message = 'Sorry, you are not allowed to view this page'
             return render(request, 'error.html', {'message': message})
 
-def count_userAbsence ():
+def count_userAbsence():
     students = UserProfile.objects.all()
+
     for student in students:
         student.absenceMonitoringId = AbsenceMonitoringTable.objects.get(id=1)
         student.save()
 
     absent_students_count = {}
+
     for attendance in AttendanceTable.objects.all():
         kelas = attendance.classCode
         intake_tables = kelas.intakeTables.all()
+
         for intake_table in intake_tables:
             students = UserProfile.objects.filter(intakeCode=intake_table)
-            # Get students who are absent
-            absent_students = students.exclude(attended_user_tables=attendance)
-            # Update the absent count for each student
-            for student in absent_students:
-                if student.userId not in absent_students_count:
-                    absent_students_count[student.userId] = {'count': 1, 'triggered': set()}
-                else:
-                    absent_students_count[student.userId]['count'] += 1
-                # Check for triggers
-                for limit in AbsenceMonitoringTable.objects.exclude(absenceLimitDays=0):
-                    if (
-                        absent_students_count[student.userId]['count'] >= limit.absenceLimitDays
-                        and limit.absenceLimitDays not in absent_students_count[student.userId]['triggered']
-                    ):
-                        student.absenceMonitoringId = limit
-                        student.save()
-                        message = f"Student {student.userId} has triggered {limit.absenceLimitName}"
-                        if NotificationTable.objects.filter(notifyMessage = message).exists():
-                            break
-                        else:
-                            user_intake = student.intakeCode.intakeCode
-                            intake = IntakeTable.objects.get(intakeCode = user_intake)
-                            admin_username = intake.adminId.user.username
-                            NotificationTable.objects.create( receiver = admin_username, notifyDate = datetime.now(), notifyMessage = message, status = "delivered")
-                            NotificationTable.objects.create( receiver = student.user.username, notifyDate = datetime.now(), notifyMessage = message, status = "delivered")
-                            absent_students_count[student.userId]['triggered'].add(limit.absenceLimitDays)
+
+            for student in students:
+                if student.user.date_joined > attendance.classDate:
+                    continue
+
+                # Get students who are absent
+                absent_students = students.exclude(attended_user_tables=attendance)
+
+                # Update the absent count for each student
+                for student in absent_students:
+                    if student.userId not in absent_students_count:
+                        absent_students_count[student.userId] = {'count': 1, 'triggered': set()}
+                    else:
+                        absent_students_count[student.userId]['count'] += 1
+
+                    # Check for triggers
+                    for limit in AbsenceMonitoringTable.objects.exclude(absenceLimitDays=0):
+                        if (
+                            absent_students_count[student.userId]['count'] >= limit.absenceLimitDays
+                            and limit.absenceLimitDays not in absent_students_count[student.userId]['triggered']
+                        ):
+                            student.absenceMonitoringId = limit
+                            student.save()
+                            message = f"Student {student.userId} has triggered {limit.absenceLimitName}"
+
+                            if NotificationTable.objects.filter(notifyMessage=message).exists():
+                                break
+                            else:
+                                user_intake = student.intakeCode.intakeCode
+                                intake = IntakeTable.objects.get(intakeCode=user_intake)
+                                admin_username = intake.adminId.user.username
+                                NotificationTable.objects.create(
+                                    receiver=admin_username,
+                                    notifyDate=timezone.now(),
+                                    notifyMessage=message,
+                                    status="delivered"
+                                )
+                                NotificationTable.objects.create(
+                                    receiver=student.user.username,
+                                    notifyDate=timezone.now(),
+                                    notifyMessage=message,
+                                    status="delivered"
+                                )
+                                absent_students_count[student.userId]['triggered'].add(limit.absenceLimitDays)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1579,3 +1613,6 @@ def collect_attendance(processed_names_list, classCode, creator):
             )
             specific_attendance.status = 'attended'
             specific_attendance.save()
+
+def admin_change_language(request):
+    return render(request, 'admin-templates/change_language.html')

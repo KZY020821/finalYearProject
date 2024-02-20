@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 {% include 'head.html' %}
 <head>
     <style>
@@ -34,17 +35,20 @@
                             <input name="username" type="text" class="form-control" id="username" required>
                         </div>
                         <div class="form-group">
-                            <label>Password</label>
+                            <label>{% trans "Password" %}</label>
                             <input name="password" type="password" class="form-control" id="password" required>
                         </div>
                         <div class="form-group text-right">
-                            <a href="reset_password">Forgot your password?</a>
+                            <a href="reset_password">{% trans "Forgot your password" %}?</a>
                         </div>
                         <div class="form-group text-center">
                             <button type="submit" class="btn btn-primary account-btn">Login</button>
                         </div>
                         <div class="text-center register-link">
-                            Don’t have an account? <a href="registerPage">Register Now</a>
+                            {% trans "Don’t have an account" %}? <a href="registerPage">{% trans "Register Now" %}</a>
+                        </div>
+                        <div class="text-center register-link">
+                            Language : <a href="/en/" role="button">{% trans "English" %}</a> | <a href="/ms/" role="button">{% trans "Malay" %}</a>
                         </div>
                     </form>
                 </div>

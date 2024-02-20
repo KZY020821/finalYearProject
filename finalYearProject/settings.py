@@ -30,7 +30,7 @@ SECRET_KEY = 's-)d+c7=^8cwx&)8%a8+f9v6x4)elf5%()ag)_$&5(@*kvx72('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44']
+ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44','192.168.1.104', '192.168.0.233']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,34 +39,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rosetta',
     'system',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-USE_I18N = True
-
-LANGUAGE_CODE = "en"
-
-LANGUAGES = [
-    ('en', _('English')),
-    ('ms', _('Malay')),
-]
-USE_L10N = True
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),
-)
-
-
 
 ROOT_URLCONF = 'finalYearProject.urls'
 
@@ -127,16 +113,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
+
+LANGUAGES = [
+    ('en', _('English')),
+    ('ms', _('Malay')),
+]
 
 TIME_ZONE = 'Asia/Kuala_Lumpur'
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
@@ -146,6 +136,11 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, 'system/static/'),)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale')
+]
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

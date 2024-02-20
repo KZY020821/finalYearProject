@@ -12,6 +12,7 @@ urlpatterns =[
     path('view-myProfile/<int:user_id>/', views.viewMyProfile, name='view-myProfile'),
     path('edit-myProfile/<int:user_id>/', views.editMyProfile, name='edit-myProfile'),
     path('logout', views.logoutUser, name='logout'),
+    path('reportAttendance', views.reportAttendance, name='reportAttendance'),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(template_name = "password_reset.html"), name='reset_password'),
     path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(template_name = "password_reset_sent.html"), name='password_reset_done'),
@@ -93,6 +94,7 @@ urlpatterns =[
     path('view-myProfileAdmin/<int:user_id>/', admin_views.viewMyProfile_admin, name='view-myProfileAdmin'),
 
     path('admin-face/<int:user_id>/', admin_views.admin_face, name='admin-face'),
+    path('admin-change-language', admin_views.admin_change_language, name='admin-change-language'),
 
     # lecturer
     path('lecturer-dashboard', lecturer_views.lecturerDashboard, name='lecturer-dashboard'),

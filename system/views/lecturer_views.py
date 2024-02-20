@@ -13,6 +13,7 @@ from ..models import LecturerProfile
 from ..models import IntakeTable
 from ..models import SubjectTable
 from ..models import AttendanceTable
+from ..models import ClassTable
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
@@ -169,7 +170,7 @@ def viewMyProfile_lecturer (request, user_id):
     if user_id == request.user.id:
             user = User.objects.get(id=user_id)
             lecturer_user = LecturerProfile.objects.get(user = user)
-            subjects = SubjectTable.objects.filter(lecturerId = lecturer_user.lecturerId)
+            subjects = ClassTable.objects.filter(lecturerId = lecturer_user.lecturerId)
             return render(request, 'lecturer-templates/viewMyProfileLecturer.html', {'user': user, 'subjects': subjects, })
     else:
         message = 'Sorry, you are not allowed to view this page'
