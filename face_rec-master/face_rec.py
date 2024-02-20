@@ -8,13 +8,13 @@ from imutils.video import VideoStream
 from eye_status import * 
 
 def init():
-    face_cascPath = 'haarcascade_frontalface_alt.xml'
+    face_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_frontalface_alt.xml'
     # face_cascPath = 'lbpcascade_frontalface.xml'
 
-    open_eye_cascPath = 'haarcascade_eye_tree_eyeglasses.xml'
-    left_eye_cascPath = 'haarcascade_lefteye_2splits.xml'
-    right_eye_cascPath ='haarcascade_righteye_2splits.xml'
-    dataset = 'faces'
+    open_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
+    left_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_lefteye_2splits.xml'
+    right_eye_cascPath ='/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_righteye_2splits.xml'
+    dataset = '/Users/khorzeyi/code/finalYearProject/media/6700YCOM/'
 
     face_detector = cv2.CascadeClassifier(face_cascPath)
     open_eyes_detector = cv2.CascadeClassifier(open_eye_cascPath)

@@ -10,10 +10,14 @@ from keras.layers import Dense
 from keras.models import model_from_json
 from keras.preprocessing.image import ImageDataGenerator
 
-from scipy.ndimage import imread
-from scipy.misc import imresize, imsave
+from imageio import imread
+from skimage.transform import resize
+from imageio import imsave
+from PIL import Image
 
-IMG_SIZE = 24
+
+
+IMG_SIZE = 24  # or the desired size for resizing
 
 def collect():
 	train_datagen = ImageDataGenerator(
@@ -54,15 +58,15 @@ def save_model(model):
 	with open("model.json", "w") as json_file:
 		json_file.write(model_json)
 	# serialize weights to HDF5
-	model.save_weights("model.h5")
+	model.save_weights("/Users/khorzeyi/code/finalYearProject/face_rec-master/model.h5")
 
 def load_model():
-	json_file = open('model.json', 'r')
+	json_file = open('/Users/khorzeyi/code/finalYearProject/face_rec-master/model.json', 'r')
 	loaded_model_json = json_file.read()
 	json_file.close()
 	loaded_model = model_from_json(loaded_model_json)
 	# load weights into new model
-	loaded_model.load_weights("model.h5")
+	loaded_model.load_weights("/Users/khorzeyi/code/finalYearProject/face_rec-master/model.h5")
 	loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 	return loaded_model
 
@@ -100,18 +104,34 @@ def train(train_generator, val_generator):
 	save_model(model)
 
 def predict(img, model):
-	img = Image.fromarray(img, 'RGB').convert('L')
-	img = imresize(img, (IMG_SIZE,IMG_SIZE)).astype('float32')
-	img /= 255
-	img = img.reshape(1,IMG_SIZE,IMG_SIZE,1)
-	prediction = model.predict(img)
-	if prediction < 0.1:
-		prediction = 'closed'
-	elif prediction > 0.9:
-		prediction = 'open'
-	else:
-		prediction = 'idk'
-	return prediction
+    # Convert the image to a NumPy array if it's not already
+    img_array = np.array(img)
+
+    # Resize the image
+    img_resized = resize(img_array, (IMG_SIZE, IMG_SIZE)).astype('float32')
+
+    # Convert the resized image to grayscale
+    img_gray = Image.fromarray(img_resized, 'RGB').convert('L')
+
+    # Resize the grayscale image
+    img_gray_resized = resize(np.array(img_gray), (IMG_SIZE, IMG_SIZE)).astype('float32')
+
+    # Normalize the pixel values
+    img_gray_resized /= 255
+
+    # Reshape the image for the model input
+    img_reshaped = img_gray_resized.reshape(1, IMG_SIZE, IMG_SIZE, 1)
+
+    # Make the prediction
+    prediction = model.predict(img_reshaped)
+
+    # Interpret the prediction
+    if prediction < 0.1:
+        return 'closed'
+    elif prediction > 0.9:
+        return 'open'
+    else:
+        return 'idk'
 
 def evaluate(X_test, y_test):
 	model = load_model()
