@@ -3,17 +3,24 @@ import os, sys
 import cv2
 import numpy as np
 import math
-import os
-import django
 import dlib
 import datetime
 from PIL import Image
+
+import os
+import sys
+sys.path.append('/Users/khorzeyi/code/finalYearProject')
 
 # Set the DJANGO_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 
 # Initialize Django
+import django
 django.setup()
+from tqdm import tqdm
+from collections import defaultdict
+from imutils.video import VideoStream
+from eye_status import *
 
 # Import Django models
 from system.views.admin_views import collect_attendance
@@ -43,13 +50,24 @@ class FaceRecognition():
     confidence_threshold = 0.3
 
     def __init__(self):
+        face_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_frontalface_alt.xml'
+        # face_cascPath = 'lbpcascade_frontalface.xml'
+
+        open_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
+        left_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_lefteye_2splits.xml'
+        right_eye_cascPath ='/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_righteye_2splits.xml'
+        self.face_detector = cv2.CascadeClassifier(face_cascPath)
+        self.open_eyes_detector = cv2.CascadeClassifier(open_eye_cascPath)
+        self.left_eye_detector = cv2.CascadeClassifier(left_eye_cascPath)
+        self.right_eye_detector = cv2.CascadeClassifier(right_eye_cascPath)
+        model = load_model()
         self.encode_faces()  # Call the face encoding function to load known faces
         self.load_qr_code()  # Call the function to load the QR code image
 
     def encode_faces(self):
-        if len(sys.argv) > 1:
-            classCode = sys.argv[1]
-        directory = f'media/{classCode}/'
+        # if len(sys.argv) > 1:
+        #     classCode = sys.argv[1]
+        directory = f'/Users/khorzeyi/code/finalYearProject/media/6612YCOM1/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
 
@@ -69,6 +87,17 @@ class FaceRecognition():
             except Exception as ex:
                 print(ex)
         print(self.known_face_names)
+
+    def isBlinking(history, maxFrames):
+        """ @history: A string containing the history of eyes status 
+            where a '1' means that the eyes were closed and '0' open.
+            @maxFrames: The maximal number of successive frames where an eye is closed """
+        for i in range(maxFrames):
+            pattern = '1' + '0'*(i+1) + '1'
+            if pattern in history:
+                return True
+        return False
+
     def load_qr_code(self):
         # Load the static QR code image with alpha channel
         qr_code_image = cv2.imread('system/static/assets/img/qrcode.png', cv2.IMREAD_UNCHANGED)
@@ -121,23 +150,33 @@ class FaceRecognition():
                             self.face_names.append(f'{name} ({confidence})')
                             if name not in self.processed_names:
                                 self.processed_names.add(f'{name}')
+                        # Draw rectangles and labels on the frame for recognized faces
+                        for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                            top *= 4
+                            right *= 4
+                            bottom *= 4
+                            left *= 4
+
+                            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)  # Draw a red rectangle around the face
+                            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), -1)  # Draw a label background
+                            cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                        (255, 255, 255), 1)  # Put the name and confidence label
                     else:
                         # Face does not match any known face above the confidence threshold
                         unknown_confidence = face_confidence(np.min(face_distances), face_match_threshold=0.7)
                         if float(unknown_confidence.rstrip('%')) > self.confidence_threshold * 100:
                             self.face_names.append(f'Unknown')
+                        # Draw rectangles and labels on the frame for recognized faces
+                        for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                            top *= 4
+                            right *= 4
+                            bottom *= 4
+                            left *= 4
 
-            # Draw rectangles and labels on the frame for recognized faces
-            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
-                top *= 4
-                right *= 4
-                bottom *= 4
-                left *= 4
-
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
-                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
-                            (255, 255, 255), 1)  # Put the name and confidence label
+                            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
+                            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
+                            cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                        (255, 255, 255), 1)  # Put the name and confidence label
 
             cv2.imshow('face recognition', frame)  # Display the frame with face recognition
 

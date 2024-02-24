@@ -1188,11 +1188,26 @@ textarea.form-control {
 	font-size: 50px;
 	text-align: center;
 	line-height: 65px;
-	background: #ffbc35;
+	background: #ff3c35;
 	border-radius: 50%;
 	font-size: 40px;
 	height: 65px;
 }
+
+.dash-widget-bg5 {
+	width: 65px;
+	float: left;
+	color: #fff;
+	display: block;
+	font-size: 50px;
+	text-align: center;
+	line-height: 65px;
+	background: #ff3c35;
+	border-radius: 50%;
+	font-size: 40px;
+	height: 65px;
+}
+
 .card-table.card-table-top .card-body {
 	height: 175px;
 	overflow-y: auto;

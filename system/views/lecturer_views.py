@@ -18,17 +18,48 @@ from ..models import ClassTable
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturerDashboard(request):
-  return render(request, 'lecturer-templates/dashboard.html')
+    user = request.user
+    lecturer = LecturerProfile.objects.get(user = user)
+    classes_count = ClassTable.objects.filter( lecturerId = lecturer).count()
+    classes = ClassTable.objects.filter(lecturerId = lecturer)
+    classes = ClassTable.objects.filter(lecturerId=lecturer)
+    attendances = []
+
+    class_data = []
+
+    for kelas in classes:
+        attendance = AttendanceTable.objects.filter(classCode=kelas)
+        class_total_attendances = 0
+        class_total_percentage = 0
+
+        for att in attendance:
+            attendance_percentage = att.noAttendedUser / att.totalUser * 100
+            formatted_percentage = int(round(attendance_percentage))
+
+            class_total_attendances += 1
+            class_total_percentage += formatted_percentage
+
+            attendances.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
+
+        if class_total_attendances != 0:
+            average_percentage = class_total_percentage / class_total_attendances
+            class_data.append({'class_name': kelas.classCode, 'average_percentage': round(average_percentage)})
+
+    context = {
+        'classes_count': classes_count,
+        'classes': classes,
+        'class_data': class_data,
+    }
+    return render(request, 'lecturer-templates/dashboard.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_subjectManagement(request):
-  subjects = SubjectTable.objects.all()
-  if request.method == 'POST':
-    searchSubject = request.POST['searchSubject']
-    lists = SubjectTable.objects.filter( Q(subjectCode__icontains=searchSubject) | Q(subjectName__icontains=searchSubject)).select_related('lecturerId__user').distinct()
-    return render(request, 'lecturer-templates/subjectManagement.html', {'subjects': subjects, 'searched': searchSubject, 'lists': lists})
-  return render(request, 'lecturer-templates/subjectManagement.html', {'subjects': subjects})
+    user = request.user
+    lecturer = LecturerProfile.objects.get(user = user)
+    subjects = ClassTable.objects.filter( lecturerId = lecturer)
+  
+    return render(request, 'lecturer-templates/subjectManagement.html', {'subjects': subjects})
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
@@ -55,13 +86,25 @@ def lecturer_viewAbsenceMonitoring(request):
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_attendanceManagement(request):
-    attendances = AttendanceTable.objects.all()
-    return render(request, 'lecturer-templates/attendanceManagement.html', {'attendances':attendances})
+    user = request.user
+    lecturer = LecturerProfile.objects.get(user = user)
+    classes = ClassTable.objects.filter(lecturerId = lecturer)
+    attendances = []
+    for kelas in classes:
+        attendance = AttendanceTable.objects.filter(classCode = kelas)
+        attendances.extend(attendance)
+    context = {
+        'attendances' : attendances,
+
+    }
+    return render(request, 'lecturer-templates/attendanceManagement.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_chooseSubject(request):
-    subjects = SubjectTable.objects.all()
+    user = request.user
+    lecturer = LecturerProfile.objects.get(user = user)
+    subjects = ClassTable.objects.filter(lecturerId = lecturer)
     if request.method == 'POST':
         subjectCode = request.POST['subjectCode']
         print(subjectCode)

@@ -1257,3 +1257,27 @@ msgstr "Tidak mempunyai akaun"
 
 msgid "Register Now"
 msgstr "Daftar sekarang"
+
+msgid "Late"
+msgstr "Lewat"
+
+msgid "Attended"
+msgstr "Hadir"
+
+msgid "Absent"
+msgstr "Tidak Hadir"
+
+msgid "Excuse"
+msgstr "Alasan"
+
+msgid "Emergency"
+msgstr "Kecemasan"
+
+msgid "Curriculum"
+msgstr "Kurikulum"
+
+msgid "Search:"
+msgstr "Cari:"
+
+msgid "Attendance Management"
+msgstr "Pengurusan Kehadiran"

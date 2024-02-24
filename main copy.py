@@ -58,7 +58,7 @@ class FaceRecognition():
     def encode_faces(self):
         if len(sys.argv) > 1:
             subjectCode = sys.argv[1]
-        directory = f'/Users/khorzeyi/code/finalYearProject/media/6700YCOM/'
+        directory = f'/Users/khorzeyi/code/finalYearProject/media/zhzy/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
 
@@ -172,23 +172,33 @@ class FaceRecognition():
                                 self.face_names.append(f'{name} ({confidence})')
                                 if name not in self.processed_names:
                                     self.processed_names.add(f'{name}')
+                            # Draw rectangles and labels on the frame for recognized faces
+                            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                                top *= 4
+                                right *= 4
+                                bottom *= 4
+                                left *= 4
+
+                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)  # Draw a red rectangle around the face
+                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), -1)  # Draw a label background
+                                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                            (255, 255, 255), 1)  # Put the name and confidence label
                         else:
                             # Face does not match any known face above the confidence threshold
                             unknown_confidence = face_confidence(np.min(face_distances), face_match_threshold=0.7)
                             if float(unknown_confidence.rstrip('%')) > self.confidence_threshold * 100:
                                 self.face_names.append(f'Unknown')
+                            # Draw rectangles and labels on the frame for recognized faces
+                            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                                top *= 4
+                                right *= 4
+                                bottom *= 4
+                                left *= 4
 
-            # Draw rectangles and labels on the frame for recognized faces
-            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
-                top *= 4
-                right *= 4
-                bottom *= 4
-                left *= 4
-
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
-                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
-                            (255, 255, 255), 1)  # Put the name and confidence label
+                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
+                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
+                                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                            (255, 255, 255), 1)  # Put the name and confidence label
 
             cv2.imshow('face recognition', frame)  # Display the frame with face recognition
 

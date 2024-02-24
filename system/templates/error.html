@@ -5,16 +5,16 @@
         <div class="error-box">
             <h3><i class="fa fa-warning"></i> {{ message }}</h3>
             {% if request.user.groups.exists %}
-            {% with group=request.user.groups.first.name %}
-                {% if group == 'admin' %}
-                    <a href="{% url 'admin-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
-                {% elif group == 'lecturer' %}
-                    <a href="{% url 'lecturer-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
-                {% elif group == 'user' %}
-                    <a href="{% url 'user-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
-                {% endif %}
-            {% endwith %}
-        {% endif %}
+                {% with group=request.user.groups.first.name %}
+                    {% if group == 'admin' %}
+                        <a href="{% url 'admin-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
+                    {% elif group == 'lecturer' %}
+                        <a href="{% url 'lecturer-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
+                    {% elif group == 'user' %}
+                        <a href="{% url 'user-dashboard' %}" class="btn btn-primary go-home">Dashboard</a>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
         </div>
     </div>
     {% include 'jsreferences.html' %}

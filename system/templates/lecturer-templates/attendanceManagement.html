@@ -38,9 +38,8 @@
                                 </thead>
                                 <tbody>
                                     {% for attendance in attendances %}
-                                        {% if attendance.subjectCode.lecturerId.lecturerId == request.user.lecturerprofile.lecturerId %}
                                             <tr>
-                                                <td>{{ attendance.subjectCode }}</td>
+                                                <td>{{ attendance.classCode }}</td>
                                                 <td>{{ attendance.creator }}</td>
                                                 <td> {{attendance.noAttendedUser}}/{{attendance.totalUser}} </td>
                                                 <td>{{ attendance.classDate|date:"Y-m-d" }}</td>
@@ -50,7 +49,6 @@
                                                     <a href="lecturer-edit-attendance/{{attendance.id}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
                                                 </td>
                                             </tr>
-                                        {% endif %}
                                     {% endfor %}
                                 </tbody>
                             </table>

@@ -1540,7 +1540,7 @@ def admin_face (request, user_id):
             classCode = request.POST['classCode']
             virtualenv_path = "myenv"
             python_path = os.path.join(virtualenv_path, "bin", "python")
-            main_script_path = "main.py"
+            main_script_path = f"/Users/khorzeyi/code/finalYearProject/face_rec-master/face_rec.py"
             creator = request.user.username
             command = [python_path, main_script_path, classCode, creator]
             try:

@@ -1,12 +1,50 @@
 import os
+import sys
+sys.path.append('/Users/khorzeyi/code/finalYearProject')
+
+# Set the DJANGO_SETTINGS_MODULE
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
+
+# Initialize Django
+import django
+django.setup()
+
 import cv2
 import face_recognition
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
 from imutils.video import VideoStream
-from eye_status import * 
+from eye_status import *
+from system.views.admin_views import collect_attendance
 
+processed_names = []
+
+# Set the DJANGO_SETTINGS_MODULE
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
+
+# Initialize Django
+django.setup()
+
+def load_qr_code():
+    # Load the static QR code image with an alpha channel
+    qr_code_image = cv2.imread('/Users/khorzeyi/code/finalYearProject/system/static/assets/img/qrcode.png', cv2.IMREAD_UNCHANGED)
+    return qr_code_image
+
+def overlay_qr_code(frame, qr_code_alpha_channel):
+    # Resize QR code image to fit in the bottom right corner
+    qr_code_resized = cv2.resize(qr_code_alpha_channel, (150, 150))
+
+    # Extract the alpha channel from the resized QR code image
+    qr_code_alpha_channel = qr_code_resized[:, :, 3]
+
+    # Create a mask for the QR code alpha channel
+    mask = cv2.cvtColor(qr_code_alpha_channel, cv2.COLOR_GRAY2BGR) / 255.0
+
+    # Overlay QR code on the frame at the bottom right corner
+    frame[-150:, -150:] = frame[-150:, -150:] * (1 - mask) + qr_code_resized[:, :, :3] * mask
+
+    
 def init():
     face_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_frontalface_alt.xml'
     # face_cascPath = 'lbpcascade_frontalface.xml'
@@ -14,7 +52,9 @@ def init():
     open_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
     left_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_lefteye_2splits.xml'
     right_eye_cascPath ='/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_righteye_2splits.xml'
-    dataset = '/Users/khorzeyi/code/finalYearProject/media/6700YCOM/'
+    if len(sys.argv) > 1:
+            classCode = sys.argv[1]
+    dataset = f'/Users/khorzeyi/code/finalYearProject/media/6612YCOM1/'
 
     face_detector = cv2.CascadeClassifier(face_cascPath)
     open_eyes_detector = cv2.CascadeClassifier(open_eye_cascPath)
@@ -29,11 +69,16 @@ def init():
 
     print("[LOG] Collecting images ...")
     images = []
+    imageName = []
     for direc, _, files in tqdm(os.walk(dataset)):
         for file in files:
-            if file.endswith("jpg"):
+            if file.lower().endswith(('.jpg', '.jpeg', '.png')):
                 images.append(os.path.join(direc,file))
-    return (model,face_detector, open_eyes_detector, left_eye_detector,right_eye_detector, video_capture, images) 
+                imageName.append(file)
+    print(imageName)            
+    qr_code_alpha_channel = load_qr_code()
+
+    return (model, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, video_capture, images, qr_code_alpha_channel)
 
 def process_and_encode(images):
     # initialize the list of known encodings and known names
@@ -54,7 +99,7 @@ def process_and_encode(images):
         encoding = face_recognition.face_encodings(image, boxes)
 
         # the person's name is the name of the folder where the image comes from
-        name = image_path.split(os.path.sep)[-2]
+        name = image_path.split(os.path.sep)[-1]
 
         if len(encoding) > 0 : 
             known_encodings.append(encoding[0])
@@ -72,11 +117,12 @@ def isBlinking(history, maxFrames):
             return True
     return False
 
-def detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected):
+def detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected, qr_code_alpha_channel):
         frame = video_capture.read()
         # resize the frame
-        frame = cv2.resize(frame, (0, 0), fx=0.6, fy=0.6)
-
+        frame = cv2.resize(frame, (0, 0), fx=1.0, fy=1.0)
+        overlay_qr_code(frame, qr_code_alpha_channel)
+        
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
@@ -88,7 +134,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             minSize=(50, 50),
             flags=cv2.CASCADE_SCALE_IMAGE
         )
-
         # for each detected face
         for (x,y,w,h) in faces:
             # Encode the face into a 128-d embeddings vector
@@ -178,7 +223,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
                         color = (0,0,255)
                     cv2.rectangle(left_face,(ex,ey),(ex+ew,ey+eh),color,2)
                 eyes_detected[name] += eye_status
-
             # Each time, we check if the person has blinked
             # If yes, we display its name
             if isBlinking(eyes_detected[name],3):
@@ -186,19 +230,25 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
                 # Display name
                 y = y - 15 if y - 15 > 15 else y + 15
                 cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX,0.75, (0, 255, 0), 2)
-
+                if name not in processed_names:
+                    processed_names.append(f'{name}')
         return frame
 
 
 if __name__ == "__main__":
-    (model, face_detector, open_eyes_detector,left_eye_detector,right_eye_detector, video_capture, images) = init()
+    (model, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, video_capture, images, qr_code_alpha_channel) = init()
     data = process_and_encode(images)
 
     eyes_detected = defaultdict(str)
     while True:
-        frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector,left_eye_detector,right_eye_detector, data, eyes_detected)
+        frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected, qr_code_alpha_channel)
         cv2.imshow("Face Liveness Detector", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if cv2.waitKey(1) == ord('q'):
+                print(list(processed_names))
+                if len(sys.argv) > 1:
+                    classCode = sys.argv[1]
+                    creator = sys.argv[2]
+                collect_attendance(list(processed_names), classCode, creator)
+                break  # Press 'q' to quit the program
     cv2.destroyAllWindows()
     video_capture.stop()

@@ -16,7 +16,8 @@
                             <table id="example" class="table table-striped custom-table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Subject Code{{request.user.userprofile.intakeCode.intakeCode}}</th>
+                                        <th>Subject Code</th>
+                                        <th>Class Code</th>
                                         <th>Subject Name</th>
                                         <th>Lecturer</th>
                                         <th>Intake(s)</th>
@@ -30,7 +31,8 @@
                                             {% if intake.intakeCode == request.user.userprofile.intakeCode.intakeCode %}
                                                 <tr>
                                                     <td>{{ subject.subjectCode }}</td>
-                                                    <td>{{ subject.subjectName }}</td>
+                                                    <td>{{ subject.classCode }}</td>
+                                                    <td>{{ subject.subjectCode.subjectName }}</td>
                                                     <td>{{ subject.lecturerId.user.username }}</td>
                                                     <td>
                                                         {% for intake in subject.intakeTables.all %}

@@ -1,4 +1,6 @@
 {% load static %}
+{% load i18n %}
+
 {% include 'head.html' %}
 <body>
     <div class="main-wrapper">
@@ -7,7 +9,8 @@
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">Attendance Management</h4>
+                        <h4 class="page-title">{% trans 'Attendance Management' %}</h4>
+                        <h4 class="page-title">{% trans 'Admin Dashboard' %}</h4>
                     </div>
                 </div>
                 <div class="row">
@@ -25,23 +28,29 @@
                                 </thead>
                                 <tbody>
                                     {% for attendance in attendances %}
-                                        {% for intake_table in attendance.classCode.intakeTables.all %}
-                                            {% if request.user.userprofile.intakeCode.intakeCode == intake_table.intakeCode %}
-                                                <tr>
-                                                    <td>{{ attendance.classCode }}</td>
-                                                    <td>{{ attendance.creator }}</td>
-                                                    <td>{{ attendance.classDate|date:"Y-m-d" }}</td>
-                                                    <td>{{ attendance.classDate|time:"H:i:s" }}</td>
-                                                    <td>
-                                                        {% if request.user.userprofile in attendance.attendedUser.all %}
-                                                            <span class="custom-badge status-green">Attended</span>
-                                                        {% else %}
-                                                            <span class="custom-badge status-red">Absent</span>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
+                                        <tr>
+                                            <td>{{ attendance.relation_id.classCode }}</td>
+                                            <td>{{ attendance.relation_id.creator }}</td>
+                                            <td>{{ attendance.checkIn|date:"Y-m-d" }}</td>
+                                            <td>{{ attendance.checkIn|time:"H:i:s" }}</td>
+                                            <td>
+                                                {% if attendance.status == 'attended' %}
+                                                    <span class="custom-badge status-green">{% trans 'Attended' %}</span>
+                                                {% elif attendance.status == 'absent' %}
+                                                    <span class="custom-badge status-red">{% trans 'Absent' %}</span>
+                                                {% elif attendance.status == 'mc' %}
+                                                    <span class="custom-badge status-orange">MC</span>
+                                                {% elif attendance.status == 'excuse' %}
+                                                <span class="custom-badge status-orange">{% trans 'Excuse' %}</span>
+                                                {% elif attendance.status == 'emergency' %}
+                                                <span class="custom-badge status-orange">{% trans 'Emergency' %}</span>
+                                                {% elif attendance.status == 'curriculum' %}
+                                                <span class="custom-badge status-orange">{% trans 'Curriculum' %}</span>
+                                                {% elif attendance.status == 'late' %}
+                                                <span class="custom-badge status-orange">{% trans 'Late' %}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -53,8 +62,23 @@
     </div>
     {% include 'jsreferences.html' %}
     <script>
-        new DataTable('#example');
-    </script>
+        $(document).ready(function() {
+            // Check if DataTable is already initialized
+            if ($.fn.DataTable.isDataTable('#example')) {
+                // Destroy the existing DataTable instance
+                $('#example').DataTable().destroy();
+            }
+    
+            // Initialize DataTable with your options
+            $('#example').DataTable({
+                "language": {
+                    "search": "{% trans 'Search:' %}",
+                    // Other DataTable options...
+                }
+            });
+        });
+    </script>    
+    
 </body>
 
 </html>

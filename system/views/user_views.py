@@ -19,18 +19,50 @@ from ..models import LeaveTable
 from ..models import ReportTable
 from ..models import NotificationTable
 from ..models import AttendanceTable
+from ..models import AttendanceStatus
 from ..models import ClassTable
+from system import models
+from django.db.models import Count
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
 def userDashboard(request):
-  return render(request, 'user-templates/dashboard.html')
+    user = request.user
+    profile = UserProfile.objects.get(user=user)
+    intake = profile.intakeCode
+    # Assuming `intakeTables` is the related name in your ClassTable model
+    # Use `filter` to get ClassTable objects related to the specific intake
+    class_tables = ClassTable.objects.filter(intakeTables=intake)
+    class_count = class_tables.count()
+
+    # Count the total number of related subjects across all ClassTable objects
+    subject_count = class_tables.aggregate(total_subjects=Count('subjectCode', distinct=True))['total_subjects']
+    absent_count = AttendanceStatus.objects.filter(userId=profile, status='absent').count()
+    attendance_percentages = []
+
+    for kelas in class_tables:
+        total_classes = AttendanceTable.objects.filter(nameList=profile, classCode=kelas).count()
+        attended_classes = AttendanceTable.objects.filter(attendedUser=profile, classCode=kelas).count()
+
+        if total_classes != 0:
+            attendance_percentage = attended_classes / total_classes
+            formatted_percentage = "{:.0f}".format(attendance_percentage * 100)
+            attendance_percentages.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
+
+    context = {
+      'intake': intake, 
+      'subject_count' : subject_count,
+      'class_count' : class_count,
+      'absent_count' : absent_count,
+      'attendance_percentages': attendance_percentages,
+    }
+    return render(request, 'user-templates/dashboard.html', context)
 
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
 def user_subjectManagement(request):
-  subjects = SubjectTable.objects.all()
+  subjects = ClassTable.objects.all()
   if request.method == 'POST':
     searchSubject = request.POST['searchSubject']
     lists = SubjectTable.objects.filter( Q(subjectCode__icontains=searchSubject) | Q(subjectName__icontains=searchSubject)).select_related('lecturerId__user').distinct()
@@ -117,7 +149,9 @@ def user_viewLeave(request, id):
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
 def user_attendanceManagement(request):
-  attendances = AttendanceTable.objects.all() 
+  user = request.user
+  profile = UserProfile.objects.get(user=user)
+  attendances = AttendanceStatus.objects.filter(userId=profile).order_by('-checkIn')
   return render(request, 'user-templates/attendanceManagement.html', {'attendances': attendances})
 
 

@@ -19,7 +19,7 @@
               <div class="col-sm ">
                 <a href="{% url 'admin-intake-management' %}" style="text-decoration: none;">
                   <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg1"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
+                      <span class="dash-widget-bg1" style="background: #ff3c35;"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
                       <div class="dash-widget-info text-right" style="color: #656565;">
                         <h4>Total intakes</h4>
                         <h3>{{intake_count}}</h3>
@@ -76,7 +76,7 @@
               <div class="col-sm ">
                 <a href="{% url 'admin-class-management' %}" style="text-decoration: none;">
                   <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg2"><i class="fa fa-user" aria-hidden="true"></i></span>
+                      <span class="dash-widget-bg2" style="background: #a735ff;"><i class="fa fa-user" aria-hidden="true"></i></span>
                       <div class="dash-widget-info text-right" style="color: #656565;">
                         <h4>Total student </h4>
                         <h3>{{user_count}}</h3>
@@ -126,6 +126,12 @@
               type: 'radialBar',
               toolbar: {
                 show: true
+              },
+              animations: {
+                enabled: false, // Set animations to false to disable animation
+                dynamicAnimation: {
+                  enabled: false
+                }
               }
             },
             plotOptions: {
