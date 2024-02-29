@@ -1,19 +1,12 @@
-import face_recognition
-import os
-import sys
-import cv2
-import numpy as np
 import math
 import os
+import sys
+
+import cv2
 import django
-import dlib
+import face_recognition
+import numpy as np
 import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Conv2D
-from keras.layers import AveragePooling2D
-from keras.layers import Flatten
-from keras.layers import Dense
-from keras.preprocessing.image import ImageDataGenerator
 
 # Set the DJANGO_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
@@ -23,6 +16,7 @@ tf.compat.v1.disable_eager_execution()
 
 # Initialize Django
 django.setup()
+
 
 # Import Django models
 
@@ -39,7 +33,40 @@ def face_confidence(face_distance, face_match_threshold=0.6):
         value = (linear_val + ((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2))) * 100
         return str(round(value, 2)) + '%'  # Return adjusted confidence as a percentage
 
-class FaceRecognition():
+
+def eye_aspect_ratio(eye):
+    # Convert eye landmarks to NumPy array
+    eye = np.array(eye, dtype=np.float32)
+
+    # Calculate Euclidean distances between pairs of eye landmarks
+    A = np.linalg.norm(eye[1] - eye[5])
+    B = np.linalg.norm(eye[2] - eye[4])
+
+    # Calculate Euclidean distance between the horizontal eye landmarks
+    C = np.linalg.norm(eye[0] - eye[3])
+
+    # Calculate the eye aspect ratio
+    ear = (A + B) / (2 * C)
+
+    return ear
+
+
+def liveness_detection(landmarks):
+    # Extract the left and right eye landmarks
+    left_eye = landmarks['left_eye']
+    right_eye = landmarks['right_eye']
+
+    # Calculate the eye aspect ratio for both eyes
+    left_ear = eye_aspect_ratio(left_eye)
+    right_ear = eye_aspect_ratio(right_eye)
+
+    # Average of the eye aspect ratios for liveness detection
+    liveness_value = (left_ear + right_ear) / 2.0
+
+    return liveness_value
+
+
+class FaceRecognition:
     # Initialize class variables
     face_locations = []
     face_encodings = []
@@ -52,24 +79,21 @@ class FaceRecognition():
     confidence_threshold = 0.3
 
     def __init__(self):
+        self.qr_code_alpha_channel = None
         self.encode_faces()  # Call the face encoding function to load known faces
         self.load_qr_code()  # Call the function to load the QR code image
 
     def encode_faces(self):
         if len(sys.argv) > 1:
-            subjectCode = sys.argv[1]
+            pass
         directory = f'/Users/khorzeyi/code/finalYearProject/media/zhzy/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
 
-        # Use the dlib face recognition model (e.g., 'dlib_face_recognition_resnet_model_v1.dat')
-        dlib_model_path = '/Users/khorzeyi/code/finalYearProject/dlib_face_recognition_resnet_model_v1.dat'
-        dlib_model = dlib.face_recognition_model_v1(dlib_model_path)
-
         for image in image_files:
             try:
                 face_image = face_recognition.load_image_file(os.path.join(directory, image))
-                
+
                 # Use the dlib face recognition model
                 face_encoding = face_recognition.face_encodings(face_image)[0]
 
@@ -81,7 +105,8 @@ class FaceRecognition():
 
     def load_qr_code(self):
         # Load the static QR code image with an alpha channel
-        qr_code_image = cv2.imread('/Users/khorzeyi/code/finalYearProject/system/static/assets/img/qrcode.png', cv2.IMREAD_UNCHANGED)
+        qr_code_image = cv2.imread('/Users/khorzeyi/code/finalYearProject/system/static/assets/img/qrcode.png',
+                                   cv2.IMREAD_UNCHANGED)
         self.qr_code_alpha_channel = qr_code_image
 
     def overlay_qr_code(self, frame):
@@ -94,43 +119,12 @@ class FaceRecognition():
         # Create a mask for the QR code alpha channel
         mask = cv2.cvtColor(qr_code_alpha_channel, cv2.COLOR_GRAY2BGR) / 255.0
 
-        # Overlay QR code on the frame at the bottom right corner
+        # Overlay QR code on the frame in the bottom right corner
         frame[-150:, -150:] = frame[-150:, -150:] * (1 - mask) + qr_code_resized[:, :, :3] * mask
-
-    def eye_aspect_ratio(self, eye):
-        # Convert eye landmarks to NumPy array
-        eye = np.array(eye, dtype=np.float32)
-
-        # Calculate Euclidean distances between pairs of eye landmarks
-        A = np.linalg.norm(eye[1] - eye[5])
-        B = np.linalg.norm(eye[2] - eye[4])
-
-        # Calculate Euclidean distance between the horizontal eye landmarks
-        C = np.linalg.norm(eye[0] - eye[3])
-
-        # Calculate the eye aspect ratio
-        ear = (A + B) / (2 * C)
-
-        return ear
-
-    def liveness_detection(self, landmarks):
-        # Extract the left and right eye landmarks
-        left_eye = landmarks['left_eye']
-        right_eye = landmarks['right_eye']
-
-        # Calculate the eye aspect ratio for both eyes
-        left_ear = self.eye_aspect_ratio(left_eye)
-        right_ear = self.eye_aspect_ratio(right_eye)
-
-        # Average of the eye aspect ratios for liveness detection
-        liveness_value = (left_ear + right_ear) / 2.0
-
-        return liveness_value
-
 
     def run_recognition(self):
         # Open the video capture from the default camera (camera index 0)
-        video_capture = cv2.VideoCapture(0)
+        video_capture = cv2.VideoCapture(1)
 
         if not video_capture.isOpened():
             sys.exit('Video source not found....')  # Exit if the video source is not found
@@ -150,13 +144,13 @@ class FaceRecognition():
                 self.face_names = []
                 self.overlay_qr_code(frame)
                 for face_location, face_encoding in zip(self.face_locations, self.face_encodings):
-                    top, right, bottom, left = face_location
+                    top, right, bottom, _ = face_location
 
                     # Extract facial landmarks
                     landmarks = face_recognition.face_landmarks(rgb_small_frame, [face_location])[0]
 
                     # Perform liveness detection
-                    liveness_value = self.liveness_detection(landmarks)
+                    liveness_value = liveness_detection(landmarks)
 
                     # Check liveness value and perform face recognition only if liveness is detected
                     if liveness_value > 0.2:
@@ -179,8 +173,10 @@ class FaceRecognition():
                                 bottom *= 4
                                 left *= 4
 
-                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)  # Draw a red rectangle around the face
-                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), -1)  # Draw a label background
+                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0),
+                                              2)  # Draw a red rectangle around the face
+                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0),
+                                              -1)  # Draw a label background
                                 cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
                                             (255, 255, 255), 1)  # Put the name and confidence label
                         else:
@@ -195,8 +191,10 @@ class FaceRecognition():
                                 bottom *= 4
                                 left *= 4
 
-                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
-                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
+                                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255),
+                                              2)  # Draw a red rectangle around the face
+                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255),
+                                              -1)  # Draw a label background
                                 cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
                                             (255, 255, 255), 1)  # Put the name and confidence label
 
@@ -208,6 +206,7 @@ class FaceRecognition():
 
         video_capture.release()
         cv2.destroyAllWindows()
+
 
 if __name__ == '__main__':
     fr = FaceRecognition()  # Create an instance of the FaceRecognition class

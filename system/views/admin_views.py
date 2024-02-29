@@ -172,7 +172,6 @@ def admin_editAdmin(request, user_id):
           adminEmail = request.POST['adminEmail']
           firstName = request.POST['first_name']
           lastName = request.POST['last_name']
-          username = request.POST['username']
           profileImage = request.FILES.get('image')
           
           admin_profile = AdminProfile.objects.get(user=user)
@@ -190,16 +189,8 @@ def admin_editAdmin(request, user_id):
             if os.path.exists(old_image_path):
                 os.remove(old_image_path)
 
-            # Update user details
-            user.email = adminEmail
-            user.first_name = firstName
-            user.last_name = lastName
-            user.username = username
-            user.save()
-
             # Update admin profile details
             adminID = admin_profile.adminId
-            
             # Save the new image file
             username_id = f"{adminID}_{firstName}-{lastName}"
             file_extension = profileImage.name.split('.')[-1]
@@ -210,6 +201,13 @@ def admin_editAdmin(request, user_id):
 
             admin_profile.adminProfileImage = image_pathway
             admin_profile.save()
+
+            # Update user details
+            user.email = adminEmail
+            user.first_name = firstName
+            user.last_name = lastName
+            user.username = adminID
+            user.save()
 
             messages.success(request, 'Modification has been saved successfully.')
             return redirect('admin-admin-management')
@@ -323,13 +321,13 @@ def admin_editLecturer(request, user_id):
             lecturerEmail = request.POST['lecturerEmail']
             firstName = request.POST['first_name']
             lastName = request.POST['last_name']
-            username = request.POST['username']
             profileImage = request.FILES.get('image')
 
           
             lecturer_profile = LecturerProfile.objects.get(user=user)
 
             if profileImage:
+
                 try:
                     # Attempt to detect face from the new image
                     face_image = face_recognition.load_image_file(profileImage)
@@ -337,32 +335,32 @@ def admin_editLecturer(request, user_id):
                 except Exception as ex:
                     messages.error(request, "Failed to detect face from the image you uploaded.")
                     return redirect('admin-edit-lecturer', user_id=user_id)
+
                 old_image_path = lecturer_profile.lecturerProfileImage.path  # Get the current image path
                 # Remove the old image file
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)
 
+                lecturerID = lecturer_profile.lecturerId
+
+                # Save the new image file
+                username_id = f"{lecturerID}_{firstName}-{lastName}"
+                file_extension = profileImage.name.split('.')[-1]
+                image_pathway = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
+
+                fs = FileSystemStorage()
+                fs.save(image_pathway, profileImage)
+
+                lecturer_profile.lecturerProfileImage = image_pathway
+                lecturer_profile.save()
+
             # Update user details
             user.email = lecturerEmail
             user.first_name = firstName
             user.last_name = lastName
-            user.username = username
+            user.username = lecturerID
             user.save()
 
-
-            lecturerID = lecturer_profile.lecturerId
-            
-            # Save the new image file
-            username_id = f"{lecturerID}_{firstName}-{lastName}"
-            file_extension = profileImage.name.split('.')[-1]
-            image_pathway = os.path.join('lecturerProfileImage', f"{username_id}.{file_extension}")
-
-            fs = FileSystemStorage()
-            fs.save(image_pathway, profileImage)
-
-            lecturer_profile.lecturerProfileImage = image_pathway
-            lecturer_profile.save()
-            
             messages.success(request, 'Modification have been saved successfully.')
             return redirect('admin-lecturer-management')
         return render(request, 'admin-templates/editLecturer.html', {'user': user})
@@ -511,15 +509,12 @@ def admin_editUser(request, user_id):
             userEmail = request.POST['userEmail']
             firstName = request.POST['first_name']
             lastName = request.POST['last_name']
-            username = request.POST['username']
             profileImage = request.FILES.get('image')
             intakeCode = request.POST['intakeCode']
             images = request.FILES.getlist('additional_images')
 
             if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
                 messages.error(request, 'Email used')
-            elif User.objects.filter(username=username).exclude(id=user_id).exists():
-                messages.error(request, 'Username used')
             elif UserProfile.objects.filter(userId=userID).exclude(user=user).exists():
                 messages.error(request, 'User ID used')
             else:
@@ -658,7 +653,7 @@ def admin_editUser(request, user_id):
                 user.email = userEmail
                 user.first_name = firstName
                 user.last_name = lastName
-                user.username = username
+                user.username = userID
                 user.save()
                 
                 profile = user.userprofile
@@ -940,7 +935,7 @@ def admin_createClass(request):
         subject_instance.noOfUser += kelas.noOfUser
         subject_instance.save()
 
-        messages.success(request, 'Class created successfully')
+        messages.success(request, _('Class created successfully'))
         return redirect('admin-class-management')
 
     return render(request, 'admin-templates/createClass.html', context)

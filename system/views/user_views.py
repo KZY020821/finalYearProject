@@ -71,14 +71,16 @@ def user_subjectManagement(request):
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
-def user_viewSubject(request, subjectCode):
-  subject = SubjectTable.objects.get(subjectCode=subjectCode)
-  intakes = IntakeTable.objects.all()
-  selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
-  selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
-  lecturer_group = Group.objects.get(name='lecturer')
-  lecturer_users = User.objects.filter(groups=lecturer_group)
-  return render(request, 'user-templates/viewSubject.html', {'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes':selected_intakes, 'users':selected_users, })
+def user_viewSubject(request, classCode):
+    kelas = ClassTable.objects.get(classCode=classCode)
+    intakes = IntakeTable.objects.all()
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
+    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+    lecturer_group = Group.objects.get(name='lecturer')
+    lecturer_users = User.objects.filter(groups=lecturer_group)
+    context = {'kelas': kelas, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes,
+               'users': selected_users, }
+    return render(request, 'user-templates/viewSubject.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['user'])
@@ -219,6 +221,9 @@ def viewMyProfileUser(request, user_id):
     
     except User.DoesNotExist:
       return render(request, 'error_page.html', {'error_message': 'User not found'})
+
+def user_change_language(request):
+    return render(request, 'user-templates/change_language.html')
 
 
 

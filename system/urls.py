@@ -104,17 +104,18 @@ urlpatterns =[
     
     path('lecturer-attendance-management', lecturer_views.lecturer_attendanceManagement, name='lecturer-attendance-management'),
     path('lecturer-choose-subject', lecturer_views.lecturer_chooseSubject, name='lecturer-choose-subject'),
-    path('lecturer-create-attendance/<str:subjectCode>/', lecturer_views.lecturer_createAttendance, name='lecturer-create-attendance'),
+    path('lecturer-create-attendance/<str:classCode>/', lecturer_views.lecturer_createAttendance, name='lecturer-create-attendance'),
     path('lecturer-edit-attendance/<int:id>/', lecturer_views.lecturer_editAttendance, name='lecturer-edit-attendance'),
     path('lecturer-view-attendance/<int:id>/', lecturer_views.lecturer_viewAttendance, name='lecturer-view-attendance'),
 
     path('view-myProfileLecturer/<int:user_id>/', lecturer_views.viewMyProfile_lecturer, name='view-myProfileLecturer'),
+    path('lecturer-change-language', lecturer_views.lecturer_change_language, name='lecturer-change-language'),
 
     # user
     path('user-dashboard', user_views.userDashboard, name='user-dashboard'),
     
     path('user-subject-management', user_views.user_subjectManagement, name='user-subject-management'),
-    path('user-view-subject/<str:subjectCode>/', user_views.user_viewSubject, name='user-view-subject'),
+    path('user-view-subject/<str:classCode>/', user_views.user_viewSubject, name='user-view-subject'),
     
     path('user-absenceMonitoring-management', user_views.user_absenceMonitoringManagement, name='user-absenceMonitoring-management'),
     path('user-view-absenceMonitoring/<int:id>/', user_views.user_viewAbsenceMonitoring, name='user-view-absenceMonitoring'),
@@ -134,6 +135,7 @@ urlpatterns =[
     path('user-noted-notification/<int:id>/', user_views.user_notedNotification, name='user-noted-notification'),
 
     path('view-myProfileUser/<int:user_id>/', user_views.viewMyProfileUser, name='view-myProfileUser'),
+    path('user-change-language', user_views.user_change_language, name='user-change-language'),
     # error
     path('error', views.error, name='error'),
 

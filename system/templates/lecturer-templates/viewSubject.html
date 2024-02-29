@@ -1,60 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
 {% load static %}
-{% include 'head.html' %}
-<style>
-    .messages .error {
-        color: red;
-    }
-    .messages .success {
-        color: green;
-    }
-</style>
+{% load i18n %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <title>Bolt-FRAS</title>
+    <link rel="icon" type="image/png" href="{% static 'assets/img/bolt.png' %}"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap-datetimepicker.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/dataTables.bootstrap4.min.css' %} ">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		<script src=" {% static 'assets/js/html5shiv.min.js' %} "></script>
+		<script src=" {% static 'assets/js/respond.min.js' %} "></script>
+    <script src=" {% static 'assets/js/table-sort.js' %} "></script>
+    <link href=" {% static 'assets/DataTables/datatables.min.css' %} " rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+</head>
+
 <body>
     <div class="main-wrapper">
-        {% include 'header_lecturer.html' %}
+        <div class="header">
+            <div class="header-left">
+                <a href="{% url 'lecturer-dashboard' %}" class="logo">
+                    <img src=" {% static 'assets/img/bolt.png' %} " width="35" height="35" alt=""> <span>Bolt-FRAS</span>
+                </a>
+            </div>
+            <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
+            <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
+            <ul class="nav user-menu float-right">
+                <li class="nav-item dropdown has-arrow">
+                    <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
+                        <span class="user-img">
+                            <img class="rounded-circle" src="{{request.user.lecturerprofile.lecturerProfileImage.url}}" width="24" alt="Admin">
+                            <span class="status online"></span>
+                        </span>
+                        <span>{{request.user.username}}</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-inner slimscroll">
+                <div id="sidebar-menu" class="sidebar-menu">
+                    <ul>
+                        <li {% if request.path == '/lecturer-dashboard' %}class="active"{% endif %}>
+                            <a href="{% url 'lecturer-dashboard' %}"><i class="fa fa-dashboard"></i> <span>{% trans "Dashboard" %}</span></a>
+                        </li>
+                        <li {% if '/lecturer-attendance-management' in request.path or '/lecturer-edit-attendance' in request.path or '/lecturer-view-attendance' in request.path or '/lecturer-create-attendance' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'lecturer-attendance-management' %}"><i class="fa fa-calendar"></i> <span>{% trans "Attendance Management" %}</span></a>
+                        </li>
+                        <li {% if '/lecturer-subject-management' in request.path or '/lecturer-view-subject' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'lecturer-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>{% trans "Subject Management" %}</span></a>
+                        </li>
+                        <li {% if '/view-myProfileLecturer' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'view-myProfileLecturer' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans "My Profile" %}</span></a>
+                        </li>
+                        <li {% if '/lecturer-change-language' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'lecturer-change-language' %}">
+                                <i class="fa-solid fa-language"></i>
+                                <span>{% trans "Change Language" %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>{% trans "Logout" %}</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
         <div class="page-wrapper">
             <div class="content">
+                <a href="#" class="btn btn-primary" onclick="goBack()" ><i class="fa fa-undo" aria-hidden="true"></i>Go Back</a>
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">View Subject</h4>
-                    </div>
-                    <div class="col-sm-8 col-9 text-right m-b-20">
-                        <a href="{% url 'admin-edit-subject' subject.subjectCode %}" class="btn btn-primary float-right"><i class="fa fa-edit"></i> Edit Subject</a>
+                        <h4 class="page-title">{% trans "View Subject" %}</h4>
                     </div>
                 </div>
                 <div class="card-box">
                     <form method="POST" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <h3 class="card-title">Subject Code</h3>
+                        <h3 class="card-title">{% trans "Class Code" %}</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{subject.subjectCode}}" readonly>
+                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{subject.classCode}}" readonly>
                                 </div>
                             </div>
                         </div>
-                        <h3 class="card-title">Subject Name</h3>
+                        <h3 class="card-title">{% trans "Subject Code" %}</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{subject.subjectName}}" readonly>
+                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{subject.subjectCode.subjectCode}}" readonly>
                                 </div>
                             </div>
                         </div>
-                        <h3 class="card-title">Lecturer</h3>
+                        <h3 class="card-title">{% trans "Subject Name" %}</h3>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="subjectName" name="subjectName" value="{{subject.subjectCode.subjectName}}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="card-title">{% trans "Lecturer" %}</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <select class="form-control" name="lecturerId" readonly>
                                         {% for lecturer in lecturers %}
                                         <option value="{{ lecturer.lecturerprofile.lecturerId }}" {% if lecturer.lecturerprofile.lecturerId == subject.lecturerId.lecturerId %}selected{% endif %}>
-                                            {{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.username }}
+                                            {{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.first_name }} {{ lecturer.last_name }}
                                         </option>
                                         {% endfor %}
                                     </select>
                                 </div>
                             </div>
                         </div>
-                        <h3 class="card-title">Intake(s)</h3>
+                        <h3 class="card-title">{% trans "Intake" %}</h3>
                         <select class="form-control" name="intakes" style="height: 250px;" multiple readonly>
                             {% for intake in intakes %}
                                 {% if intake.intakeCode in selected_intakes %}
@@ -63,7 +138,7 @@
                                     </option>
                                 {% endif %}
                             {% endfor %}
-                        </select>                        
+                        </select>
                     </form>
                 </div>
                 <h3 class="card-title">Student list</h3>
@@ -74,8 +149,8 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Student's name</th>
-                                        <th>Student's ID</th>
+                                        <th>{% trans "Student's ID" %}</th>
+                                            <th>{% trans "Student's name" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -83,7 +158,7 @@
                                         <tr>
                                             <td>{{ forloop.counter }}</td>
                                             <td>{{ user.userId }}</td>
-                                            <td>{{ user.user.username }}</td>
+                                            <td>{{ user.user.first_name }} {{ user.user.last_name }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -93,7 +168,41 @@
                 </div>
             </div>
         </div>
-    {% include 'jsreferences.html' %}
+    <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                    <h3>{% trans "You are about to logout. Are you sure?" %}</h3>
+                    <div class="m-t-20">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
+                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">{% trans "Sure" %}</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar-overlay" data-reff=""></div>
+    <script src=" {% static 'assets/js/jquery-3.2.1.min.js' %} "></script>
+    <script src=" {% static 'assets/js/popper.min.js' %} "></script>
+    <script src=" {% static 'assets/js/bootstrap.min.js' %} "></script>
+    <script src=" {% static 'assets/js/jquery.slimscroll.js' %} "></script>
+    <script src=" {% static 'assets/js/app.js' %} "></script>
+    <script src=" {% static 'assets/js/Chart.bundle.js' %} "></script>
+    <script src=" {% static 'assets/js/chart.js' %} "></script>
+    <script src=" {% static 'assets/js/select2.min.js' %} "></script>
+    <script src=" {% static 'assets/js/moment.min.js' %} "></script>
+    <script src=" {% static 'assets/js/bootstrap-datetimepicker.min.js' %} "></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
 </body>
 
 </html>

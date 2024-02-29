@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 {% load static %}
 {% load i18n %}
@@ -94,72 +94,20 @@
                 </div>
             </div>
         <div class="page-wrapper">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-success" id="success-alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
             <div class="content">
-                <h3 class="page-title">{% trans 'Dashboard' %}</h3>
-            </div>
-            <div class="row" style="margin: 15px;">
-              <div class="col-sm ">
-                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg1"><i class="fa fa-users" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right" style="color: #656565;">
-                        <h4>{% trans "Your Intake" %}</h4>
-                        <h3>{{ intake.intakeCode }}</h3>
-                      </div>
-                  </div>
-              </div>
-              <div class="col-sm ">
-                <a href="{% url 'user-subject-management' %}" style="text-decoration: none;">
-                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg2"><i class="fas fa-chalkboard-teacher" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right" style="color: #656565;">
-                        <h4>{% trans "Total subject" %}</h4>
-                        <h3>{{subject_count}}</h3>
-                      </div>
-                  </div>
-                </a>
-              </div>
-              <div class="col-sm ">
-                <a href="{% url 'admin-class-management' %}" style="text-decoration: none;">
-                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg3"><i class="fa fa-users" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right" style="color: #656565;">
-                        <h4>{% trans "Total class" %}</h4>
-                        <h3>{{class_count}}</h3>
-                      </div>
-                  </div>
-                </a>
-              </div>
-              <div class="col-sm ">
-                <a href="{% url 'admin-class-management' %}" style="text-decoration: none;">
-                  <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg4" style="background: #ff3c35;"><i class="fa fa-warning" aria-hidden="true"></i></span>
-                      <div class="dash-widget-info text-right" style="color: #656565;">
-                        <h4>{% trans "Absent Count" %}</h4>
-                        <h3>{{ absent_count }}</h3>
-                      </div>
-                  </div>
-                </a>
-              </div>
-            </div>
-            <div class="row" style="margin: 15px;">
-              {% for attendance_percentage in attendance_percentages %}
-                  <div class="col-sm">
-                    <div class="dash-widget"  style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <div class="chart-title">
-                        <h4>{% trans "Attendance" %} %  for {{ attendance_percentage.class_name }}</h4>
-                      </div>	
-                      <div id="attendance_percentage{{forloop.counter}}" data-average-percentage="{{ attendance_percentage.percentage }}"></div>
+                <div class="row">
+                    <div class="col-sm-4 col-3">
+                        <h4 class="page-title">{% trans "Change Language" %}</h4>
                     </div>
-                  </div>
-              {% endfor %}
-          </div>
+                </div>
+                <div class="card-box">
+                    <a href="/ms/user-change-language" role="button">{% trans "Malay" %}</a>
+                    <br>
+                    <br>
+                    <br>
+                    <a href="/en/user-change-language" role="button">{% trans "English" %}</a>
+                </div>  
+            </div>
         </div>
     </div>
     <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
@@ -167,10 +115,10 @@
             <div class="modal-content">
                 <div class="modal-body text-center">
                     <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
-                    <h3>You are about to logout. Are you sure?</h3>
+                    <h3>{% trans "You are about to logout. Are you sure?" %}</h3>
                     <div class="m-t-20">
-                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
-                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">Sure</button></a>
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
+                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">{% trans "Sure" %}</button></a>
                     </div>
                 </div>
             </div>
@@ -191,99 +139,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
-    <script>
-      $(document).ready(function() {
-        // Automatically close the success alert after 3 seconds
-        setTimeout(function() {
-          $("#success-alert").alert('close');
-        }, 3000);
-      });
-    </script>
-    <script>
-      $(document).ready(function() {
-        // Automatically close the success alert after 3 seconds
-        setTimeout(function() {
-          $("#success-alert").alert('close');
-        }, 3000);
-    
-        // Iterate through the elements and render charts
-        $('[id^="attendance_percentage"]').each(function() {
-          var averagePercentage = parseFloat($(this).data('average-percentage')) || 0;
-    
-          var options = {
-            series: [averagePercentage],
-            chart: {
-              height: 350,
-              type: 'radialBar',
-              toolbar: {
-                show: true
-              }
-            },
-            plotOptions: {
-              radialBar: {
-                startAngle: -135,
-                endAngle: 225,
-                hollow: {
-                  margin: 0,
-                  size: '70%',
-                  background: '#fff',
-                  image: undefined,
-                  imageOffsetX: 0,
-                  imageOffsetY: 0,
-                  position: 'front',
-                  dropShadow: {
-                    enabled: true,
-                    top: 3,
-                    left: 0,
-                    blur: 4,
-                    opacity: 0.24
-                  }
-                },
-                track: {
-                  background: '#fff',
-                  strokeWidth: '67%',
-                  margin: 0,
-                  dropShadow: {
-                    enabled: true,
-                    top: -3,
-                    left: 0,
-                    blur: 4,
-                    opacity: 0.35
-                  }
-                },
-                dataLabels: {
-                  show: true,
-                  name: {
-                    offsetY: -10,
-                    show: true,
-                    color: '#888',
-                    fontSize: '17px'
-                  },
-                  value: {
-                    formatter: function(val) {
-                      return parseInt(val);
-                    },
-                    color: '#111',
-                    fontSize: '36px',
-                    show: true,
-                  }
-                }
-              }
-            },
-            fill: {
-              type: 'solid'
-            },
-            stroke: {
-              lineCap: 'round'
-            },
-            labels: ['Percent'],
-          };
-    
-          var chart = new ApexCharts(this, options);
-          chart.render();
-        });
-      });
-    </script>    
 </body>
 
 </html>

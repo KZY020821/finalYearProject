@@ -84,7 +84,7 @@ def init():
     right_eye_detector = cv2.CascadeClassifier(right_eye_cascPath)
 
     print("[LOG] Opening webcam ...")
-    video_capture = VideoStream(src=0).start()
+    video_capture = VideoStream(src=1).start()
 
     model = load_model()
 

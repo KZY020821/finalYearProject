@@ -53,7 +53,13 @@
                                 <span class="badge badge-pill bg-danger float-right">{{ notification_count }}</span>
                             {% endif %}
                         </a>
-                    </li>       
+                    </li>
+                    <li {% if '/user-change-language' in request.path %}class="active"{% endif %}>
+                        <a href="{% url 'user-change-language' %}">
+                            <i class="fa-solid fa-language"></i>
+                            <span>Change Language</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>Logout</span></a>
                     </li>

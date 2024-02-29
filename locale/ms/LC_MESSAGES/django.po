@@ -600,7 +600,7 @@ msgstr ""
 
 #: myenv/lib/python3.12/site-packages/django/forms/formsets.py:499
 msgid "Delete"
-msgstr ""
+msgstr "Padam"
 
 #: myenv/lib/python3.12/site-packages/django/forms/models.py:899
 #, python-format
@@ -1281,3 +1281,474 @@ msgstr "Cari:"
 
 msgid "Attendance Management"
 msgstr "Pengurusan Kehadiran"
+
+msgid "Admin Management"
+msgstr "Pengurusan Admin"
+
+msgid "Lecturer Management"
+msgstr "Pengurusan Pensyarah"
+
+msgid "Student Management"
+msgstr "Pengurusan Pelajar"
+
+msgid "Intake Management"
+msgstr "Pengurusan Pengambilan"
+
+msgid "Subject Management"
+msgstr "Pengurusan Subjek"
+
+msgid "Class Management"
+msgstr "Pengurusan Kelas"
+
+msgid "Absence Monitoring"
+msgstr "Pemantauan Ketidakhadiran"
+
+msgid "Leave Management"
+msgstr "Pengurusan Cuti"
+
+msgid "Profile Page"
+msgstr "Halaman Profil"
+
+msgid "Report Management"
+msgstr "Pengurusan Laporan"
+
+msgid "Notification Management"
+msgstr "Pengurusan Notifikasi"
+
+msgid "Change Language"
+msgstr "Tukar Bahasa"
+
+msgid "Logout"
+msgstr "Log Keluar"
+
+msgid "Create New Absence Limit"
+msgstr "Mencipta Had Ketidakhadiran Baharu"
+
+msgid "Absence Limit Name"
+msgstr "Nama Had Ketidakhadiran"
+
+msgid "Absence Limit"
+msgstr "Had Ketidakhadiran"
+
+msgid "Days allowed to absence"
+msgstr "Hari yang dibenarkan untuk tidak hadir"
+
+msgid "Set By"
+msgstr "Ditetapkan Oleh"
+
+msgid "Number of Student"
+msgstr "Bilangan Pelajar"
+
+msgid "Action"
+msgstr "Tindakan"
+
+msgid "View"
+msgstr "Lihat"
+
+msgid "You are about to logout. Are you sure?"
+msgstr "Anda akan log keluar. Adakah anda pasti?"
+
+msgid "Are you sure you want the selected Absence Limit?"
+msgstr "Adakah anda pasti mahu Had Ketidakhadiran yang dipilih?"
+
+msgid "Close"
+msgstr "Tutup"
+
+msgid "Sure"
+msgstr "Pasti"
+
+msgid "Choose Subject To Take Attendance"
+msgstr "Pilih Subjek Untuk Mengambil Kehadiran"
+
+msgid "Class Code"
+msgstr "Kod Kelas"
+
+msgid "Create"
+msgstr "Cipta"
+
+msgid "Create New Admin"
+msgstr "Cipta Admin Baharu"
+
+msgid "Search Admin (ID or name)"
+msgstr "Carian Admin (ID atau Nama)"
+
+msgid "Are you sure you want to delete the admin account?"
+msgstr "Adakah anda pasti mahu memadamkan akaun admin yang dipilih?"
+
+msgid "Take Attendance"
+msgstr "Mengambil Kehadiran"
+
+msgid "Download CSV"
+msgstr "Muat Turun CSV"
+
+msgid "Subject"
+msgstr "Subjek"
+
+msgid "Created by"
+msgstr "Diciptakan oleh"
+
+msgid "No. of student attended"
+msgstr "Bilangan murid yang hadir"
+
+msgid "Created on (date)"
+msgstr "Dicipta pada (tarikh)"
+
+msgid "Created at (time)"
+msgstr "Dicipta pada (masa)"
+
+msgid "Method to obtain attendance"
+msgstr "Kaedah untuk mendapatkan kehadiran"
+
+msgid "Choose Class Code to take attendance"
+msgstr "Pilih Kod Kelas untuk mengambil kehadiran"
+
+msgid "Create New Class"
+msgstr "Cipta Kelas Baharu"
+
+msgid "Subject Name"
+msgstr "Nama Subjek"
+
+msgid "Lecturer"
+msgstr "Pensyarah"
+
+msgid "Intake"
+msgstr "Pengambilan"
+
+msgid "No. of Student"
+msgstr "Bilangan Pelajar"
+
+msgid "Subject's Status"
+msgstr "Status subjek"
+
+msgid "Show _MENU_ entries"
+msgstr "Tunjuk _MENU_ entri"
+
+msgid "Showing _START_ to _END_ of _TOTAL_ entries"
+msgstr "Menunjukkan _START_ hingga _END_ of _TOTAL_ entri"
+
+msgid "Previous"
+msgstr "Sebelumnya"
+
+msgid "Next"
+msgstr "Seterusnya"
+
+msgid "Active"
+msgstr "Aktif"
+
+msgid "Not Active"
+msgstr "Tidak Aktif"
+
+msgid "Activate"
+msgstr "Aktifkan"
+
+msgid "Deactivate"
+msgstr "Nyahaktifkan"
+
+msgid "Class created successfully"
+msgstr "Kelas berjaya dibuat"
+
+msgid "Are you sure you want to delete the selected Class?"
+msgstr "Adakah anda pasti mahu memadamkan Kelas yang dipilih?"
+
+msgid "Admin ID (Required)"
+msgstr "ID Admin (Diperlukkan)"
+
+msgid "Admin Email (Required)"
+msgstr "Emel Admin (Diperlukkan)"
+
+msgid "(Required)"
+msgstr "(Diperlukkan)"
+
+msgid "First Name"
+msgstr "Nama Pertama"
+
+msgid "Last Name"
+msgstr "Nama Terakhir"
+
+msgid "Repeat Password"
+msgstr "Ulang Kata Laluan"
+
+msgid "Profile Image"
+msgstr "Imej Profil"
+
+msgid "Attendance taking"
+msgstr "Pengambilan Kehadiran"
+
+msgid "Student list"
+msgstr "Senarai pelajar"
+
+msgid "Student's name"
+msgstr "nama pelajar"
+
+msgid "Student's ID"
+msgstr "ID pelajar"
+
+msgid "hold ctrl to select multiple intakes"
+msgstr "tahan ctrl untuk memilih berbilang pengambilan"
+
+msgid "Create New Intake"
+msgstr "Mencipta Pengambilam Baharu"
+
+msgid "New Intake Code"
+msgstr "Kod Pengambilam Baharu"
+
+msgid "Create New Lecturer Account"
+msgstr "Mencipta akaum pensyarah baharu"
+
+msgid "Lecturer ID"
+msgstr "ID pensyarah"
+
+msgid "Lecturer Email"
+msgstr "Emel Pensyarah"
+
+msgid "Subject Code"
+msgstr "Kod Subjek"
+
+msgid "Create New Subject"
+msgstr "Mencipta Subjek Baharu"
+
+msgid "Create New Student Account"
+msgstr "Mencipta Akaun Pelajar Baharu"
+
+msgid "Student ID"
+msgstr "ID Pelajar"
+
+msgid "Student Email"
+msgstr "Emel Pelajar"
+
+msgid "Total"
+msgstr "Jumlah"
+
+msgid "Attendance"
+msgstr "Kehadiran"
+
+msgid "Save"
+msgstr "Simpan"
+
+msgid "Attendance Status"
+msgstr "Status Kehadiran"
+
+msgid "Class"
+msgstr "Kelas"
+
+msgid "Create New Intake Code"
+msgstr "Mencipta Kod Pengambilan Baharu"
+
+msgid "Student"
+msgstr "Pelajar"
+
+msgid "Number of student"
+msgstr "Bilangan pelajar"
+
+msgid "Are you sure you want the selected Intake?"
+msgstr "Adakah anda pasti mahu memadamkan pengambilan yang dipilih?"
+
+msgid "Request by"
+msgstr "Permintaan oleh"
+
+msgid "Request On"
+msgstr "Permintaan pada"
+
+msgid "Start Date"
+msgstr "Tarikh mula"
+
+msgid "End Date"
+msgstr "Tarikh tamat"
+
+msgid "Approve"
+msgstr "Lulus"
+
+msgid "Deny"
+msgstr "Nafi"
+
+msgid "Pending"
+msgstr "Belum selesai"
+
+msgid "Approved"
+msgstr "Dilulus"
+
+msgid "Denied"
+msgstr "Dinafi"
+
+msgid "Add Lecturer"
+msgstr "Tambah Pensyarah"
+
+msgid "Search Lecturer (ID or name)"
+msgstr "Carian Pensyarah (ID atau Nama)"
+
+msgid "Search Student (ID or name)"
+msgstr "Carian Pelajar (ID atau Nama)"
+
+msgid "Are you sure you want to delete the lecturer account?"
+msgstr "Adakah anda pasti mahu memadamkan akaun pensyarah?"
+
+msgid "Receiver"
+msgstr "Penerima"
+
+msgid "Message"
+msgstr "Mesej"
+
+msgid "Created on"
+msgstr "Cipta pada"
+
+msgid "From"
+msgstr "Daripada"
+
+msgid "Report on"
+msgstr "Laporan pada"
+
+msgid "Report to"
+msgstr "Laporan kepada"
+
+msgid "Report Title"
+msgstr "Tajuk laporan"
+
+msgid "Report Description"
+msgstr "Penerangan laporan"
+
+msgid "Delivered"
+msgstr "Dihantar"
+
+msgid "Read"
+msgstr "Dibaca"
+
+msgid "Replied"
+msgstr "Dibalas"
+
+msgid "Reply Message"
+msgstr "Balas Mesej"
+
+msgid "Modify"
+msgstr "Ubah Suai"
+
+msgid "Reply"
+msgstr "Balas"
+
+msgid "Add Subject"
+msgstr "Tambah Subjek"
+
+msgid "Add Student"
+msgstr "Tambah Pelajar"
+
+msgid "View Absence Limit Details"
+msgstr "Lihat Butiran Had Ketidakhadiran"
+
+msgid "View Admin Account"
+msgstr "Lihat Akaun Admin"
+
+msgid "View Attendance"
+msgstr "Lihat kehadiran"
+
+msgid "View Class"
+msgstr "Lihat Kelas"
+
+msgid "View Intake"
+msgstr "Lihat Pengambilan"
+
+msgid "Intake Code"
+msgstr "Kod Pengambilan"
+
+msgid "View Leave From"
+msgstr "Lihat Cuti Daripada"
+
+msgid "Apply Date"
+msgstr "Tarikh permohonan"
+
+msgid "Leave Title"
+msgstr "Tajuk Cuti"
+
+msgid "Description"
+msgstr "Penerangan"
+
+msgid "Attachment"
+msgstr "Lampiran"
+
+msgid "View Lecturer Account"
+msgstr "Lihat Akaun Pensyarah"
+
+msgid "View Report From"
+msgstr "Lihat Laporan Daripada"
+
+msgid "Reply Report"
+msgstr "Membalas Laporan"
+
+msgid "View Subject"
+msgstr "Lihat Subjek"
+
+msgid "View Student Account"
+msgstr "Lihat Akaun Pelajar"
+
+msgid "Create Attendance"
+msgstr "Cipta Kehadiran"
+
+msgid "Select All"
+msgstr "Pilih Semua"
+
+msgid "Role"
+msgstr "Peranan"
+
+msgid "Back"
+msgstr "Balik"
+
+msgid "Create Leave"
+msgstr "Cipta Cuti"
+
+msgid "To"
+msgstr "Kepada"
+
+msgid "Leave Description"
+msgstr "Penerangan Cuti"
+
+msgid "Leave Attachment (Medical certificate or letter)"
+msgstr "Lampiran Cuti (Sijil atau surat perubatan)"
+
+msgid "Absent Count"
+msgstr "Kiraan tidak hadir"
+
+msgid "Your Intake"
+msgstr "pengambilan Anda"
+
+msgid "Create Report"
+msgstr "Cipta Laporan"
+
+msgid "An email is already sent, check your mailbox to reset your password."
+msgstr "E-mel sudah dihantar, semak peti mel anda untuk menetapkan semula kata laluan anda."
+
+msgid "Log In"
+msgstr "Log Masuk"
+
+msgid "New password"
+msgstr "Kata Laluan Baharu"
+
+msgid "New password confirmation"
+msgstr "Ulangan Kata Laluan Baharu"
+
+msgid "Please follow the rules, if you failed to follow, you will be redirect back to this page after you click change button"
+msgstr "Sila ikut peraturan, jika anda gagal mengikuti, anda akan dilencongkan semula ke halaman ini selepas anda mengklik butang tukar"
+
+msgid "Your password must more than 8 letters."
+msgstr "Kata laluan anda mestilah lebih daripada 8 huruf."
+
+msgid "Your password must have a combination of capital letters and lowercase letters."
+msgstr "Kata laluan anda mesti mempunyai gabungan huruf besar dan huruf kecil."
+
+msgid "Your password must have a combination of alphabets and numeric case."
+msgstr "Kata laluan anda mesti mempunyai gabungan abjad dan huruf besar."
+
+msgid "Your password cannot too similar with your email or name."
+msgstr "Kata laluan anda tidak boleh terlalu serupa dengan e-mel atau nama anda."
+
+msgid "Face Image"
+msgstr "Imej Muka"
+
+msgid "Signup"
+msgstr "Pendaftaran"
+
+msgid "Login"
+msgstr "Log Masuk"
+
+msgid "Already have an account?"
+msgstr "Sudah ada akaun?"
+
+
+

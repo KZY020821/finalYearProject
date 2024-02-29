@@ -2,18 +2,17 @@ from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.db.models import Q
-from django.shortcuts import redirect, render
 from django.db import transaction
+from django.shortcuts import redirect, render
 
 from ..decorators import allow_users
-from ..models import IntakeTable
-from ..models import UserProfile
-from ..models import LecturerProfile
-from ..models import IntakeTable
-from ..models import SubjectTable
-from ..models import AttendanceTable
+from ..models import AttendanceTable, AttendanceStatus
 from ..models import ClassTable
+from ..models import IntakeTable
+from ..models import LecturerProfile
+from ..models import SubjectTable
+from ..models import UserProfile
+
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
@@ -64,7 +63,7 @@ def lecturer_subjectManagement(request):
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_viewSubject(request, subjectCode):
-  subject = SubjectTable.objects.get(subjectCode=subjectCode)
+  subject = ClassTable.objects.get(classCode=subjectCode)
   intakes = IntakeTable.objects.all()
   selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
   selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
@@ -91,7 +90,7 @@ def lecturer_attendanceManagement(request):
     classes = ClassTable.objects.filter(lecturerId = lecturer)
     attendances = []
     for kelas in classes:
-        attendance = AttendanceTable.objects.filter(classCode = kelas)
+        attendance = AttendanceTable.objects.filter(classCode = kelas).order_by('-classDate')
         attendances.extend(attendance)
     context = {
         'attendances' : attendances,
@@ -106,107 +105,151 @@ def lecturer_chooseSubject(request):
     lecturer = LecturerProfile.objects.get(user = user)
     subjects = ClassTable.objects.filter(lecturerId = lecturer)
     if request.method == 'POST':
-        subjectCode = request.POST['subjectCode']
-        print(subjectCode)
-        return redirect('lecturer-create-attendance', subjectCode=subjectCode)        
+        subjectCoder = request.POST['subjectCode']
+        return redirect('lecturer-create-attendance', classCode=subjectCoder)
     return render(request, 'lecturer-templates/chooseSubject.html', {'subjects':subjects})
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
-def lecturer_createAttendance(request, subjectCode):
-    subject = SubjectTable.objects.get(subjectCode=subjectCode)
+def lecturer_createAttendance(request, classCode):
+    kelas = ClassTable.objects.get(classCode = classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = kelas.intakeTables.all()
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
     lecturer_group = Group.objects.get(name='lecturer')
     lecturer_users = User.objects.filter(groups=lecturer_group)
+    subject = SubjectTable.objects.get(subjectCode = kelas.subjectCode.subjectCode)
+
+    context = {
+        'kelas': kelas,
+        'lecturers': lecturer_users,
+        'intakes': intakes,
+        'selected_intakes': selected_intakes,
+        'users': selected_users,
+        'subject': subject}
 
     if request.method == "POST":
-        subjectCoder = request.POST['subjectCode']
+        classCoder = request.POST['classCode']
         creator = request.POST['creator']
         attendedUser = request.POST.getlist('attendedUser')
         totalUser = request.POST['totalUser']
-        
+        method = "manual"
         noAttendedUser = len(attendedUser)
         classDate = datetime.now()
 
         try:
-            subject_instance = SubjectTable.objects.get(subjectCode=subjectCoder)
-        except SubjectTable.DoesNotExist:
-            subject_instance = None 
+            class_instance = ClassTable.objects.get(classCode=classCoder)
+        except ClassTable.DoesNotExist:
+            class_instance = None
 
         attendance_instance = AttendanceTable.objects.create(
-            subjectCode=subject_instance,
+            classCode=class_instance,
             creator=creator,
             totalUser=totalUser,
             noAttendedUser=noAttendedUser,
-            classDate=classDate
+            classDate=classDate,
+            method="Manual"
         )
 
+        relation_instance = AttendanceTable.objects.get(id=attendance_instance.id)
+        for id in attendedUser:
+            relation_instance.attendedUser.add(id)
+
+        for user_id in selected_users:
+            relation_instance.nameList.add(user_id)
+
+        for user in selected_users:
+            AttendanceStatus.objects.create(
+                relation_id=relation_instance,
+                userId=user,
+            )
+
         for user_id in attendedUser:
-            user_instance = UserProfile.objects.get(userId=user_id)
-            attendance_instance.attendedUser.add(user_instance)
+            user = UserProfile.objects.get(userId=user_id)
+            specific_attendance = AttendanceStatus.objects.get(
+                relation_id=relation_instance,
+                userId=user,
+            )
+            specific_attendance.status = 'attended'
+            specific_attendance.save()
 
         return redirect('lecturer-attendance-management')  # Make sure this URL name is defined in your urls.py
 
-    return render(request, 'lecturer-templates/createAttendance.html', {'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users})
+    return render(request, 'lecturer-templates/createAttendance.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_viewAttendance(request, id):
     attendance = AttendanceTable.objects.get(id=id)
-    subject = SubjectTable.objects.get(subjectCode=attendance.subjectCode)
+    kelas = ClassTable.objects.get(classCode = attendance.classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
-    lecturer_group = Group.objects.get(name='lecturer')
-    lecturer_users = User.objects.filter(groups=lecturer_group)
-
-    # Get a list of attended user IDs
-    attended_users_ids = list(attendance.attendedUser.values_list('userId', flat=True))
-    print(attended_users_ids)
-    return render(request, 'lecturer-templates/viewAttendance.html', {'attendance': attendance, 'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users, 'attended_users': attended_users_ids})
+    attendance_status = AttendanceStatus.objects.filter(relation_id = attendance.id)
+    context = {
+        'attendance': attendance,
+        'kelas': kelas,
+        'intakes': intakes,
+        'selected_intakes': selected_intakes,
+        'users': selected_users,
+        'attendance_status' : attendance_status
+        }
+    return render(request, 'lecturer-templates/viewAttendance.html', context)
 
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['lecturer'])
 def lecturer_editAttendance(request, id):
     attendance = AttendanceTable.objects.get(id=id)
-    subject = SubjectTable.objects.get(subjectCode=attendance.subjectCode)
+    kelas = ClassTable.objects.get(classCode=attendance.classCode)
     intakes = IntakeTable.objects.all()
-    selected_intakes = list(subject.intakeTables.values_list('intakeCode', flat=True))
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+    attendance_status = AttendanceStatus.objects.filter(relation_id=attendance.id)
     lecturer_group = Group.objects.get(name='lecturer')
     lecturer_users = User.objects.filter(groups=lecturer_group)
+    intakeTables = kelas.intakeTables.all()
+    subjects = SubjectTable.objects.all()
+    context = {
+        'attendance': attendance,
+        'kelas': kelas,
+        'intakes': intakes,
+        'selected_intakes': selected_intakes,
+        'users': selected_users,
+        'attendance_status': attendance_status,
+        'intakeTables': intakeTables,
+        'lecturers': lecturer_users,
+        'subjects': subjects,
+    }
 
-    # Get a list of attended user IDs
-    attended_users_ids = list(attendance.attendedUser.values_list('userId', flat=True))
-
+    name_list = []
     if request.method == "POST":
-        attendedUser = request.POST.getlist('attendedUser')
-        totalUser = request.POST['totalUser']
+        student_statuses = {}
 
-        noAttendedUser = len(attendedUser)
+        noOfAttendedUser = 0
+        attendedUser = []
+        for status in attendance_status:
+            student_id = status.userId.userId
+            status_value = request.POST.get(f"status_{student_id}")
+            status.status = status_value.lower()
+            if status_value.lower() == 'attended':
+                noOfAttendedUser += 1
+                attendedUser.append(student_id)
+            status.save()
 
-        # Clear existing attended users not present in the form
-        for user_id in set(attended_users_ids) - set(attendedUser):
-            user_instance = UserProfile.objects.get(userId=user_id)
-            attendance.attendedUser.remove(user_instance)
-
-        # Update attendance details
-        attendance.totalUser = totalUser
-        attendance.noAttendedUser = noAttendedUser
+        attendance.attendedUser.set('')
         attendance.save()
 
-        # Add new attended users
-        with transaction.atomic():
-            for user_id in attendedUser:
-                user_instance = UserProfile.objects.get(userId=user_id)
-                attendance.attendedUser.add(user_instance)
+        for user in attendedUser:
+            user_instance = UserProfile.objects.get(userId=user)
+            attendance.attendedUser.add(user_instance)
+
+        attendance.noAttendedUser = noOfAttendedUser
+        attendance.save()
 
         return redirect('lecturer-attendance-management')  # Make sure this URL name is defined in your urls.py
 
-    return render(request, 'lecturer-templates/editAttendance.html', {'attendance': attendance, 'subject': subject, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes': selected_intakes, 'users': selected_users, 'attended_users': attended_users_ids})
+    return render(request, 'lecturer-templates/editAttendance.html', context)
 
 
 def viewMyProfile_lecturer (request, user_id):
@@ -218,3 +261,6 @@ def viewMyProfile_lecturer (request, user_id):
     else:
         message = 'Sorry, you are not allowed to view this page'
         return render(request, 'error.html', {'message': message})
+
+def lecturer_change_language(request):
+    return render(request, 'lecturer-templates/change_language.html')

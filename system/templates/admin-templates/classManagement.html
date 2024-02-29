@@ -1,16 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
 {% load static %}
-{% include 'head.html' %}
+{% load i18n %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <title>Bolt-FRAS</title>
+    <link rel="icon" type="image/png" href="{% static 'assets/img/bolt.png' %}"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap-datetimepicker.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/dataTables.bootstrap4.min.css' %} ">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href=" {% static 'assets/DataTables/datatables.min.css' %} " rel="stylesheet">
+    <script src=" {% static 'assets/js/html5shiv.min.js' %} "></script>
+    <script src=" {% static 'assets/js/respond.min.js' %} "></script>
+    <script src=" {% static 'assets/js/table-sort.js' %} "></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        .messages .error {
+            color: red;
+        }
+        .messages .success {
+            color: green;
+        }
+    </style>
+</head>
+
 <body>
     <div class="main-wrapper">
-        {% include 'header_admin.html' %}
-        <div class="page-wrapper">
+        <div class="header">
+            <div class="header-left">
+                <a href="{% url 'admin-dashboard' %}" class="logo">
+                    <img src=" {% static 'assets/img/bolt.png' %} " width="35" height="35" alt=""> <span>Bolt-FRAS</span>
+                </a>
+            </div>
+            <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
+            <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
+            <ul class="nav user-menu float-right">
+                <li class="nav-item dropdown has-arrow">
+                    <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
+                        <span class="user-img">
+                            <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
+                            <span class="status online"></span>
+                        </span>
+                        <span>{{request.user.username}}</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-inner slimscroll">
+                <div id="sidebar-menu" class="sidebar-menu">
+                    <ul>
+                        <li {% if '/admin-dashboard' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-dashboard' %}"><i class="fa fa-dashboard"></i> <span>{% trans 'Dashboard' %}</span></a>
+                        </li>
+                        <li {% if '/admin-admin-management' in request.path or '/admin-edit-admin' in request.path or '/admin-view-admin' in request.path or '/admin-create-admin' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-admin-management' %}"><i class="fa fa-user"></i> <span>{% trans 'Admin Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-lecturer-management' in request.path or '/admin-edit-lecturer' in request.path or '/admin-view-lecturer' in request.path or '/admin-create-lecturer' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-lecturer-management' %}"><i class="fa fa-user"></i> <span>{% trans 'Lecturer Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-user-management' in request.path or '/admin-edit-user' in request.path or '/admin-view-user' in request.path or '/admin-create-user' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-user-management' %}"><i class="fa fa-user"></i> <span>{% trans 'Student Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-intake-management' in request.path or '/admin-edit-intake' in request.path or '/admin-view-intake' in request.path or '/admin-create-intake' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-intake-management' %}"><i class="fa-solid fa-user-group"></i> <span>{% trans 'Intake Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-subject-management' in request.path or '/admin-edit-subject' in request.path or '/admin-view-subject' in request.path or '/admin-create-subject' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-subject-management' %}"><i class="fas fa-chalkboard-teacher"></i><span>{% trans 'Subject Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-class-management' in request.path or '/admin-edit-class' in request.path or '/admin-view-class' in request.path or '/admin-create-class' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-class-management' %}"><i class="fa fa-users" aria-hidden="true"></i><span>{% trans 'Class Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-attendance-management' in request.path or '/admin-edit-attendance' in request.path or '/admin-view-attendance' in request.path or '/admin-create-attendance' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-attendance-management' %}"><i class="fa fa-calendar"></i> <span>{% trans 'Attendance Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-absenceMonitoring-management' in request.path or '/admin-edit-absenceMonitoring' in request.path or '/admin-view-absenceMonitoring' in request.path or '/admin-create-absenceMonitoring' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-absenceMonitoring-management' %}"><i class="fa-solid fa-triangle-exclamation"></i><span>{% trans 'Absence Monitoring' %}</span></a>
+                        </li>
+                        <li {% if '/admin-leave-management' in request.path or '/admin-view-leave' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-leave-management' %}">
+                                <i class="fa-solid fa-envelope-open"></i></i>
+                                <span>{% trans 'Leave Management' %}</span>
+                                {% if leave_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ leave_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li {% if '/view-myProfileAdmin' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
+                        </li>
+                        <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                        </li>
+                        <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-notification-management' %}">
+                                <i class="fa-solid fa-bell"></i>
+                                <span>{% trans 'Notification Management' %}</span>
+                                {% if notification_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ notification_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li {% if '/admin-change-language' in request.path %}class="active"{% endif %}>
+                            <a href="{% url 'admin-change-language' %}">
+                                <i class="fa-solid fa-language"></i>
+                                <span>{% trans 'Change Language' %}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#delete_user_modal"><i class="fa-solid fa-power-off"></i> <span>{% trans 'Logout' %}</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="page-wrapper" >
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">Class Management</h4>
+                        <h4 class="page-title">{% trans "Class Management" %}</h4>
                     </div>
                     <div class="col-sm-8 col-9 text-right m-b-20">
-                        <a href="admin-create-class" class="btn btn-primary float-right"><i class="fa fa-plus"></i> Add Class</a>
+                        <a href="admin-create-class" class="btn btn-primary float-right"><i class="fa fa-plus"></i> {% trans "Create New Class" %}</a>
                     </div>
                 </div>
                 {% if messages %}
@@ -18,7 +140,7 @@
                         {% for message in messages %}
                             <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
                                 {{ message }}
-                            </li> 
+                            </li>
                         {% endfor %}
                     </ul>
                 {% endif %}
@@ -28,13 +150,13 @@
                             <table  id="example" class="table table-striped custom-table mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Class Code</th>
-                                        <th>Subject Name</th>
-                                        <th>Lecturer</th>
-                                        <th>Intake(s)</th>
-                                        <th>No. of Student</th>
-                                        <th>Subject's Status</th>
-                                        <th class="text-right disable-sort">Action</th>
+                                        <th>{% trans "Class Code" %}</th>
+                                        <th>{% trans "Subject Name" %}</th>
+                                        <th>{% trans "Lecturer" %}</th>
+                                        <th>{% trans "Intake" %}</th>
+                                        <th>{% trans "No. of Student" %}</th>
+                                        <th>{% trans "Subject's Status" %}</th>
+                                        <th class="text-right disable-sort">{% trans "Action" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -52,21 +174,21 @@
                                                 <td>{{ class.noOfUser }}</td>
                                                 <td>
                                                     {% if class.status == "Active" or class.status == "active" %}
-                                                        <span class="custom-badge status-green">Active</span>
+                                                        <span class="custom-badge status-green">{% trans "Active" %}</span>
                                                     {% else %}
-                                                        <span class="custom-badge status-red">Deactive</span>
+                                                        <span class="custom-badge status-red">{% trans "Not Active" %}</span>
                                                     {% endif %}
                                                 </td>
                                                 <td class="text-right">
-                                                    <a href="admin-view-class/{{class.classCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
-                                                    <a href="admin-edit-class/{{class.classCode}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> Edit</button></a>
+                                                    <a href="admin-view-class/{{class.classCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
+                                                    <a href="admin-edit-class/{{class.classCode}}"><button type="button" class="btn btn-secondary" style="width: 105px;"><i class="fa fa-edit"></i> {% trans "Edit" %}</button></a>
                                                     {% if class.status == "Active" or class.status == "active" %}
-                                                        <a href="admin-deactive-class/{{class.classCode}}"><button type="button" class="btn btn-warning" style="width: 105px;"><i class="fas fa-toggle-off"></i> Deactive</button></a>
+                                                        <a href="admin-deactive-class/{{class.classCode}}"><button type="button" class="btn btn-warning" style="width: 135px;"><i class="fas fa-toggle-off"></i> {% trans "Deactivate" %}</button></a>
                                                     {% else %}
-                                                        <a href="admin-active-class/{{class.classCode}}"><button type="button" class="btn btn-success" style="width: 105px;"><i class="fas fa-toggle-on"></i> Active</button></a>
+                                                        <a href="admin-active-class/{{class.classCode}}"><button type="button" class="btn btn-success" style="width: 105px;"><i class="fas fa-toggle-on"></i> {% trans "Active" %}</button></a>
                                                     {% endif %}
                                                     
-                                                    <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ class.classCode }}" style="width: 105px;"><i class="fa fa-trash"></i> Delete</button>
+                                                    <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ class.classCode }}" style="width: 105px;"><i class="fa fa-trash"></i> {% trans "Delete" %}</button>
                                                 </td>
                                             </tr>
                                             <div id="popup_modal_{{ class.classCode }}" class="modal fade delete-modal" role="dialog">
@@ -74,13 +196,13 @@
                                                     <div class="modal-content">
                                                         <div class="modal-body text-center">
                                                             <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
-                                                            <h3>Are you sure you want the selected Class?</h3>
+                                                            <h3>{% trans "Are you sure you want to delete the selected Class?" %}</h3>
                                                             <div class="m-t-20">
                                                                 <form method="post" action="{% url 'admin-remove-class' %}">
                                                                     {% csrf_token %}
                                                                     <input type="hidden" name="classCode" value="{{ class.classCode }}">
-                                                                    <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
-                                                                    <button type="submit" class="btn btn-danger">Sure</button>
+                                                                    <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
+                                                                    <button type="submit" class="btn btn-danger">{% trans "Sure" %}</button>
                                                                 </form>
                                                             </div>
                                                         </div>
@@ -96,13 +218,67 @@
             </div>
         </div>
     </div>
-    {% include 'jsreferences.html' %}
+    </div>
+    <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <img src="{% static 'assets/img/sent.png' %}" alt="" width="50" height="46">
+                    <h3>{% trans "You are about to logout. Are you sure?" %}</h3>
+                    <div class="m-t-20">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
+                        <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">{% trans "Sure" %}</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="sidebar-overlay" data-reff=""></div>
+    <script src=" {% static 'assets/js/jquery-3.2.1.min.js' %} "></script>
+    <script src=" {% static 'assets/js/popper.min.js' %} "></script>
+    <script src=" {% static 'assets/js/bootstrap.min.js' %} "></script>
+    <script src=" {% static 'assets/js/jquery.slimscroll.js' %} "></script>
+    <script src=" {% static 'assets/js/app.js' %} "></script>
+    <script src=" {% static 'assets/js/Chart.bundle.js' %} "></script>
+    <script src=" {% static 'assets/js/chart.js' %} "></script>
+    <script src=" {% static 'assets/js/select2.min.js' %} "></script>
+    <script src=" {% static 'assets/js/moment.min.js' %} "></script>
+    <script src=" {% static 'assets/js/bootstrap-datetimepicker.min.js' %} "></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
     <script>
         new DataTable('#example');
-        
+
         setTimeout(function() {
             document.getElementById('alert').style.display = 'none';
         }, 3000);
+
+        $(document).ready(function() {
+    // Check if DataTable is already initialized
+    if ($.fn.DataTable.isDataTable('#example')) {
+        // Destroy the existing DataTable instance
+        $('#example').DataTable().destroy();
+    }
+
+    // Initialize DataTable with your options and translations
+    $('#example').DataTable({
+        "language": {
+            "search": "{% trans 'Search:' %}",
+            "lengthMenu": "{% trans 'Show _MENU_ entries' %}",
+            "info": "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+            "paginate": {
+                "first": "{% trans 'First' %}",
+                "previous": "{% trans 'Previous' %}",
+                "next": "{% trans 'Next' %}",
+                "last": "{% trans 'Last' %}"
+            }
+        }
+    });
+});
     </script>
 </body>
+
 </html>
+

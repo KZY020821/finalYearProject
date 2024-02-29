@@ -1,5 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
 {% load static %}
-{% include 'head.html' %}
+{% load i18n %}
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
+
+    <title>Bolt-FRAS</title>
+    <link rel="icon" type="image/png" href="{% static 'assets/img/bolt.png' %}"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/select2.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap-datetimepicker.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/css/dataTables.bootstrap4.min.css' %} ">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		<script src=" {% static 'assets/js/html5shiv.min.js' %} "></script>
+		<script src=" {% static 'assets/js/respond.min.js' %} "></script>
+    <script src=" {% static 'assets/js/table-sort.js' %} "></script>
+    <link href=" {% static 'assets/DataTables/datatables.min.css' %} " rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+</head>
 <body>
     <div class="main-wrapper  account-wrapper">
         <div class="account-page">
@@ -18,34 +41,34 @@
                             <input type="text" class="form-control" name="studentID" id="studentID" required>
                         </div>
                         <div class="form-group">
-                            <label>Educational Email</label>
+                            <label>{% trans "Email" %}</label>
                             <input type="email" class="form-control" name="email" required>
                         </div>
                         <div class="form-group">
-                            <label>Password</label>
+                            <label>{% trans "Password" %}</label>
                             <input type="password" class="form-control" name="password" required>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must more than 8 letters.</h5>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must more than 8 letters." %}</h5>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must have a combination of capital letters and lowercase letters. </h5>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of capital letters and lowercase letters." %} </h5>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password must have a combination of alphabets and numeric case.</h5>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of alphabets and numeric case." %}</h5>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; Your password cannot too similar with your email or name.</h5>
+                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password cannot too similar with your email or name." %}</h5>
                         </div>
                         <div class="form-group">
-                            <label>Repeat password</label>
+                            <label>{% trans "Repeat password" %}</label>
                             <input type="password" class="form-control" name="password2" required>
                         </div>
                         <div class="form-group">
-                            <label>Given Name</label>
+                            <label>{% trans "First Name" %}</label>
                             <input type="text" class="form-control" name="first_name" required>
                         </div>
                         <div class="form-group">
-                            <label>Family Name</label>
+                            <label>{% trans "Last Name" %}</label>
                             <input type="text" class="form-control" name="last_name" required>
                         </div>
                         <div class="form-group">
-                            <label>Intake</label>
+                            <label>{% trans "Intake" %}</label>
                             <select class="form-control" name="intakeCode" required>
                                 <option value="">---</option>
                                 {% for intake in intakes %}
@@ -54,20 +77,34 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Face Image</label>
+                            <label>{% trans "Face Image" %}</label>
                             <input type="file" class="form-control" name="image" id="image" accept="image/*" required>
                         </div>
                         <div class="form-group text-center">
-                            <button class="btn btn-primary account-btn" type="submit">Signup</button>
+                            <button class="btn btn-primary account-btn" type="submit">{% trans "Signup" %}</button>
                         </div>
                         <div class="text-center login-link">
-                            Already have an account? <a href="/">Login</a>
+                            {% trans "Already have an account?" %} <a href="/">{% trans "Login" %}</a>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    {% include 'jsreferences.html' %}
+    <div class="sidebar-overlay" data-reff=""></div>
+<script src=" {% static 'assets/js/jquery-3.2.1.min.js' %} "></script>
+<script src=" {% static 'assets/js/popper.min.js' %} "></script>
+<script src=" {% static 'assets/js/bootstrap.min.js' %} "></script>
+<script src=" {% static 'assets/js/jquery.slimscroll.js' %} "></script>
+<script src=" {% static 'assets/js/app.js' %} "></script>
+<script src=" {% static 'assets/js/Chart.bundle.js' %} "></script>
+<script src=" {% static 'assets/js/chart.js' %} "></script>
+<script src=" {% static 'assets/js/select2.min.js' %} "></script>
+<script src=" {% static 'assets/js/moment.min.js' %} "></script>
+<script src=" {% static 'assets/js/bootstrap-datetimepicker.min.js' %} "></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
 </body>
 </html>
