@@ -1,12 +1,16 @@
+import os
+import subprocess
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
-from django.db import transaction
-from django.shortcuts import redirect, render
+from django.http import HttpResponse
+from django.shortcuts import redirect
+from django.shortcuts import render
 
 from ..decorators import allow_users
-from ..models import AttendanceTable, AttendanceStatus
+from ..models import AttendanceStatus
+from ..models import AttendanceTable
 from ..models import ClassTable
 from ..models import IntakeTable
 from ..models import LecturerProfile
@@ -261,6 +265,95 @@ def viewMyProfile_lecturer (request, user_id):
     else:
         message = 'Sorry, you are not allowed to view this page'
         return render(request, 'error.html', {'message': message})
+
+
+@login_required(login_url='/')
+@allow_users(allow_roles=['lecturer'])
+def lecturer_face(request, user_id):
+    if user_id == request.user.id:
+        if request.method == "POST":
+            classCode = request.POST['classCode']
+            virtualenv_path = "myenv"
+            python_path = os.path.join(virtualenv_path, "bin", "python")
+            main_script_path = f"/Users/khorzeyi/code/finalYearProject/face_rec-master/face_rec_lec.py"
+            creator = request.user.username
+            command = [python_path, main_script_path, classCode, creator]
+            try:
+                subprocess.run(command, capture_output=True, text=True, shell=False)
+            except subprocess.CalledProcessError as e:
+                pass
+
+            user_instance = User.objects.get(id=request.user.id)
+            if user_instance.groups.exists():
+                if user_instance.groups.first().name == 'admin':
+                    return redirect('admin-dashboard')
+                elif user_instance.groups.first().name == 'lecturer':
+                    return redirect('lecturer-dashboard')
+                else:
+                    return redirect('user-dashboard')
+        user = request.user
+        lecturer = LecturerProfile.objects.get(user = user)
+        kelas = ClassTable.objects.filter(lecturerId = lecturer)
+        return render(request, 'lecturer-templates/lecturer_face.html', {'kelas': kelas})
+    else:
+        message = 'Sorry, you are not allowed to view this page'
+        return render(request, 'error.html', {'message': message})
+
+
+def collect_attendance(processed_names_list, classCode, creator):
+    try:
+        class_instance = ClassTable.objects.get(classCode=classCode)
+    except ClassTable.DoesNotExist:
+        return HttpResponse("Class not found", status=404)
+
+    selected_intakes = list(class_instance.intakeTables.values_list('intakeCode', flat=True))
+    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+
+    classDate = datetime.now()
+    noAttendedUser = len(processed_names_list)
+
+    if 'Unknown' in processed_names_list:
+        noAttendedUser -= 1
+
+    totalUser = class_instance.noOfUser
+
+    attendance_instance = AttendanceTable.objects.create(
+        classCode=class_instance,
+        creator=creator,
+        totalUser=totalUser,
+        noAttendedUser=noAttendedUser,
+        classDate=classDate,
+        method="face recognition"
+    )
+
+    relation_instance = AttendanceTable.objects.get(id=attendance_instance.id)
+
+    user_ids = [name.split('_')[0] for name in processed_names_list]
+    users_dict = UserProfile.objects.in_bulk(user_ids)
+
+    for user_id in user_ids:
+        user = users_dict.get(user_id)
+        if user:
+            relation_instance.attendedUser.add(user)
+
+    for user in selected_users:
+        relation_instance.nameList.add(user)
+
+    for user_id in selected_users:
+        AttendanceStatus.objects.create(
+            relation_id=relation_instance,
+            userId=user_id,
+        )
+
+    for user_id in processed_names_list:
+        user = users_dict.get(user_id.split('_')[0])
+        if user:
+            specific_attendance = AttendanceStatus.objects.get(
+                relation_id=relation_instance,
+                userId=user,
+            )
+            specific_attendance.status = 'attended'
+            specific_attendance.save()
 
 def lecturer_change_language(request):
     return render(request, 'lecturer-templates/change_language.html')

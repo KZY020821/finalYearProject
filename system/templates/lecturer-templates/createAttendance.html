@@ -46,7 +46,7 @@
                     </a>
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
+                        <a class="dropdown-item" href="{% url 'lecturer-face' request.user.id %}">Take Attendance</a>
                     </div>
                 </li>
             </ul>
@@ -135,7 +135,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="row" style="padding = 15px">
+                    <div class="row" style="padding:15px;">
                         <h4 class="page-title">{% trans "Student list" %}</h4>
                         <div class="col-sm col-9 text-right m-b-20">
                             <button class="btn btn-primary float-right" type="button" onclick="selectAll()">{% trans "Select All" %}</button>

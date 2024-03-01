@@ -110,6 +110,7 @@ urlpatterns =[
 
     path('view-myProfileLecturer/<int:user_id>/', lecturer_views.viewMyProfile_lecturer, name='view-myProfileLecturer'),
     path('lecturer-change-language', lecturer_views.lecturer_change_language, name='lecturer-change-language'),
+    path('lecturer-face/<int:user_id>/', lecturer_views.lecturer_face, name='lecturer-face'),
 
     # user
     path('user-dashboard', user_views.userDashboard, name='user-dashboard'),

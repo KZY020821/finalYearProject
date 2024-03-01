@@ -84,92 +84,36 @@
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">{% trans "View Attendance" %} - {{attendance.classCode}}</h4>
-                    </div>
-                    <div class="col-sm-8 col-9 text-right m-b-20">
-                        <a href="{% url 'lecturer-edit-attendance' attendance.id %}" class="btn btn-primary float-right"><i class="fa fa-edit"></i> Edit Lecturer</a>
+                        <h4 class="page-title">{% trans "Choose Subject To Take Attendance" %}</h4>
                     </div>
                 </div>
-                <form method="POST" class="form-signin" enctype="multipart/form-data">
-                    <div class="card-box">
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
+                                {{ message }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="card-box">
+                    <form method="POST" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <h3 class="card-title">Class Code</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" value="{{attendance.classCode}}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" name="creator" value="{{request.user.username}}" readonly>
-                        <h3 class="card-title">Subject</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" name="subjectName" value="{{attendance.classCode.subjectCode}} - {{attendance.classCode.subjectCode.subjectName}}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <h3 class="card-title">Lecturer</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" value="{{attendance.classCode.lecturerId.user.first_name}} {{attendance.classCode.lecturerId.user.last_name}}" readonly>
-                                </div>
-                            </div>
-                        </div>
-                        <h3 class="card-title">Intake(s)</h3>
-                        <select class="form-control" name="intakes" style="height: 150px;" multiple readonly>
-                            {% for intake in intakes %}
-                                {% if intake.intakeCode in selected_intakes %}
-                                    <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}">
-                                        {{ intake.intakeCode }}
-                                    </option>
-                                {% endif %}
+                        <h3 class="card-title">{% trans "Class Code" %}</h3>
+                        <select class="form-control" name="classCode" required>
+                            <option value="">---</option>
+                            {% for class in kelas %}
+                                <option value="{{ class.classCode }}">{{ class.classCode }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <h3 class="card-title">Student list</h3>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="table-responsive">
-                                <table class="table table-striped custom-table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>{% trans "Student's ID" %}</th>
-                                            <th>{% trans "Student's name" %}</th>
-                                            <th>Attended</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for status in attendance_status %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-                                                <td>{{ status.userId.userId }}</td>
-                                                <td>{{ status.userId.user.first_name }} {{ status.userId.user.last_name }}</td>
-                                                <td>
-                                                    <select name="status" disabled>
-                                                        <option value="Attended" {% if status.status == "attended" %}selected{% endif %}>{% trans "Attended" %}</option>
-                                                        <option value="Absent" {% if status.status == "absent" %}selected{% endif %}>{% trans "Absent" %}</option>
-                                                        <option value="Late" {% if status.status == "late" %}selected{% endif %}>{% trans "Late" %}</option>
-                                                        <option value="MC" {% if status.status == "mc" %}selected{% endif %}>{% trans "MC" %}</option>
-                                                        <option value="excuses" {% if status.status == "excuses" %}selected{% endif %}>{% trans "Excuses" %}</option>
-                                                        <option value="emergency" {% if status.status == "emergency" %}selected{% endif %}>{% trans "Emergency" %}</option>
-                                                        <option value="curriculum" {% if status.status == "curicullum" %}selected{% endif %}>{% trans "Curriculum" %}</option>
-                                                    </select>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="text-center m-t-20">
+                            <button class="btn btn-primary submit-btn">{% trans "Create" %}</button>
                         </div>
-                    </div>
-                    <input type="hidden" name="totalUser" value="{{ users|length }}">
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
+    </div>
     <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -183,7 +127,6 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
     <div class="sidebar-overlay" data-reff=""></div>
     <script src=" {% static 'assets/js/jquery-3.2.1.min.js' %} "></script>
@@ -200,6 +143,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script>
+        new DataTable('#example');
+
+        setTimeout(function() {
+            document.getElementById('alert').style.display = 'none';
+        }, 3000);
+    </script>
 </body>
 
 </html>

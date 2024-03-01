@@ -1569,6 +1569,10 @@ def collect_attendance(processed_names_list, classCode, creator):
 
     classDate = datetime.now()
     noAttendedUser = len(processed_names_list)
+
+    if 'unknown' in processed_names_list:
+        noAttendedUser -= 1
+
     totalUser = class_instance.noOfUser
 
     attendance_instance = AttendanceTable.objects.create(

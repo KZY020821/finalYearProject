@@ -250,6 +250,7 @@ if __name__ == "__main__":
         frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected, qr_code_alpha_channel, 0.3)
         cv2.imshow("Face Liveness Detector", frame)
         if cv2.waitKey(1) == ord('q'):
+                print(list(processed_names))
                 if len(sys.argv) > 1:
                     classCode = sys.argv[1]
                     creator = sys.argv[2]
