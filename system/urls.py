@@ -95,6 +95,7 @@ urlpatterns =[
 
     path('admin-face/<int:user_id>/', admin_views.admin_face, name='admin-face'),
     path('admin-change-language', admin_views.admin_change_language, name='admin-change-language'),
+    path('admin-import-data', admin_views.admin_import_data, name='admin-import-data'),
 
     # lecturer
     path('lecturer-dashboard', lecturer_views.lecturerDashboard, name='lecturer-dashboard'),

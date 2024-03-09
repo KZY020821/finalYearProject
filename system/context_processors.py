@@ -4,6 +4,8 @@ from django.contrib.auth.models import Group
 from .models import NotificationTable
 from .models import LeaveTable
 from .models import AdminProfile
+from .models import ReportTable
+from .models import UserProfile
 
 def notification_count(request):
     allowed_groups = ['admin', 'user']
@@ -28,3 +30,15 @@ def unread_leave_count(request):
         leave_count = 0
 
     return {'leave_count': leave_count}
+
+def report_count(request):
+    allowed_groups = ['admin']
+
+    if request.user.is_authenticated and request.user.groups.filter(name__in=allowed_groups).exists():
+        admin = AdminProfile.objects.get(user = request.user)
+        reports = ReportTable.objects.filter(receiver=admin, status='delivered')
+        report_count = reports.count()
+    else:
+        report_count = 0
+
+    return {'report_count': report_count}

@@ -1,13 +1,11 @@
-import face_recognition
-import os, sys
-import cv2
-import numpy as np
 import math
 import os
+import sys
+
+import cv2
 import django
-import dlib
-import datetime
-from PIL import Image
+import face_recognition
+import numpy as np
 
 # Set the DJANGO_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
@@ -15,13 +13,13 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 # Initialize Django
 django.setup()
 
+
 # Import Django models
-from system.views.admin_views import collect_attendance
 # Define a function to calculate face recognition confidence
 def face_confidence(face_distance, face_match_threshold=0.4):
     # Calculate confidence linearly based on face distance
-    range = (1.0 - face_match_threshold)
-    linear_val = (1.0 - face_distance) / (range * 2.0)
+    ranges = (1.0 - face_match_threshold)
+    linear_val = (1.0 - face_distance) / (ranges * 2.0)
 
     if face_distance > face_match_threshold:
         return str(round(linear_val * 100, 2)) + '%'  # Return confidence as a percentage
@@ -30,7 +28,8 @@ def face_confidence(face_distance, face_match_threshold=0.4):
         value = (linear_val + ((1.0 - linear_val) * math.pow((linear_val - 0.5) * 2, 0.2))) * 100
         return str(round(value, 2)) + '%'  # Return adjusted confidence as a percentage
 
-class FaceRecognition():
+
+class FaceRecognition:
     # Initialize class variables
     face_locations = []
     face_encodings = []
@@ -43,24 +42,19 @@ class FaceRecognition():
     confidence_threshold = 0.3
 
     def __init__(self):
+        self.qr_code_alpha_channel = None
         self.encode_faces()  # Call the face encoding function to load known faces
         self.load_qr_code()  # Call the function to load the QR code image
 
     def encode_faces(self):
-        if len(sys.argv) > 1:
-            classCode = sys.argv[1]
-        directory = f'media/{classCode}/'
+        directory = f'media/faceImage/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
-
-        # Use the dlib face recognition model (e.g., 'dlib_face_recognition_resnet_model_v1.dat')
-        dlib_model_path = 'dlib_face_recognition_resnet_model_v1.dat'
-        dlib_model = dlib.face_recognition_model_v1(dlib_model_path)
 
         for image in image_files:
             try:
                 face_image = face_recognition.load_image_file(os.path.join(directory, image))
-                
+
                 # Use the dlib face recognition model
                 face_encoding = face_recognition.face_encodings(face_image, model='large')[0]
 
@@ -69,6 +63,7 @@ class FaceRecognition():
             except Exception as ex:
                 print(ex)
         print(self.known_face_names)
+
     def load_qr_code(self):
         # Load the static QR code image with alpha channel
         qr_code_image = cv2.imread('system/static/assets/img/qrcode.png', cv2.IMREAD_UNCHANGED)
@@ -84,13 +79,13 @@ class FaceRecognition():
         # Create a mask for the QR code alpha channel
         mask = cv2.cvtColor(qr_code_alpha_channel, cv2.COLOR_GRAY2BGR) / 255.0
 
-        # Overlay QR code on the frame at the bottom right corner
+        # Overlay QR code on the frame in the bottom right corner
         frame[-150:, -150:] = frame[-150:, -150:] * (1 - mask) + qr_code_resized[:, :, :3] * mask
-        
+
     def run_recognition(self):
         # Open the video capture from the default camera (camera index 0)
-        video_capture = cv2.VideoCapture(0)
-        
+        video_capture = cv2.VideoCapture(1)
+
         if not video_capture.isOpened():
             sys.exit('Video source not found....')  # Exit if the video source is not found
 
@@ -134,7 +129,8 @@ class FaceRecognition():
                 bottom *= 4
                 left *= 4
 
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)  # Draw a red rectangle around the face
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255),
+                              2)  # Draw a red rectangle around the face
                 cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
                 cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
                             (255, 255, 255), 1)  # Put the name and confidence label
@@ -142,10 +138,6 @@ class FaceRecognition():
             cv2.imshow('face recognition', frame)  # Display the frame with face recognition
 
             if cv2.waitKey(1) == ord('q'):
-                if len(sys.argv) > 1:
-                    classCode = sys.argv[1]
-                    creator = sys.argv[2]
-                collect_attendance(list(self.processed_names), classCode, creator)
                 break  # Press 'q' to quit the program
 
         video_capture.release()

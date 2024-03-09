@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -180,7 +186,7 @@
                             {% endfor %}
                         </select> 
                     </div>
-                    <div class="row" style="padding = 15px">
+                    <div class="row" style="padding: 15px;">
                         <h3 class="card-title">{% trans "Student list" %}</h3>
                         <div class="col-sm col-9 text-right m-b-20">
                                 <button class="btn btn-primary float-right" type="button" onclick="selectAll()">Select All</button>

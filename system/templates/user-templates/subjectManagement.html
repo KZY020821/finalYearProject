@@ -132,14 +132,14 @@
                                                     </td>
                                                     <td>
                                                         {% if subject.status == "Active" or subject.status == "active" %}
-                                                            <span class="custom-badge status-green">Active</span>
+                                                            <span class="custom-badge status-green">{% trans "Active" %}</span>
                                                         {% else %}
-                                                            <span class="custom-badge status-red">Deactive</span>
+                                                            <span class="custom-badge status-red">{% trans "Deactive" %}</span>
                                                         {% endif %}
                                                     </td>
                                                     <td class="text-right">
                                                         {% if subject.status == "Active" or subject.status == "active" %}
-                                                            <a href="user-view-subject/{{subject.classCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> View</button></a>
+                                                            <a href="user-view-subject/{{subject.classCode}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
                                                         {% else %}
                                                             -
                                                         {% endif %}

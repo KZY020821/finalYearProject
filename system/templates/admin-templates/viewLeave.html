@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -150,19 +156,21 @@
                     <h3 class="card-title">{% trans "Description" %}: {{leave.leaveDescription}}</h3>
                     <h3 class="card-title">{% trans "Attachment" %}:</h3>
                     <img src="{{leave.leaveAttachment.url}}" style=" display:block; width: 90%; height: auto; border-style: solid; margin: auto auto 40px auto;">
-                    <div class="row">
-                        <div class="col d-flex justify-content-center">
-                            <a href="{% url 'admin-approve-leave' leave.id %}">
-                                <button type="button" class="btn btn-success"><i class="fa fa-check"></i> {% trans "Approve" %}</button>
-                            </a>
-                        </div>
-                        
-                        <div class="col d-flex justify-content-center">
-                            <a href="{% url 'admin-deny-leave' leave.id %}">
-                                <button type="button" class="btn btn-danger"><i class="fa fa-ban"></i> {% trans "Deny" %}</button>
-                            </a>
-                        </div>
-                    </div>                    
+                    {% if leave.status == "pending"%}
+                        <div class="row">
+                            <div class="col d-flex justify-content-center">
+                                <a href="{% url 'admin-approve-leave' leave.id %}">
+                                    <button type="button" class="btn btn-success"><i class="fa fa-check"></i> {% trans "Approve" %}</button>
+                                </a>
+                            </div>
+                            
+                            <div class="col d-flex justify-content-center">
+                                <a href="{% url 'admin-deny-leave' leave.id %}">
+                                    <button type="button" class="btn btn-danger"><i class="fa fa-ban"></i> {% trans "Deny" %}</button>
+                                </a>
+                            </div>
+                        </div>                    
+                    {% endif %}
                 </div>
             </div>
         </div>

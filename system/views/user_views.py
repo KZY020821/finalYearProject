@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 
-
+from django.utils.translation import gettext_lazy as _
 from ..decorators import allow_users
 from ..models import IntakeTable
 from ..models import UserProfile
@@ -134,7 +134,7 @@ def user_createLeave(request):
         if start_date_obj <= end_date_obj:
           leave = LeaveTable.objects.create(adminID = adminId_instance, userID = userId_instance, leaveTitle = leaveTitle, leaveDescription = leaveDescription, leaveAttachment = leaveAttachment, status = "pending", startDate = startDate, endDate = endDate, applyDate = applyDate)          
           leave.save()
-        messages.success(request, 'Leave created successfully.')
+        messages.success(request, _('Leave created successfully.'))
         return redirect('user-leave-management')
 
     return render(request, 'user-templates/createLeave.html', {'intakes': intakes, })
@@ -192,7 +192,6 @@ def user_createReport(request, id):
             adminId_instance = None 
 
         ReportTable.objects.create( reportTitle = reportTitle, reportMessage = reportDescription, creator = creator, reportDate = datetime.now(), receiver = adminId_instance,)
-        print(reportTitle, reportDescription, receiver, creator)
         return redirect('user-report-management')
     return render(request, 'user-templates/createReport.html', {'admin': admin, 'intake': intake})
 

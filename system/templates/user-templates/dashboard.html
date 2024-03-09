@@ -53,7 +53,7 @@
                 <div class="sidebar-inner slimscroll">
                     <div id="sidebar-menu" class="sidebar-menu">
                         <ul>
-                            <li {% if request.path == '/user-dashboard' or request.path == '/dashboard' %}class="active"{% endif %}>
+                            <li class="active">
                                 <a href="{% url 'user-dashboard' %}"><i class="fa fa-dashboard"></i> <span>{% trans "Dashboard" %}</span></a>
                             </li>
                             <li {% if '/user-attendance-management' in request.path %}class="active"{% endif %}>
@@ -69,7 +69,13 @@
                                 <a href="{% url 'view-myProfileUser' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans "Profile Page" %}</span></a>
                             </li>
                             <li {% if '/user-report-management' in request.path or '/user-view-report' in request.path or '/user-reply-report' in request.path %}class="active"{% endif %}>
-                                <a href="{% url 'user-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans "Report Management" %}</span></a>
+                                <a href="{% url 'user-report-management' %}">
+                                  <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                  <span>{% trans "Report Management" %}</span>
+                                  {% if report_ucount > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_ucount }}</span>
+                                  {% endif %}
+                                </a>
                             </li>
                             <li {% if '/user-notification-management' in request.path or '/user-noted-notification' in request.path or '/user-reply-report' in request.path %}class="active"{% endif %}>
                                 <a href="{% url 'user-notification-management' %}">

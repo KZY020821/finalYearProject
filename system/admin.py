@@ -12,9 +12,11 @@ from .models import ClassTable
 from .models import AttendanceStatus
 from .models import FaceImage
 
+from import_export.admin import ImportExportActionModelAdmin
+
 from django.contrib import admin
 # Register your models here.
-admin.site.register(UserProfile)
+admin.site.register(UserProfile, ImportExportActionModelAdmin)
 admin.site.register(AdminProfile)
 admin.site.register(AbsenceMonitoringTable)
 admin.site.register(AttendanceTable)

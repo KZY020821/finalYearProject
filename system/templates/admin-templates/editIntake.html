@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -144,11 +150,11 @@
                 <div class="card-box">
                     <form method="POST" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <h3 class="card-title">{% trans "Create New Intake Code" %}</h3>
+                        <h3 class="card-title">{% trans "Intake Code" %}</h3>
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" id="intakeCode" name="intakeCode" value="{{intake.intakeCode}}">
+                                    <input type="text" class="form-control" id="intakeCode" name="intakeCode" value="{{intake.intakeCode}}" readonly>
                                 </div>
                                 <h3 class="card-title">Admin</h3>
                                 <select class="form-control" name="adminId" required>

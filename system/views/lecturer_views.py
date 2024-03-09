@@ -16,6 +16,7 @@ from ..models import IntakeTable
 from ..models import LecturerProfile
 from ..models import SubjectTable
 from ..models import UserProfile
+from django.utils.translation import gettext_lazy as _
 
 
 @login_required(login_url='/')
@@ -36,13 +37,14 @@ def lecturerDashboard(request):
         class_total_percentage = 0
 
         for att in attendance:
-            attendance_percentage = att.noAttendedUser / att.totalUser * 100
-            formatted_percentage = int(round(attendance_percentage))
+            if att.totalUser != 0:
+                attendance_percentage = att.noAttendedUser / att.totalUser * 100
+                formatted_percentage = int(round(attendance_percentage))
 
-            class_total_attendances += 1
-            class_total_percentage += formatted_percentage
+                class_total_attendances += 1
+                class_total_percentage += formatted_percentage
 
-            attendances.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
+                attendances.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
 
         if class_total_attendances != 0:
             average_percentage = class_total_percentage / class_total_attendances
@@ -263,7 +265,7 @@ def viewMyProfile_lecturer (request, user_id):
             subjects = ClassTable.objects.filter(lecturerId = lecturer_user.lecturerId)
             return render(request, 'lecturer-templates/viewMyProfileLecturer.html', {'user': user, 'subjects': subjects, })
     else:
-        message = 'Sorry, you are not allowed to view this page'
+        message = _('Sorry, you are not allowed to view this page')
         return render(request, 'error.html', {'message': message})
 
 
@@ -296,11 +298,11 @@ def lecturer_face(request, user_id):
         kelas = ClassTable.objects.filter(lecturerId = lecturer)
         return render(request, 'lecturer-templates/lecturer_face.html', {'kelas': kelas})
     else:
-        message = 'Sorry, you are not allowed to view this page'
+        message = _('Sorry, you are not allowed to view this page')
         return render(request, 'error.html', {'message': message})
 
 
-def collect_attendance(processed_names_list, classCode, creator):
+def collect_attendance(ids, classCode, creator):
     try:
         class_instance = ClassTable.objects.get(classCode=classCode)
     except ClassTable.DoesNotExist:
@@ -310,9 +312,9 @@ def collect_attendance(processed_names_list, classCode, creator):
     selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
 
     classDate = datetime.now()
-    noAttendedUser = len(processed_names_list)
+    noAttendedUser = len(ids)
 
-    if 'Unknown' in processed_names_list:
+    if 'unknown' in ids:
         noAttendedUser -= 1
 
     totalUser = class_instance.noOfUser
@@ -327,11 +329,9 @@ def collect_attendance(processed_names_list, classCode, creator):
     )
 
     relation_instance = AttendanceTable.objects.get(id=attendance_instance.id)
+    users_dict = UserProfile.objects.in_bulk(ids)
 
-    user_ids = [name.split('_')[0] for name in processed_names_list]
-    users_dict = UserProfile.objects.in_bulk(user_ids)
-
-    for user_id in user_ids:
+    for user_id in ids:
         user = users_dict.get(user_id)
         if user:
             relation_instance.attendedUser.add(user)
@@ -345,7 +345,7 @@ def collect_attendance(processed_names_list, classCode, creator):
             userId=user_id,
         )
 
-    for user_id in processed_names_list:
+    for user_id in ids:
         user = users_dict.get(user_id.split('_')[0])
         if user:
             specific_attendance = AttendanceStatus.objects.get(

@@ -1321,8 +1321,8 @@ msgstr "Tukar Bahasa"
 msgid "Logout"
 msgstr "Log Keluar"
 
-msgid "Create New Absence Limit"
-msgstr "Mencipta Had Ketidakhadiran Baharu"
+msgid "Add Absence Limit"
+msgstr "Tambah Had Ketidakhadiran"
 
 msgid "Absence Limit Name"
 msgstr "Nama Had Ketidakhadiran"
@@ -1366,8 +1366,8 @@ msgstr "Kod Kelas"
 msgid "Create"
 msgstr "Cipta"
 
-msgid "Create New Admin"
-msgstr "Cipta Admin Baharu"
+msgid "Add Admin"
+msgstr "Tambah Admin"
 
 msgid "Search Admin (ID or name)"
 msgstr "Carian Admin (ID atau Nama)"
@@ -1402,8 +1402,8 @@ msgstr "Kaedah untuk mendapatkan kehadiran"
 msgid "Choose Class Code to take attendance"
 msgstr "Pilih Kod Kelas untuk mengambil kehadiran"
 
-msgid "Create New Class"
-msgstr "Cipta Kelas Baharu"
+msgid "Add Class"
+msgstr "Tambah Kelas"
 
 msgid "Subject Name"
 msgstr "Nama Subjek"
@@ -1486,8 +1486,8 @@ msgstr "ID pelajar"
 msgid "hold ctrl to select multiple intakes"
 msgstr "tahan ctrl untuk memilih berbilang pengambilan"
 
-msgid "Create New Intake"
-msgstr "Mencipta Pengambilam Baharu"
+msgid "Add Intake"
+msgstr "Tambah Pengambilam"
 
 msgid "New Intake Code"
 msgstr "Kod Pengambilam Baharu"
@@ -1530,9 +1530,6 @@ msgstr "Status Kehadiran"
 
 msgid "Class"
 msgstr "Kelas"
-
-msgid "Create New Intake Code"
-msgstr "Mencipta Kod Pengambilan Baharu"
 
 msgid "Student"
 msgstr "Pelajar"
@@ -1750,5 +1747,108 @@ msgstr "Log Masuk"
 msgid "Already have an account?"
 msgstr "Sudah ada akaun?"
 
+msgid "Email used"
+msgstr "Emel telah diguna"
+
+msgid "ID used"
+msgstr "ID telah diguna"
+
+msgid "Passwords do not match"
+msgstr "Kata laluan tak sama"
+
+msgid "Failed to detect face from the image you uploaded."
+msgstr "Gagal mengesan wajah daripada imej yang anda muat naik."
+
+msgid "Account created successfully."
+msgstr "Akaun berjaya dibuat."
+
+msgid "Intake created successfully"
+msgstr "Pengambilan berjaya dibuat"
+
+msgid "Subject created successfully"
+msgstr "Subjek berjaya dibuat"
+
+msgid "Absence Limit created successfully"
+msgstr "Had kehadiran berjaya dibuat"
+
+msgid "Modification has been saved successfully."
+msgstr "Pengubahsuaian telah berjaya disimpan."
+
+msgid "Account removed successfully."
+msgstr "Akaun berjaya dipadamkan."
+
+msgid "Intake removed successfully."
+msgstr "Pengambilan berjaya dipadamkan."
+
+msgid "Subject removed successfully."
+msgstr "Subjek berjaya dipadamkan."
+
+msgid "Class removed successfully."
+msgstr "Kelas berjaya dipadamkan."
+
+msgid "Subject has been activated."
+msgstr "Subjek telah diaktifkan."
+
+msgid "Subject has been deactivated."
+msgstr "Subjek telah dinyahaktifkan."
+
+msgid "Class has been activated."
+msgstr "Kelas telah diaktifkan."
+
+msgid "Class has been deactivated."
+msgstr "Kelas telah dinyahaktifkan."
+
+msgid "register failed."
+msgstr "daftar gagal."
+
+msgid "Intake code is already in use"
+msgstr "Kod pengambilan telan diguna"
+
+msgid "Subject code is already in use"
+msgstr "Kod subjek telan diguna"
+
+msgid "Class code is already in use"
+msgstr "Kod kelas telan diguna"
+
+msgid "Absence Limit Name is already in use"
+msgstr "Nama had kehadiran telah diguna"
+
+msgid "Days allowed to absence is already exists"
+msgstr "Hari yang dibenarkan untuk tidak hadir sudah wujud"
+
+msgid "Leave approved"
+msgstr "Cuti diluluskan"
+
+msgid "Leave denied"
+msgstr "Cuti dinafikan"
+
+msgid "Absence limit removed successfully."
+msgstr "Had ketidakhadiran berjaya dipadamkan"
+
+msgid "Go Back"
+msgstr "Balik"
+
+msgid "Sorry, you are not allowed to view this page"
+msgstr "Maaf, anda tidak dibenarkan melihat halaman ini"
 
 
+msgid "Total subject"
+msgstr "Jumlah subjek"
+
+msgid "Total class"
+msgstr "Jumlah kelas"
+
+msgid "Leave created successfully."
+msgstr "Cuti telah dicipta"
+
+msgid "Upload Excel File"
+msgstr "Muat naik Fail Excel"
+
+msgid "Import with Excel"
+msgstr "Import dengan Excel"
+
+msgid "Upload"
+msgstr "Muat Naik"
+
+msgid "Excel File"
+msgstr "Fail Excel"

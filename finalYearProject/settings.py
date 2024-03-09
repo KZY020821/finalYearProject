@@ -30,7 +30,7 @@ SECRET_KEY = 's-)d+c7=^8cwx&)8%a8+f9v6x4)elf5%()ag)_$&5(@*kvx72('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44','192.168.1.104', '192.168.0.233']
+ALLOWED_HOSTS = ['localhost', '192.168.1.101', '192.168.1.31', '127.0.0.1', '192.168.1.6', '192.168.0.204', '192.168.0.44','192.168.1.104', '192.168.0.233', '192.168.1.35', '192.168.0.23', '192.168.2.32']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rosetta',
+    'import_export',
     'system',
 ]
 
@@ -69,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'system.context_processors.notification_count',
                 'system.context_processors.unread_leave_count',
+                'system.context_processors.report_count',
             ],
         },
     },
@@ -152,3 +154,5 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'boltfras@gmail.com'
 EMAIL_HOST_PASSWORD = 'vson uncj eyzs imxe'
+
+IMPORT_EXPORT_USE_TRANSACTIONS = True

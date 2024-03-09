@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -153,9 +159,9 @@
                                                 <td>{{ notification.notifyMessage }}</td>
                                                 <td>{{ notification.receiver }}</td>
                                                 {% if notification.status == "delivered" or notification.status == "Delivered" %}
-                                                    <td><i class="fa-solid fa-check"></i> Delivered</td>
+                                                    <td><i class="fa-solid fa-check"></i> {% trans "Delivered" %}</td>
                                                 {% elif notification.status == "noted" or notification.status == "Noted" %}
-                                                    <td><i class="fa-solid fa-check-double"></i> Noted</td>
+                                                    <td><i class="fa-solid fa-check-double"></i> {% trans "Noted" %}</td>
                                                 {% endif %}
                                                 <td class="text-right">
                                                     {% if notification.status == "delivered" or notification.status == "Delivered" %}

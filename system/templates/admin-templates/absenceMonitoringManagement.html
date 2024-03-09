@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -132,7 +138,7 @@
                         <h4 class="page-title">{% trans "Absence Monitoring" %}</h4>
                     </div>
                     <div class="col-sm-8 col-9 text-right m-b-20">
-                        <a href="admin-create-absenceMonitoring" class="btn btn-primary float-right"><i class="fa fa-plus"></i>  {% trans "Create New Absence Limit" %}</a>
+                        <a href="admin-create-absenceMonitoring" class="btn btn-primary float-right"><i class="fa fa-plus"></i>  {% trans "Add Absence Limit" %}</a>
                     </div>
                 </div>
                 {% if messages %}
@@ -185,7 +191,7 @@
                                                             <div class="m-t-20">
                                                                 <form method="post" action="{% url 'admin-remove-absenceMonitoring' %}">
                                                                     {% csrf_token %}
-                                                                    <input type="hidden" name="user_id" value="{{ limit.id }}">
+                                                                    <input type="hidden" name="id" value="{{ limit.id }}">
                                                                     <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
                                                                     <button type="submit" class="btn btn-danger">{% trans "Sure" %}</button>
                                                                 </form>
@@ -232,28 +238,35 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+
     <script>
-        new DataTable('#example');
-        
         setTimeout(function() {
             document.getElementById('alert').style.display = 'none';
         }, 3000);
-
+        new DataTable('#example');
+        
         $(document).ready(function() {
-            // Check if DataTable is already initialized
             if ($.fn.DataTable.isDataTable('#example')) {
                 // Destroy the existing DataTable instance
                 $('#example').DataTable().destroy();
             }
-
-            // Initialize DataTable with your options
             $('#example').DataTable({
                 "language": {
                     "search": "{% trans 'Search:' %}",
+                    "lengthMenu": "{% trans 'Show _MENU_ entries' %}",
+                    "info": "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                    "infoEmpty": "{% trans 'Showing 0 to 0 of 0 entries' %}",
+                    "infoFiltered": "({% trans 'filtered from _MAX_ total entries' %})",
+                    "zeroRecords": "{% trans 'No matching records found' %}",
+                    "paginate": {
+                        "first": "{% trans 'First' %}",
+                        "previous": "{% trans 'Previous' %}",
+                        "next": "{% trans 'Next' %}",
+                        "last": "{% trans 'Last' %}"
+                    }
                 }
             });
         });
-
     </script>
 </body>
 

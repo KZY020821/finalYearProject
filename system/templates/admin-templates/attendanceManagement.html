@@ -101,7 +101,13 @@
                             <a href="{% url 'view-myProfileAdmin' request.user.id %}"><i class="fa fa-user"></i> <span>{% trans 'Profile Page' %}</span></a>
                         </li>
                         <li {% if '/admin-report-management' in request.path or '/admin-view-report' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
-                            <a href="{% url 'admin-report-management' %}"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span>{% trans 'Report Management' %}</span></a>
+                            <a href="{% url 'admin-report-management' %}">
+                                <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                                <span>{% trans 'Report Management' %}</span>
+                                {% if report_count > 0 %}
+                                    <span class="badge badge-pill bg-danger float-right">{{ report_count }}</span>
+                                {% endif %}
+                            </a>
                         </li>
                         <li {% if '/admin-notification-management' in request.path or '/admin-noted-notification' in request.path or '/admin-reply-report' in request.path %}class="active"{% endif %}>
                             <a href="{% url 'admin-notification-management' %}">
@@ -218,21 +224,25 @@
     <script>
         new DataTable('#example');
         
-        setTimeout(function() {
-            document.getElementById('alert').style.display = 'none';
-        }, 3000);
-
         $(document).ready(function() {
-            // Check if DataTable is already initialized
             if ($.fn.DataTable.isDataTable('#example')) {
                 // Destroy the existing DataTable instance
                 $('#example').DataTable().destroy();
             }
-
-            // Initialize DataTable with your options
             $('#example').DataTable({
                 "language": {
                     "search": "{% trans 'Search:' %}",
+                    "lengthMenu": "{% trans 'Show _MENU_ entries' %}",
+                    "info": "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                    "infoEmpty": "{% trans 'Showing 0 to 0 of 0 entries' %}",
+                    "infoFiltered": "({% trans 'filtered from _MAX_ total entries' %})",
+                    "zeroRecords": "{% trans 'No matching records found' %}",
+                    "paginate": {
+                        "first": "{% trans 'First' %}",
+                        "previous": "{% trans 'Previous' %}",
+                        "next": "{% trans 'Next' %}",
+                        "last": "{% trans 'Last' %}"
+                    }
                 }
             });
         });
