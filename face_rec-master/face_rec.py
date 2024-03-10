@@ -1,8 +1,14 @@
 import os
 import re
 import sys
+# Get the absolute path of the current file
+current_file_path = os.path.abspath(__file__)
 
-sys.path.append('/Users/khorzeyi/code/finalYearProject')
+# Go up two levels to get the base directory
+base_path = os.path.dirname(os.path.dirname(current_file_path))
+
+# Add the base path to sys.path
+sys.path.append(base_path)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 import django
 
@@ -22,7 +28,7 @@ processed_names = []
 
 
 def load_qr_code():
-    qr_code_image = cv2.imread('/Users/khorzeyi/code/finalYearProject/system/static/assets/img/qrcode.png',
+    qr_code_image = cv2.imread('system/static/assets/img/qrcode.png',
                                cv2.IMREAD_UNCHANGED)
     return qr_code_image
 
@@ -36,11 +42,11 @@ def overlay_qr_code(frame, qr_code_alpha_channel):
 
 def init():
     global classCode
-    face_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_frontalface_alt.xml'
-    open_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
-    left_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_lefteye_2splits.xml'
-    right_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_righteye_2splits.xml'
-    dataset = f'/Users/khorzeyi/code/finalYearProject/media/faceImage/'
+    face_cascPath = 'face_rec-master/haarcascade_frontalface_alt.xml'
+    open_eye_cascPath = 'face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
+    left_eye_cascPath = 'face_rec-master/haarcascade_lefteye_2splits.xml'
+    right_eye_cascPath = 'face_rec-master/haarcascade_righteye_2splits.xml'
+    dataset = f'media/faceImage/'
 
     face_detector = cv2.CascadeClassifier(face_cascPath)
     open_eyes_detector = cv2.CascadeClassifier(open_eye_cascPath)
@@ -80,6 +86,7 @@ def init():
 
 def process_and_encode(images):
     known_face_names = []
+    known_full_names = []
     known_face_encodings = []
     for image in images:
         try:
@@ -95,11 +102,13 @@ def process_and_encode(images):
             name = name.split('.')[0]
             cleaned_name = name.replace('-', ' ')
             status = ('ID: ' + user_id + '  Name: ' + cleaned_name)
+            full_name = (cleaned_name +" Your attendance has been taken")
             known_face_names.append(status)
+            known_full_names.append(full_name)
         except Exception as ex:
             print(ex)
 
-    return {"encodings": known_face_encodings, "names": known_face_names}
+    return {"encodings": known_face_encodings, "names": known_face_names, "statuses":known_full_names}
 
 
 def isBlinking(history, maxFrames):
@@ -154,6 +163,7 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             counts = {}
             for i in matchedIdxs:
                 name = data["names"][i]
+                status = data["statuses"][i]
                 counts[name] = counts.get(name, 0) + 1
 
             # Determine the recognized face with the largest number of votes
@@ -236,7 +246,7 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
             
             bottom_left_corner = (10, frame.shape[0] - 10)
-            cv2.putText(frame, "Your attendance has been taken", bottom_left_corner, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, status, bottom_left_corner, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
             
             if name not in processed_names:
                 if name != 'Unknown':
@@ -254,7 +264,7 @@ if __name__ == "__main__":
     while True:
         frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector,
                                    right_eye_detector, data, eyes_detected, qr_code_alpha_channel, 0.3)
-        cv2.imshow("Face Liveness Detector", frame)
+        cv2.imshow("BOLT-FRAS Face Recognition Attendance System", frame)
         if cv2.waitKey(1) == ord('q'):
             ids = []
 

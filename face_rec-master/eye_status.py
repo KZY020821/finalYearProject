@@ -15,6 +15,17 @@ from skimage.transform import resize
 from imageio import imsave
 from PIL import Image
 
+import os
+import sys
+
+# Get the absolute path of the current file
+current_file_path = os.path.abspath(__file__)
+
+# Go up two levels to get the base directory
+base_path = os.path.dirname(os.path.dirname(current_file_path))
+
+# Add the base path to sys.path
+sys.path.append(base_path)
 
 
 IMG_SIZE = 24  # or the desired size for resizing
@@ -58,15 +69,15 @@ def save_model(model):
 	with open("model.json", "w") as json_file:
 		json_file.write(model_json)
 	# serialize weights to HDF5
-	model.save_weights("/Users/khorzeyi/code/finalYearProject/face_rec-master/model.h5")
+	model.save_weights("face_rec-master/model.h5")
 
 def load_model():
-	json_file = open('/Users/khorzeyi/code/finalYearProject/face_rec-master/model.json', 'r')
+	json_file = open('face_rec-master/model.json', 'r')
 	loaded_model_json = json_file.read()
 	json_file.close()
 	loaded_model = model_from_json(loaded_model_json)
 	# load weights into new model
-	loaded_model.load_weights("/Users/khorzeyi/code/finalYearProject/face_rec-master/model.h5")
+	loaded_model.load_weights("face_rec-master/model.h5")
 	loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 	return loaded_model
 

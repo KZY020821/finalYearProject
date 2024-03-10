@@ -134,8 +134,26 @@
         <div class="page-wrapper">
             <div class="content">
                 <div class="row">
-                    <div class="col-sm-4">
+                    <div class="col-sm-4 col-3">
                         <h4 class="page-title">{% trans "Upload Excel File" %}</h4>
+                    </div>
+                    <div class="col-sm-8 col-9 text-right m-b-3">
+                        <a href="{% static 'assets/file/template.xlsx' %}" download class="btn btn-primary float-right" style="margin: 10px;"><i class="fa fa-download" aria-hidden="true"></i> {% trans "Download Template" %}</a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm m-3">
+                        <h4>{% trans 'Tutorial for import data' %}</h4>
+                        <p><b>{% trans 'Step' %} 1:</b> {% trans 'Download the template.xlsx by pressing the' %} "<a href="{% static 'assets/file/template.xlsx' %}" download ><i class="fa fa-download" aria-hidden="true"></i> {% trans "Download Template" %}</a>"{% trans ' Button.' %}</p>
+                        <p><b>{% trans 'Step' %} 2:</b> {% trans 'Open the template.xlsx file.' %}</p>
+                        <p><b>{% trans 'Step' %} 3:</b> {% trans 'Fill in the data based on the image shown below and save it.' %}</p>
+                        <img src="{% static 'assets/img/excel-example(2).png'%}" class="img-fluid rounded" alt="Responsive image">
+                        <ul>
+                            <li><b>{% trans 'Important' %}:</b>{% trans ' The' %} <b>faceImage</b> {% trans 'column should paste the image path of the image.' %} </li>
+                            <li><b>{% trans 'For example' %}</b>, {% trans '<i class="fa-brands fa-windows"></i> Windows machine should look like' %} <b>C:\Users\windows\Pictures\image.png</b></li>
+                            <li><b>{% trans 'For example' %}</b>, {% trans '<i class="fa-brands fa-apple"></i> Mac machine should look like' %} <b>/Users/mac/Pictures/Camera Roll/image.png</b></li>
+                        </ul>
+                        <p><b>{% trans 'Step' %} 4:</b> {% trans 'Upload the template.xlsx file to the form below.' %}</p>
                     </div>
                 </div>
                 <form method="POST" enctype="multipart/form-data">

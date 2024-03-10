@@ -9,8 +9,6 @@ urlpatterns =[
     # main
     path('', views.loginPage, name='login-page'),
     path('registerPage', views.registerPage, name='register'),
-    path('view-myProfile/<int:user_id>/', views.viewMyProfile, name='view-myProfile'),
-    path('edit-myProfile/<int:user_id>/', views.editMyProfile, name='edit-myProfile'),
     path('logout', views.logoutUser, name='logout'),
     path('reportAttendance', views.reportAttendance, name='reportAttendance'),
 

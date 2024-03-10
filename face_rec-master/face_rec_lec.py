@@ -1,8 +1,14 @@
 import os
 import re
 import sys
+# Get the absolute path of the current file
+current_file_path = os.path.abspath(__file__)
 
-sys.path.append('/Users/khorzeyi/code/finalYearProject')
+# Go up two levels to get the base directory
+base_path = os.path.dirname(os.path.dirname(current_file_path))
+
+# Add the base path to sys.path
+sys.path.append(base_path)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 import django
 
@@ -16,13 +22,13 @@ from imutils.video import VideoStream
 from eye_status import *
 from system.models import UserProfile
 from system.models import ClassTable
-from system.views.admin_views import collect_attendance
+from system.views.lecturer_views import collect_attendance
 
 processed_names = []
 
 
 def load_qr_code():
-    qr_code_image = cv2.imread('/Users/khorzeyi/code/finalYearProject/system/static/assets/img/qrcode.png',
+    qr_code_image = cv2.imread('system/static/assets/img/qrcode.png',
                                cv2.IMREAD_UNCHANGED)
     return qr_code_image
 
@@ -36,11 +42,11 @@ def overlay_qr_code(frame, qr_code_alpha_channel):
 
 def init():
     global classCode
-    face_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_frontalface_alt.xml'
-    open_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
-    left_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_lefteye_2splits.xml'
-    right_eye_cascPath = '/Users/khorzeyi/code/finalYearProject/face_rec-master/haarcascade_righteye_2splits.xml'
-    dataset = f'/Users/khorzeyi/code/finalYearProject/media/faceImage/'
+    face_cascPath = 'face_rec-master/haarcascade_frontalface_alt.xml'
+    open_eye_cascPath = 'face_rec-master/haarcascade_eye_tree_eyeglasses.xml'
+    left_eye_cascPath = 'face_rec-master/haarcascade_lefteye_2splits.xml'
+    right_eye_cascPath = 'face_rec-master/haarcascade_righteye_2splits.xml'
+    dataset = f'media/faceImage/'
 
     face_detector = cv2.CascadeClassifier(face_cascPath)
     open_eyes_detector = cv2.CascadeClassifier(open_eye_cascPath)

@@ -1852,3 +1852,42 @@ msgstr "Muat Naik"
 
 msgid "Excel File"
 msgstr "Fail Excel"
+
+msgid "Step"
+msgstr "Langkah"
+
+msgid "Download Template"
+msgstr "Muat turun Templat"
+
+msgid "Open the template.xlsx file."
+msgstr "Buka fail template.xlsx."
+
+msgid "Fill in the data based on the image shown below and save it."
+msgstr "Isikan data berdasarkan imej yang ditunjukkan di bawah dan simpannya."
+
+msgid "Download the template.xlsx by pressing the"
+msgstr "Muat turun template.xlsx dengan menekan butang"
+
+msgid " Button."
+msgstr " . "
+
+msgid "Important"
+msgstr "Penting"
+
+msgid "For example"
+msgstr "Sebagai contoh"
+
+msgid " The"
+msgstr " Lajur"
+
+msgid "column should paste the image path of the image."
+msgstr "harus menampal laluan imej."
+
+msgid "<i class=\"fa-brands fa-windows\"></i> Windows machine should look like"
+msgstr "Mesin <i class=\"fa-brands fa-windows\"></i> Windows sepatutnya kelihatan seperti"
+
+msgid "<i class=\"fa-brands fa-apple\"></i> Mac machine should look like"
+msgstr "Mesin <i class=\"fa-brands fa-apple\"></i> Mac sepatutnya kelihatan seperti"
+
+msgid "Upload the template.xlsx file to the form below."
+msgstr "Muat naik fail template.xlsx ke borang di bawah."

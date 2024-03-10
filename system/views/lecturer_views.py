@@ -17,6 +17,15 @@ from ..models import LecturerProfile
 from ..models import SubjectTable
 from ..models import UserProfile
 from django.utils.translation import gettext_lazy as _
+import sys
+
+# Get the absolute path of the current file
+current_file_path = os.path.abspath(__file__)
+
+# Go up two levels to get the base directory
+base_path = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
+# Add the base path to sys.path
+sys.path.append(base_path)
 
 
 @login_required(login_url='/')
@@ -277,7 +286,7 @@ def lecturer_face(request, user_id):
             classCode = request.POST['classCode']
             virtualenv_path = "myenv"
             python_path = os.path.join(virtualenv_path, "bin", "python")
-            main_script_path = f"/Users/khorzeyi/code/finalYearProject/face_rec-master/face_rec_lec.py"
+            main_script_path = f"face_rec-master/face_rec_lec.py"
             creator = request.user.username
             command = [python_path, main_script_path, classCode, creator]
             try:

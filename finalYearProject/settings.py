@@ -14,7 +14,7 @@ import sys
 import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
-
+base_path = os.path.dirname(os.path.abspath(__file__))
 
 
 
@@ -146,13 +146,13 @@ LOCALE_PATHS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-sys.path.insert(0, '/Users/khorzeyi/code/finalYearProject/main.py')
+sys.path.insert(0, 'main.py')
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'boltfras@gmail.com'
-EMAIL_HOST_PASSWORD = 'vson uncj eyzs imxe'
+EMAIL_HOST_PASSWORD = 'wlmu qank cjje jfas'
 
 IMPORT_EXPORT_USE_TRANSACTIONS = True

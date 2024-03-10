@@ -39,47 +39,47 @@ import face_recognition
 from tablib import Dataset
 from ..resources import UserProfileResource, UserResource
 import csv
+import sys
+from django.core.mail import send_mail
+from django.conf import settings
+
+# Get the absolute path of the current file
+current_file_path = os.path.abspath(__file__)
+
+# Go up two levels to get the base directory
+base_path = os.path.dirname(os.path.dirname(os.path.dirname(current_file_path)))
+# Add the base path to sys.path
+sys.path.append(base_path)
+
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def adminDashboard(request):
     count_userAbsence()
     check_leave()
-    attendances = AttendanceTable.objects.all()
+    status = AttendanceStatus.objects.all()
     user = User.objects.get(id=request.user.id)
     admin = AdminProfile.objects.get(user=user)
-    intakes = IntakeTable.objects.filter(adminId=admin.adminId)
+    intake_data = {}
 
-    intake_data = {}  
+    for state in status:
+        key = state.userId.intakeCode.intakeCode
+        if key not in intake_data:
+            intake_data[key] = {'attended_sum': 0, 'total_sum': 0}
 
-    for attendance in attendances:
-        for intake in intakes:
-            if intake in attendance.classCode.intakeTables.all():
-                intake_total = UserProfile.objects.filter(intakeCode=intake.intakeCode)
-                intake_attended = attendance.attendedUser.filter(intakeCode=intake.intakeCode)
+        if state.status == "attended":
+            intake_data[key]['attended_sum'] += 1
+        intake_data[key]['total_sum'] += 1
 
-                if intake.intakeCode not in intake_data:
-                    intake_data[intake.intakeCode] = {
-                        'attended_sum': intake_attended.count(),
-                        'total_sum': intake_total.count(),
-                        'count': 1  
-                    }
-                else:
-                    intake_data[intake.intakeCode]['attended_sum'] += intake_attended.count()
-                    intake_data[intake.intakeCode]['total_sum'] += intake_total.count()
-                    intake_data[intake.intakeCode]['count'] += 1
 
     average_percentages = {}
     for intake_code, data in intake_data.items():
         attended_sum = data['attended_sum']
         total_sum = data['total_sum']
-        count = data['count']
-
         average_percentage = (attended_sum / total_sum)*100 if total_sum != 0 else 0
         average_percentage = format(average_percentage, ".0f")
         average_percentages[intake_code] = {
             'average_percentage': average_percentage,
-            'occurrences': count
         }
 
     intake_count = IntakeTable.objects.count()
@@ -88,6 +88,7 @@ def adminDashboard(request):
     admin_count = AdminProfile.objects.count()
     lecturer_count = LecturerProfile.objects.count()
     user_count = UserProfile.objects.count()
+
     context =  {
         'average_percentages': average_percentages, 
         'intake_count' : intake_count,
@@ -496,7 +497,7 @@ def admin_editUser(request, user_id):
             lastName = request.POST['last_name']
             profileImage = request.FILES.get('image')
             intakeCode = request.POST['intakeCode']
-            images = request.FILES.getlist('additional_images')
+            # images = request.FILES.getlist('additional_images')
 
             if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
                 messages.error(request, _('Email used'))
@@ -508,6 +509,13 @@ def admin_editUser(request, user_id):
                 except IntakeTable.DoesNotExist:
                     intake_instance = None 
                 if profileImage:
+                    try:
+                        face_image = face_recognition.load_image_file(profileImage)
+                        face_encoding = face_recognition.face_encodings(face_image)[0]
+                    except Exception as ex:
+                        messages.error(request, f"Failed to detect face from the image you uploaded.")
+                        return render(request, 'admin-templates/editUser.html', {'user': user, 'intakes': intakes})
+
                     old_image_path = user_profile.faceImageUrl.path  # Get the current image path
                     # Remove the old image file
                     if os.path.exists(old_image_path):
@@ -1126,6 +1134,7 @@ def createCsv(request):
             "Status",
             "User's Id", 
             "User's Name",
+            "User's Intake",
             ])
         
         for attendance in attendances:
@@ -1148,7 +1157,8 @@ def createCsv(request):
                         formatted_time,
                         state.status, 
                         state.userId.userId, 
-                        f"{state.userId.user.first_name} {state.userId.user.last_name}"
+                        f"{state.userId.user.first_name} {state.userId.user.last_name}",
+                        f"{state.userId.intakeCode.intakeCode}",
                     ])
         return response
 
@@ -1296,7 +1306,8 @@ def admin_editAttendance(request, id):
         for status in attendance_status:
             student_id = status.userId.userId
             status_value = request.POST.get(f"status_{student_id}")
-            status.status= status_value.lower()
+            print(status_value.lower())
+            status.status = status_value.lower()
             if status_value.lower() == 'attended':
                 noOfAttendedUser += 1
                 attendedUser.append(student_id)
@@ -1401,7 +1412,8 @@ def count_userAbsence():
                 if (absent_count >= limit.absenceLimitDays):
                     student.absenceMonitoringId = limit
                     student.save()
-                    message = f"Student {student.userId} has triggered {limit.absenceLimitName}"
+
+                    message = f"Student {student.userId} - {student.user.first_name} {student.user.last_name} has triggered {limit.absenceLimitName}"
                     if NotificationTable.objects.filter(notifyMessage=message).exists():
                         break
                     else:
@@ -1420,6 +1432,35 @@ def count_userAbsence():
                             notifyMessage=message,
                             status="delivered"
                         )
+                        subject = f"Important Notice Regarding Attendance: Meeting Invitation"
+                        email = student.user.email
+                        formal_message = f'''
+Dear {student.user.first_name} {student.user.last_name},
+
+    I trust this email finds you well. We hope you have been having a productive semester.
+
+    I am writing to bring to your attention an important matter related to your attendance. Our records indicate that you have reached the absence limit of {limit.absenceLimitName} set by the university policies, which you already absent more than {limit.absenceLimitDays} days. As a result, we would like to schedule a meeting with you to discuss this matter further and explore potential solutions.
+
+    Understanding that unforeseen circumstances may arise, we believe it is crucial to address any challenges you may be facing and work together to find a resolution. The purpose of this meeting is to gain insights into your current situation, explore possible reasons for the absences, and provide any necessary support to help you succeed academically.
+
+    We kindly request that you schedule a meeting at your earliest convenience. The meeting will be held with {student.intakeCode.adminId.user.first_name} {student.intakeCode.adminId.user.last_name}, who will discuss the specifics of your attendance record and collaborate with you to create a plan moving forward.
+
+    To schedule the meeting, please reply to this email with your availability, or contact {student.intakeCode.adminId.user.first_name} {student.intakeCode.adminId.user.last_name} directly at {student.intakeCode.adminId.user.email}.
+
+    Please remember that maintaining regular attendance is essential for your academic success, and we are committed to assisting you in any way we can.
+
+    Thank you for your prompt attention to this matter, and we look forward to meeting with you soon.
+    
+Best regards,
+BOLT-FRAS Face Recognition Attendance System
+                        '''
+                        send_mail(
+                            subject,
+                            formal_message,
+                            "boltfras@gmail.com",
+                            [email],
+                            fail_silently=False,
+                        )
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1429,7 +1470,7 @@ def admin_face (request, user_id):
             classCode = request.POST['classCode']
             virtualenv_path = "myenv"
             python_path = os.path.join(virtualenv_path, "bin", "python")
-            main_script_path = f"/Users/khorzeyi/code/finalYearProject/face_rec-master/face_rec.py"
+            main_script_path = f"face_rec-master/face_rec.py"
             creator = request.user.username
             command = [python_path, main_script_path, classCode, creator]
             try:

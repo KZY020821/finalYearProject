@@ -114,7 +114,7 @@ class AttendanceStatus(models.Model):
         ('attended', 'Attended'),
         ('mc', 'MC'),
         ('excuse', 'Excuse'),
-        ('Emergency', 'Emergency'),
+        ('emergency', 'Emergency'),
         ('curriculum', 'Curriculum'),
         ('late', 'Late'),
     )

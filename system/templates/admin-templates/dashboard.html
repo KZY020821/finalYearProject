@@ -222,11 +222,11 @@
                       <div id="intake{{forloop.counter}}" data-average-percentage="{{ data.average_percentage }}"></div>
                     </div>
                   </div>
-                {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-                    </div><div class="row" style="margin: 15px;">
-                {% endif %}
               {% endfor %}
-          </div>
+              {% if forloop.counter|divisibleby:"4" and not forloop.last %}
+                </div><div class="row" style="margin: 15px;">
+              {% endif %}
+            </div>
         </div>
     </div>
     <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
@@ -244,20 +244,19 @@
         </div>
     </div>
     <div class="sidebar-overlay" data-reff=""></div>
-    <script src=" {% static 'assets/js/jquery-3.2.1.min.js' %} "></script>
-    <script src=" {% static 'assets/js/popper.min.js' %} "></script>
-    <script src=" {% static 'assets/js/bootstrap.min.js' %} "></script>
-    <script src=" {% static 'assets/js/jquery.slimscroll.js' %} "></script>
-    <script src=" {% static 'assets/js/app.js' %} "></script>
-    <script src=" {% static 'assets/js/Chart.bundle.js' %} "></script>
-    <script src=" {% static 'assets/js/chart.js' %} "></script>
-    <script src=" {% static 'assets/js/select2.min.js' %} "></script>
-    <script src=" {% static 'assets/js/moment.min.js' %} "></script>
-    <script src=" {% static 'assets/js/bootstrap-datetimepicker.min.js' %} "></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'assets/js/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'assets/js/popper.min.js' %}"></script>
+    <script src="{% static 'assets/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'assets/js/jquery.slimscroll.js' %}"></script>
+    <script src="{% static 'assets/js/app.js' %}"></script>
+    <script src="{% static 'assets/js/Chart.bundle.js' %}"></script>
+    <script src="{% static 'assets/js/chart.js' %}"></script>
+    <script src="{% static 'assets/js/select2.min.js' %}"></script>
+    <script src="{% static 'assets/js/moment.min.js' %}"></script>
+    <script src="{% static 'assets/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script src="{% static 'assets/DataTables/datatables.min.js' %}"></script>
     <script>
       $(document).ready(function() {
         // Automatically close the success alert after 3 seconds
@@ -348,7 +347,7 @@
           chart.render();
         });
       });
-    </script>
+  </script>
 </body>
 
 </html>
