@@ -32,20 +32,15 @@ class AbsenceMonitoringTable(models.Model):
     def __str__(self):
         return f"ID: {self.id}, Name: {self.absenceLimitName}, Day(s): {self.absenceLimitDays}, Set by {self.adminID}"
     
-class FaceImage(models.Model):
-    image = models.ImageField(upload_to='faceImage')
-    def __str__(self):
-            return f"ID: {self.id}"
 class UserProfile(models.Model):
     userId = models.CharField(max_length=50, primary_key=True, default="Not provided")
     intakeCode = models.ForeignKey(IntakeTable, on_delete=models.CASCADE, default="Not provided")
     absenceMonitoringId = models.ForeignKey(AbsenceMonitoringTable, on_delete=models.SET_NULL, null=True, blank=True)
     faceImageUrl = models.ImageField(null=True, blank=True, upload_to='faceImage', default='faceImage/default.png')
-    face_images = models.ManyToManyField(FaceImage)
     user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'groups__name': 'user'})
     
     def __str__(self):
-        return f"User ID: {self.userId}, intake code: {self.intakeCode}, username {self.user.username}"
+        return f"User ID: {self.userId}, name: {self.user.first_name} {self.user.last_name},intake code: {self.intakeCode}, username {self.user.username}"
 class SubjectTable(models.Model):
     STATUS_CHOICES = (
         ('active', 'Active'),
@@ -126,17 +121,12 @@ class AttendanceStatus(models.Model):
         return f"ID:{self.id}, date time: {self.checkIn}"
     
 class ReportTable(models.Model):
-    TITLE_CHOICES = (
-        ('User Experience', 'user experience'),
-        ('Attendance', 'attendance'),
-        ('Others', 'others'),
-    )
     STATUS_CHOICES = (
         ('delivered', 'Delivered'),
         ('read', 'Read'),
         ('replied', 'Replied'),
     )
-    reportTitle = models.CharField(max_length=50, choices=TITLE_CHOICES, default='Attendance')
+    reportTitle = models.CharField(max_length=50, default='Attendance')
     reportMessage = models.CharField(max_length=255, default="Not provided")
     creator = models.CharField(max_length=255, default="Not provided")
     reportDate = models.DateTimeField(default=datetime.datetime.now)

@@ -26,6 +26,9 @@ from system.views.admin_views import collect_attendance
 
 processed_names = []
 
+if len(sys.argv) > 1:
+    classCode = sys.argv[1]
+    creator = sys.argv[2]
 
 def load_qr_code():
     qr_code_image = cv2.imread('system/static/assets/img/qrcode.png',
@@ -55,11 +58,7 @@ def init():
 
     images = []
     user_ids = []
-    if len(sys.argv) > 1:
-        classCode = sys.argv[1]
-
-    classCoder = classCode
-    kelas = ClassTable.objects.get(classCode=classCoder)
+    kelas = ClassTable.objects.get(classCode=classCode)
     classes = kelas.intakeTables.all()
     users = UserProfile.objects.all()
     for user in users:
@@ -102,13 +101,11 @@ def process_and_encode(images):
             name = name.split('.')[0]
             cleaned_name = name.replace('-', ' ')
             status = ('ID: ' + user_id + '  Name: ' + cleaned_name)
-            full_name = (cleaned_name +" Your attendance has been taken")
             known_face_names.append(status)
-            known_full_names.append(full_name)
         except Exception as ex:
             print(ex)
 
-    return {"encodings": known_face_encodings, "names": known_face_names, "statuses":known_full_names}
+    return {"encodings": known_face_encodings, "names": known_face_names}
 
 
 def isBlinking(history, maxFrames):
@@ -163,7 +160,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             counts = {}
             for i in matchedIdxs:
                 name = data["names"][i]
-                status = data["statuses"][i]
                 counts[name] = counts.get(name, 0) + 1
 
             # Determine the recognized face with the largest number of votes
@@ -245,9 +241,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             y = y - 15 if y - 15 > 15 else y + 15
             cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
             
-            bottom_left_corner = (10, frame.shape[0] - 10)
-            cv2.putText(frame, status, bottom_left_corner, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-            
             if name not in processed_names:
                 if name != 'Unknown':
                     processed_names.append(f'{name}')
@@ -264,7 +257,7 @@ if __name__ == "__main__":
     while True:
         frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector,
                                    right_eye_detector, data, eyes_detected, qr_code_alpha_channel, 0.3)
-        cv2.imshow("BOLT-FRAS Face Recognition Attendance System", frame)
+        cv2.imshow(f"BOLT-FRAS Face Recognition Attendance System - {classCode}", frame)
         if cv2.waitKey(1) == ord('q'):
             ids = []
 
@@ -276,10 +269,6 @@ if __name__ == "__main__":
                     # Extract the ID from the regex match
                     id_value = match.group(1)
                     ids.append(id_value)
-
-            if len(sys.argv) > 1:
-                classCode = sys.argv[1]
-                creator = sys.argv[2]
             collect_attendance(ids, classCode, creator)
             break  # Press 'q' to quit the program
     cv2.destroyAllWindows()

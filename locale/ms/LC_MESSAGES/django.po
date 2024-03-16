@@ -1378,8 +1378,8 @@ msgstr "Adakah anda pasti mahu memadamkan akaun admin yang dipilih?"
 msgid "Take Attendance"
 msgstr "Mengambil Kehadiran"
 
-msgid "Download CSV"
-msgstr "Muat Turun CSV"
+msgid "Download XLSX"
+msgstr "Muat Turun XLSX"
 
 msgid "Subject"
 msgstr "Subjek"

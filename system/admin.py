@@ -10,7 +10,6 @@ from .models import ReportTable
 from .models import NotificationTable
 from .models import ClassTable
 from .models import AttendanceStatus
-from .models import FaceImage
 
 from import_export.admin import ImportExportActionModelAdmin
 
@@ -28,4 +27,3 @@ admin.site.register(ReportTable)
 admin.site.register(NotificationTable)
 admin.site.register(ClassTable)
 admin.site.register(AttendanceStatus)
-admin.site.register(FaceImage)

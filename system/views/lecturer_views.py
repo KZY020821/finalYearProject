@@ -35,7 +35,9 @@ def lecturerDashboard(request):
     lecturer = LecturerProfile.objects.get(user = user)
     classes_count = ClassTable.objects.filter( lecturerId = lecturer).count()
     classes = ClassTable.objects.filter(lecturerId = lecturer)
-    classes = ClassTable.objects.filter(lecturerId=lecturer)
+    selected_relation_id = AttendanceTable.objects.filter()
+    status = AttendanceStatus.objects.filter()
+    
     attendances = []
 
     class_data = []
@@ -58,11 +60,33 @@ def lecturerDashboard(request):
         if class_total_attendances != 0:
             average_percentage = class_total_percentage / class_total_attendances
             class_data.append({'class_name': kelas.classCode, 'average_percentage': round(average_percentage)})
+    
+    data = {}
+    for state in status:
+        key = state.relation_id.classCode.classCode
+        if key not in data:
+            data[key] = {'attendance_list': [0, 0, 0, 0, 0]}
+
+        if state.status == "attended":
+            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+        if state.status == "absent":
+            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+        if state.status == "mc":
+            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+        if state.status == "curriculum":
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "excuse":
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "emergency":
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "late":
+            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
 
     context = {
         'classes_count': classes_count,
         'classes': classes,
         'class_data': class_data,
+        'data': data,
     }
     return render(request, 'lecturer-templates/dashboard.html', context)
 

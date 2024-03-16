@@ -131,41 +131,80 @@
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <h4 class="page-title">{% trans "Create New Subject" %}</h4>
+                        <h4 class="page-title">{% trans "Attendance Status - All attendance data" %}</h4>
                     </div>
                 </div>
-                {% if messages %}
-                    <ul class="messages">
-                        {% for message in messages %}
-                            <li {% if message.tags %}class="{{ message.tags }}"{% endif %}>
-                                {{ message }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-                <div class="card-box">
-                    <form method="POST" class="form-signin" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <h3 class="card-title">{% trans "Subject Code" %}</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectCode" name="subjectCode" required>
-                                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <div class="inputs" style="margin-bottom: 10px;">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>Start Date:</td>
+                                            <td><input type="date" id="start_date" name="start_date"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>End Date:</td>
+                                            <td><input type="date" id="end_date" name="end_date"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
+                            <table id="example" class="table table-striped custom-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Class Code</th>
+                                        <th>Subject Code</th>
+                                        <th>Subject Name</th>
+                                        <th>Lecturer's Name</th>
+                                        <th>Check In Time</th>
+                                        <th>Status</th>
+                                        <th>Status</th>
+                                        <th>User's Id</th>
+                                        <th>User's Name</th>
+                                        <th>User's Intake</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in attendance_data %}
+                                        <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ entry.Date }}</td>
+                                        <td>{{ entry.ClassCode }}</td>
+                                        <td>{{ entry.SubjectCode }}</td>
+                                        <td>{{ entry.SubjectName }}</td>
+                                        <td>{{ entry.Lecturer }}</td>
+                                        <td>{{ entry.CheckInTime }}</td>
+                                        <td>
+                                            {% if entry.Status == "attended" or entry.Status == "Attended" %}
+                                                <span class="custom-badge status-green">{% trans "Attended" %}</span>
+                                            {% elif entry.Status == "absent" %}
+                                                <span class="custom-badge status-red">{% trans "Absent" %}</span>
+                                            {% elif entry.Status == "mc" %}
+                                                <span class="custom-badge status-orange">{% trans "MC" %}</span>
+                                            {% elif entry.Status == "late" %}
+                                                <span class="custom-badge status-blue">{% trans "Late" %}</span>
+                                            {% elif entry.Status == "curriculum" %}
+                                                <span class="custom-badge status-grey">{% trans "Curriculum" %}</span>
+                                            {% elif entry.Status == "excuse" %}
+                                                <span class="custom-badge status-purple">{% trans "Excuse" %}</span>
+                                            {% elif entry.Status == "emergency" %}
+                                                <span class="custom-badge status-pink">{% trans "Emergency" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td> {{entry.Status}} </td>
+                                        <td>{{ entry.Id }}</td>
+                                        <td>{{ entry.User }}</td>
+                                        <td>{{ entry.Intake }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <h3 class="card-title">{% trans "Subject Name" %}</h3>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <input type="text" class="form-control" id="subjectName" name="subjectName" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-center m-t-20">
-                            <button type="submit" class="btn btn-primary submit-btn">{% trans "Create" %}</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -199,6 +238,45 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.2.3/js/dataTables.fixedHeader.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#example').DataTable({
+                orderCellsTop: true,
+                fixedHeader: true,
+                language: {
+                    search: "{% trans 'Search:' %}",
+                    lengthMenu: "{% trans 'Show _MENU_ entries' %}",
+                    info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                    infoEmpty: "{% trans 'Showing 0 to 0 of 0 entries' %}",
+                    infoFiltered: "({% trans 'filtered from _MAX_ total entries' %})",
+                    zeroRecords: "{% trans 'No matching records found' %}",
+                    paginate: {
+                        first: "{% trans 'First' %}",
+                        previous: "{% trans 'Previous' %}",
+                        next: "{% trans 'Next' %}",
+                        last: "{% trans 'Last' %}"
+                    }
+                }
+            });
+
+            // Add event listeners for Start Date and End Date inputs
+            $('#start_date, #end_date').on('change', function() {
+                var startDate = formatDate($('#start_date').val());
+                var endDate = formatDate($('#end_date').val());
+
+                // Filter the DataTable based on the Date column
+                table.column(1).search(startDate + '|' + endDate, true, false).draw();
+            });
+
+            // Function to format date as DD-MM-YYYY
+            function formatDate(dateStr) {
+                var parts = dateStr.split("-");
+                return parts[2] + "-" + parts[1] + "-" + parts[0]; // Assuming date format is DD-MM-YYYY
+            }
+        });
+    </script>    
 </body>
 
 </html>

@@ -47,13 +47,13 @@
                         <div class="form-group">
                             <label>{% trans "Password" %}</label>
                             <input type="password" class="form-control" name="password" required>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must more than 8 letters." %}</h5>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must more than 8 letters." %}</h6>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of capital letters and lowercase letters." %} </h5>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of capital letters and lowercase letters." %} </h6>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of alphabets and numeric case." %}</h5>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of alphabets and numeric case." %}</h6>
                             <br>
-                            <h5 style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password cannot too similar with your email or name." %}</h5>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password cannot too similar with your email or name." %}</h6>
                         </div>
                         <div class="form-group">
                             <label>{% trans "Repeat password" %}</label>
@@ -78,6 +78,15 @@
                         </div>
                         <div class="form-group">
                             <label>{% trans "Face Image" %}</label>
+                            <p>Good example:</p>
+                            <img src="{% static 'assets/img/zy.jpg' %} " class="img-thumbnail">
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "All facial features must be shown clearly." %}</h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Capture face only, avoiding too far from camera." %} </h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Do not smile when capturing the image." %}</h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Eyes must look at the camera." %}</h5>
                             <input type="file" class="form-control" name="image" id="image" accept="image/*" required>
                         </div>
                         <div class="form-group text-center">

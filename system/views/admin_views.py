@@ -1,4 +1,7 @@
 import os
+import json
+from django.http import JsonResponse
+from openpyxl import Workbook
 from django.core.files import File
 import shutil
 import subprocess
@@ -30,8 +33,8 @@ from ..models import AttendanceTable
 from ..models import ReportTable
 from ..models import NotificationTable
 from ..models import AttendanceStatus
-from ..models import FaceImage
 from django.db import transaction
+from django.db.models import Count
 
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -61,21 +64,40 @@ def adminDashboard(request):
     user = User.objects.get(id=request.user.id)
     admin = AdminProfile.objects.get(user=user)
     intake_data = {}
-
+    data = {}
     for state in status:
         key = state.userId.intakeCode.intakeCode
         if key not in intake_data:
-            intake_data[key] = {'attended_sum': 0, 'total_sum': 0}
+            intake_data[key] = {'attended_sum': 0, 'absent_sum': 0, 'mc_sum': 0, 'curriculum_sum': 0, 'excuse_sum': 0, 'emergency_sum': 0, 'late_sum': 0, 'total_sum': 0}
+            data[key] = {'attendance_list': [0, 0, 0, 0, 0, 0, 0]}
 
         if state.status == "attended":
             intake_data[key]['attended_sum'] += 1
+            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+        if state.status == "absent":
+            intake_data[key]['absent_sum'] += 1
+            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+        if state.status == "mc":
+            intake_data[key]['mc_sum'] += 1
+            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+        if state.status == "curriculum":
+            intake_data[key]['curriculum_sum'] += 1
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "excuse":
+            intake_data[key]['excuse_sum'] += 1
+            data[key]['attendance_list'][5] = data[key]['attendance_list'][5]+1
+        if state.status == "emergency":
+            intake_data[key]['emergency_sum'] += 1
+            data[key]['attendance_list'][6] = data[key]['attendance_list'][6]+1
+        if state.status == "late":
+            intake_data[key]['late_sum'] += 1
+            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
         intake_data[key]['total_sum'] += 1
-
-
+    
     average_percentages = {}
-    for intake_code, data in intake_data.items():
-        attended_sum = data['attended_sum']
-        total_sum = data['total_sum']
+    for intake_code, list in intake_data.items():
+        attended_sum = list['attended_sum']
+        total_sum = list['total_sum']
         average_percentage = (attended_sum / total_sum)*100 if total_sum != 0 else 0
         average_percentage = format(average_percentage, ".0f")
         average_percentages[intake_code] = {
@@ -88,7 +110,6 @@ def adminDashboard(request):
     admin_count = AdminProfile.objects.count()
     lecturer_count = LecturerProfile.objects.count()
     user_count = UserProfile.objects.count()
-
     context =  {
         'average_percentages': average_percentages, 
         'intake_count' : intake_count,
@@ -97,6 +118,8 @@ def adminDashboard(request):
         'admin_count' : admin_count, 
         'lecturer_count' : lecturer_count, 
         'user_count' : user_count, 
+        'intake_data': intake_data, 
+        'data': data,
         }
     return render(request, 'admin-templates/dashboard.html', context)
 
@@ -552,11 +575,61 @@ def admin_editUser(request, user_id):
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_viewUser(request, user_id):
-  try:
-      user = User.objects.get(id=user_id)
-      return render(request, 'admin-templates/viewUser.html', {'user': user})
-  except User.DoesNotExist:
-      return render(request, 'error.html', {'message': 'User not found'})
+    try:
+        user = User.objects.get(id=user_id)
+        profile = UserProfile.objects.get(user=user)
+        intake = profile.intakeCode
+        class_tables = ClassTable.objects.filter(intakeTables=intake)
+        class_count = class_tables.count()
+        subject_count = class_tables.aggregate(total_subjects=Count('subjectCode', distinct=True))['total_subjects']
+        absent_count = AttendanceStatus.objects.filter(userId=profile, status='absent').count()
+        attendance_percentages = []
+
+        for kelas in class_tables:
+            total_classes = AttendanceTable.objects.filter(nameList=profile, classCode=kelas).count()
+            attended_classes = AttendanceTable.objects.filter(attendedUser=profile, classCode=kelas).count()
+
+            if total_classes != 0:
+                attendance_percentage = attended_classes / total_classes
+                formatted_percentage = "{:.0f}".format(attendance_percentage * 100)
+                attendance_percentages.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
+        
+        data = {}
+        status = AttendanceStatus.objects.filter(userId = profile.userId)
+        for state in status:
+            key = state.relation_id.classCode.classCode
+            if key not in data:
+                data[key] = {'attendance_list': [0, 0, 0, 0, 0, 0, 0]}
+
+            if state.status == "attended":
+                data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+            if state.status == "absent":
+                data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+            if state.status == "mc":
+                data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+            if state.status == "curriculum":
+                data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+            if state.status == "excuse":
+                data[key]['attendance_list'][5] = data[key]['attendance_list'][5]+1
+            if state.status == "emergency":
+                data[key]['attendance_list'][6] = data[key]['attendance_list'][6]+1
+            if state.status == "late":
+                data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
+                
+        profile = UserProfile.objects.get(user=user)
+        attendances = AttendanceStatus.objects.filter(userId=profile).order_by('-checkIn')
+        context = {
+            'user': user,
+            'attendances': attendances,
+            'intake': intake, 
+            'subject_count' : subject_count,
+            'class_count' : class_count,
+            'absent_count' : absent_count,
+            'attendance_percentages': attendance_percentages,
+            'data': data,}
+        return render(request, 'admin-templates/viewUser.html', context)
+    except User.DoesNotExist:
+        return render(request, 'error.html', {'message': 'User not found'})
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1113,6 +1186,54 @@ def admin_viewLeave(request, id):
     except User.DoesNotExist:
         return render(request, 'error.html', {'message': 'User not found'})
 
+def createXlsx(request):
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    current_date = datetime.now()
+    formatted_date = current_date.strftime("%Y%m%d")
+    response['Content-Disposition'] = f'attachment; filename={formatted_date}-attendance-report.xlsx'
+
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    worksheet.append([
+        "Date",
+        "Class Code",
+        "Subject Code",
+        "Subject Name",
+        "Lecturer's Name",
+        "Check In Time",
+        "Status",
+        "User's Id",
+        "User's Name",
+        "User's Intake",
+    ])
+
+    attendances = AttendanceTable.objects.all()
+    status = AttendanceStatus.objects.all()
+
+    for attendance in attendances:
+        for state in status:
+            if state.relation_id.id == attendance.id:
+                aware_datetime = state.checkIn
+                local_time = timezone.localtime(aware_datetime)
+                formatted_time = local_time.strftime('%H:%M:%S')
+
+                worksheet.append([
+                    f"{attendance.classDate.strftime('%d-%m-%Y')}",
+                    attendance.classCode.classCode,
+                    attendance.classCode.subjectCode.subjectCode,
+                    attendance.classCode.subjectCode.subjectName,
+                    f"{attendance.classCode.lecturerId.user.first_name} {attendance.classCode.lecturerId.user.last_name}",
+                    formatted_time,
+                    state.status,
+                    state.userId.userId,
+                    f"{state.userId.user.first_name} {state.userId.user.last_name}",
+                    f"{state.userId.intakeCode.intakeCode}",
+                ])
+
+    workbook.save(response)
+    return response
+
 def createCsv(request):
         response = HttpResponse(content_type = 'text/csv')
         current_date = datetime.now()
@@ -1161,6 +1282,41 @@ def createCsv(request):
                         f"{state.userId.intakeCode.intakeCode}",
                     ])
         return response
+
+def createJson(request):
+    attendances = AttendanceTable.objects.all()
+    status = AttendanceStatus.objects.all()
+
+    data = []
+    for attendance in attendances:
+        for state in status:
+            if state.relation_id.id == attendance.id:
+                # Assuming state.checkIn is an aware datetime
+                aware_datetime = state.checkIn
+
+                # Convert UTC time to the desired time zone
+                local_time = timezone.localtime(aware_datetime)
+
+                formatted_time = local_time.strftime('%H:%M:%S')
+
+                data.append({
+                    "Date": attendance.classDate.strftime('%d-%m-%Y'),
+                    "Class Code": attendance.classCode.classCode,
+                    "Subject Code": attendance.classCode.subjectCode.subjectCode,
+                    "Subject Name": attendance.classCode.subjectCode.subjectName,
+                    "Lecturer's Name": f"{attendance.classCode.lecturerId.user.first_name} {attendance.classCode.lecturerId.user.last_name}",
+                    "Check In Time": formatted_time,
+                    "Status": state.status,
+                    "User's Id": state.userId.userId,
+                    "User's Name": f"{state.userId.user.first_name} {state.userId.user.last_name}",
+                    "User's Intake": f"{state.userId.intakeCode.intakeCode}",
+                })
+
+    response_data = json.dumps(data, indent=2)
+    response = JsonResponse(response_data, safe=False)
+    response['Content-Disposition'] = 'attachment; filename="attendance-report.json"'
+    return response
+
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1269,6 +1425,38 @@ def admin_viewAttendance(request, id):
         }
     return render(request, 'admin-templates/viewAttendance.html', context)
 
+@login_required(login_url='/')
+@allow_users(allow_roles=['admin'])
+def admin_attendanceStatus(request):
+    attendances = AttendanceTable.objects.all()
+    status = AttendanceStatus.objects.all()
+
+    attendance_data = []
+    for attendance in attendances:
+        for state in status:
+            if state.relation_id.id == attendance.id:
+                aware_datetime = state.checkIn
+                local_time = timezone.localtime(aware_datetime)
+                formatted_time = local_time.strftime('%H:%M:%S')
+                
+                data_entry = {
+                    "Date": attendance.classDate.strftime('%d-%m-%Y'),
+                    "ClassCode": attendance.classCode.classCode,
+                    "SubjectCode": attendance.classCode.subjectCode.subjectCode,
+                    "SubjectName": attendance.classCode.subjectCode.subjectName,
+                    "Lecturer": f"{attendance.classCode.lecturerId.user.first_name} {attendance.classCode.lecturerId.user.last_name}",
+                    "CheckInTime": formatted_time,
+                    "Status": state.status,
+                    "Id": state.userId.userId,
+                    "User": f"{state.userId.user.first_name} {state.userId.user.last_name}",
+                    "Intake": state.userId.intakeCode.intakeCode,
+                }
+                attendance_data.append(data_entry)
+        
+    context = {
+        'attendance_data': attendance_data,
+        }
+    return render(request, 'admin-templates/attendanceStatus.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1461,6 +1649,36 @@ BOLT-FRAS Face Recognition Attendance System
                             [email],
                             fail_silently=False,
                         )
+                        admin_email = student.intakeCode.adminId.user.email  # Assuming you have access to the admin's email address
+
+                        admin_notification_subject = f"Notification: Student Absence Limit Reached for {student.user.first_name} {student.user.last_name}"
+                        admin_notification_message = f'''
+Dear {student.intakeCode.adminId.user.first_name} {student.intakeCode.adminId.user.last_name},
+
+    I hope this message finds you well.
+
+    I am writing to bring to your attention an important matter concerning the attendance of a student in your jurisdiction. Our records indicate that {student.user.first_name} {student.user.last_name} has reached the absence limit of {limit.absenceLimitName} as set by the university policies. The student has already been absent for more than {limit.absenceLimitDays} days.
+
+    In light of this, we would like to schedule a meeting with the student to discuss this matter further and explore potential solutions. The purpose of the meeting is to gain insights into the student's current situation, explore possible reasons for the absences, and provide any necessary support to help them succeed academically.
+
+    We kindly request your assistance in coordinating and conducting this meeting. Please reach out to the student directly at {student.user.email} to schedule the meeting at the earliest convenience.
+
+    Maintaining regular attendance is essential for the academic success of our students, and your collaboration in addressing this matter is highly appreciated.
+
+    Thank you for your prompt attention to this issue. If you have any questions or require additional information, please feel free to contact me.
+
+Best regards,
+
+BOLT-FRAS Face Recognition Attendance System
+                        '''
+                        send_mail(
+                            admin_notification_subject,
+                            admin_notification_message,
+                            "boltfras@gmail.com",
+                            [admin_email],
+                            fail_silently=False,
+                        )
+
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])

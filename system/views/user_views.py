@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -48,6 +48,28 @@ def userDashboard(request):
             attendance_percentage = attended_classes / total_classes
             formatted_percentage = "{:.0f}".format(attendance_percentage * 100)
             attendance_percentages.append({'class_name': kelas.classCode, 'percentage': formatted_percentage})
+    
+    data = {}
+    status = AttendanceStatus.objects.filter(userId = request.user.userprofile.userId)
+    for state in status:
+        key = state.relation_id.classCode.classCode
+        if key not in data:
+            data[key] = {'attendance_list': [0, 0, 0, 0, 0, 0, 0]}
+
+        if state.status == "attended":
+            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+        if state.status == "absent":
+            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+        if state.status == "mc":
+            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+        if state.status == "curriculum":
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "excuse":
+            data[key]['attendance_list'][5] = data[key]['attendance_list'][5]+1
+        if state.status == "emergency":
+            data[key]['attendance_list'][6] = data[key]['attendance_list'][6]+1
+        if state.status == "late":
+            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
 
     context = {
       'intake': intake, 
@@ -55,6 +77,7 @@ def userDashboard(request):
       'class_count' : class_count,
       'absent_count' : absent_count,
       'attendance_percentages': attendance_percentages,
+      'data': data,
     }
     return render(request, 'user-templates/dashboard.html', context)
 
@@ -184,6 +207,7 @@ def user_createReport(request, id):
     if request.method == "POST":
         reportTitle = request.POST['reportTitle']
         reportDescription = request.POST['reportDescription']
+        reportAttachment = request.FILES.get('reportAttachment')
         receiver = request.POST['receiver']
         creator = request.POST['creator']
         try:
@@ -191,7 +215,7 @@ def user_createReport(request, id):
         except UserProfile.DoesNotExist:
             adminId_instance = None 
 
-        ReportTable.objects.create( reportTitle = reportTitle, reportMessage = reportDescription, creator = creator, reportDate = datetime.now(), receiver = adminId_instance,)
+        ReportTable.objects.create( reportTitle = reportTitle, reportMessage = reportDescription, creator = creator, reportDate = datetime.now(), receiver = adminId_instance, reportAttachment = reportAttachment)
         return redirect('user-report-management')
     return render(request, 'user-templates/createReport.html', {'admin': admin, 'intake': intake})
 
@@ -225,6 +249,37 @@ def user_change_language(request):
     return render(request, 'user-templates/change_language.html')
 
 
+@login_required(login_url='/')
+@allow_users(allow_roles=['user'])
+def reportAttendance(request, attendance_id):
+    try:
+        attendance = AttendanceTable.objects.get(id = attendance_id)
+    except AttendanceTable.DoesNotExist:
+        return render(request, 'error_page.html', {'error_message': 'Could not find attendance data'})
+    
+    id = request.user.id
+    user = User.objects.get(id=id)
+    profile = UserProfile.objects.get(user = user)
+    intakeCoder = profile.intakeCode.intakeCode
+    intake = IntakeTable.objects.get(intakeCode=intakeCoder)
+    admin = intake.adminId.adminId
+    class_date_formatted = attendance.classDate.strftime("%Y-%m-%d")
+    check_in_time_formatted = attendance.classDate.strftime("%H:%M:%S")
+    report_title = f'Report Attendance of class {attendance.classCode}, on {class_date_formatted} at {check_in_time_formatted}'
 
+    if request.method == "POST":
+        reportTitle = request.POST['reportTitle']
+        reportDescription = request.POST['reportDescription']
+        receiver = request.POST['receiver']
+        creator = request.POST['creator']
+        try:
+            adminId_instance = AdminProfile.objects.get(adminId=receiver)
+        except UserProfile.DoesNotExist:
+            adminId_instance = None 
+
+        ReportTable.objects.create( reportTitle = reportTitle, reportMessage = reportDescription, creator = creator, reportDate = datetime.now(), receiver = adminId_instance,)
+        messages.success(request, "Report has been submit successfully")
+        return redirect('user-attendance-management')
+    return render(request, 'user-templates/createReport.html', {'admin': admin, 'intake': intake, 'report_title': report_title, })
 
 

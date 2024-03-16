@@ -42,7 +42,7 @@
             <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
             <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
             <ul class="nav user-menu float-right">
-                <li class="nav-item dropdown has-arrow">
+                <li class="nav-item dropdown" style="pointer-events: none;">
                     <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
@@ -50,12 +50,8 @@
                         </span>
                         <span>{{request.user.username}}</span>
                     </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
-                    </div>
                 </li>
-            </ul>
+            </ul>            
         </div>
         <div class="sidebar" id="sidebar">
             <div class="sidebar-inner slimscroll">
@@ -187,6 +183,13 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <input type="password" class="form-control" name="password1" required>
+                                    <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must more than 8 letters." %}</h6>
+                            <br>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of capital letters and lowercase letters." %} </h6>
+                            <br>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password must have a combination of alphabets and numeric case." %}</h6>
+                            <br>
+                            <h6 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Your password cannot too similar with your email or name." %}</h6>
                                 </div>
                             </div>
                         </div>
@@ -202,6 +205,16 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
+                                    <p>Good example:</p>
+                            <img src="{% static 'assets/img/zy.jpg' %} " class="img-thumbnail" style="max-width: 300px;">
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "All facial features must be shown clearly." %}</h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Capture face only, avoiding too far from camera." %} </h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Do not smile when capturing the image." %}</h5>
+                            <br>
+                            <h5 class="font-weight-light" style="display: inline-block; margin-right: 8px; color: rgb(142, 141, 141);">&#8226; {% trans "Eyes must look at the camera." %}</h5>
                                     <input type="file" class="form-control" id="image" name="image" accept="image/*" capture="user" required>
                                 </div>
                             </div>

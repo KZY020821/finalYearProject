@@ -241,9 +241,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
             y = y - 15 if y - 15 > 15 else y + 15
             cv2.putText(frame, name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 0), 2)
             
-            bottom_left_corner = (10, frame.shape[0] - 10)
-            cv2.putText(frame, "Your attendance has been taken", bottom_left_corner, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-            
             if name not in processed_names:
                 if name != 'Unknown':
                     processed_names.append(f'{name}')

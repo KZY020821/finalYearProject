@@ -21,7 +21,20 @@
     <script src=" {% static 'assets/js/table-sort.js' %} "></script>
     <link href=" {% static 'assets/DataTables/datatables.min.css' %} " rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        #imageModal .modal-dialog {
+            max-width: 80%; /* Adjust the maximum width of the modal */
+        }
 
+        #imageModal .modal-body {
+            text-align: center;
+        }
+
+        #enlargedImage {
+            max-width: 80%; /* Ensure the image fits within the modal body */
+            height: auto; /* Maintain the aspect ratio */
+        }
+    </style>
 </head>
 <body>
     <div class="main-wrapper">
@@ -34,7 +47,7 @@
             <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
             <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
             <ul class="nav user-menu float-right">
-                <li class="nav-item dropdown has-arrow">
+                <li class="nav-item dropdown" style="pointer-events: none;">
                     <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle" src="{{request.user.userprofile.faceImageUrl.url}}" width="24" alt="Admin">
@@ -42,12 +55,8 @@
                         </span>
                         <span>{{request.user.username}}</span>
                     </a>
-                    <div class="dropdown-menu">
-                        
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                    </div>
                 </li>
-            </ul>
+            </ul>            
         </div>
             <div class="sidebar" id="sidebar">
                 <div class="sidebar-inner slimscroll">
@@ -97,7 +106,7 @@
             <div class="content">
                 <div class="row">
                     <div class="col-sm-4 col-3">
-                        <a href="{% url 'user-leave-management' %}" class="btn btn-primary"><i class="fa fa-arrow-left"></i> {% trans "Back" %}</a>
+                        <a href="{% url 'user-leave-management' %}" class="btn btn-primary mb-3"><i class="fa fa-arrow-left"></i> {% trans "Back" %}</a>
                     </div>
                 </div>
                 {% if messages %}
@@ -117,7 +126,9 @@
                     <h3 class="card-title">{% trans "Leave Title" %}: {{leave.leaveTitle}}</h3>
                     <h3 class="card-title">{% trans "Description" %}: {{leave.leaveDescription}}</h3>
                     <h3 class="card-title">{% trans "Attachment" %}:</h3>
-                    <img src="{{leave.leaveAttachment.url}}" style=" display:block; width: 90%; height: auto; border-style: solid; margin: auto auto 40px auto;">                   
+                    <div id="imageContainer">
+                        <img src="{{leave.leaveAttachment.url}}" class="img-thumbnail" style="display: block; max-width: 500px; border-style: solid; margin: auto auto 40px auto;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,6 +142,15 @@
                         <button type="button" class="btn btn-white" data-dismiss="modal">{% trans "Close" %}</button>
                         <a href="{% url 'logout' %}"><button type="button" class="btn btn-danger">{% trans "Sure" %}</button></a>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="imageModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img id="enlargedImage" class="img-fluid" src="" alt="Enlarged Image">
                 </div>
             </div>
         </div>
@@ -151,6 +171,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script>
+        $(document).ready(function() {
+            // Add click event handler to the image container
+            $('#imageContainer').on('click', function() {
+                var imageUrl = $(this).find('img').attr('src'); // Get the URL of the clicked image
+                $('#enlargedImage').attr('src', imageUrl); // Set the source of the enlarged image in the modal
+                $('#imageModal').modal('show'); // Show the modal
+            });
+        });
+    </script>
 </body>
 
 </html>

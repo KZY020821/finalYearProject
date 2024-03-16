@@ -42,7 +42,7 @@
             <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
             <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
             <ul class="nav user-menu float-right">
-                <li class="nav-item dropdown has-arrow">
+                <li class="nav-item dropdown" style="pointer-events: none;">
                     <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
@@ -50,12 +50,8 @@
                         </span>
                         <span>{{request.user.username}}</span>
                     </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
-                    </div>
                 </li>
-            </ul>
+            </ul>            
         </div>
         <div class="sidebar" id="sidebar">
             <div class="sidebar-inner slimscroll">
@@ -227,8 +223,24 @@
                 </div><div class="row" style="margin: 15px;">
               {% endif %}
             </div>
+            <div class="row" style="margin: 15px;">
+              {% for intake_code, data in data.items %}    
+                <div class="col-sm">
+                    <div class="dash-widget mx-auto" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
+                        <div class="chart-title">
+                            <h4>{{intake_code}} {% trans "Attendance" %}</h4>
+                        </div>	
+                        <div style="display: flex; justify-content: center;" id="donutchart{{intake_code}}" data-attendance-list="{{ data.attendance_list }}"></div>
+                    </div>
+                </div>
+              {% endfor %}
+              {% if forloop.counter|divisibleby:"4" and not forloop.last %}
+                </div><div class="row" style="margin: 15px;">
+              {% endif %}
+            </div>
         </div>
     </div>
+    
     <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -347,7 +359,61 @@
           chart.render();
         });
       });
-  </script>
+  
+    $('[id^="donutchart"]').each(function() {
+      var attendance_list = $(this).data('attendance-list');
+      var labelNames = ['Attended', 'Absent', 'MC', 'Late', 'Curriculum', 'Excuse', 'Emergency'];  
+      var colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#F9844A', '#4D5360'];
+      var options = {
+          series: attendance_list,
+          chart: {
+          width: 600,
+          type: 'donut',
+          animations: {
+                enabled: false,
+                dynamicAnimation: {
+                  enabled: false
+                }
+              }
+        },
+        plotOptions: {
+          pie: {
+            startAngle: -90,
+            endAngle: 270,
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        legend: {
+          formatter: function(val, opts) {
+            return labelNames[opts.seriesIndex] + " - " + opts.w.globals.series[opts.seriesIndex];
+
+          }
+        },
+        colors: colors, 
+        tooltip: {
+            custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                return labelNames[seriesIndex] + " - " + w.globals.series[seriesIndex];
+            }
+        },
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            chart: {
+              width: 200
+            },
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }],
+        };
+
+        var chart = new ApexCharts(this, options);
+        chart.render();
+    });
+</script>
 </body>
 
 </html>

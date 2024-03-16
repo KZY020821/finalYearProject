@@ -42,7 +42,7 @@
             <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
             <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
             <ul class="nav user-menu float-right">
-                <li class="nav-item dropdown has-arrow">
+                <li class="nav-item dropdown" style="pointer-events: none;">
                     <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle" src="{{request.user.adminprofile.adminProfileImage.url}}" width="24" alt="Admin">
@@ -50,12 +50,8 @@
                         </span>
                         <span>{{request.user.username}}</span>
                     </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        <a class="dropdown-item" href="{% url 'admin-face' request.user.id %}">Take Attendance</a>
-                    </div>
                 </li>
-            </ul>
+            </ul>            
         </div>
         <div class="sidebar" id="sidebar">
             <div class="sidebar-inner slimscroll">
@@ -154,7 +150,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="classCode" value="{{kelas.classCode}}">
+                                    <input type="text" class="form-control" name="classCode" value="{{kelas.classCode}}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -189,7 +185,7 @@
                             {% endfor %}
                         </select>                        
                         <div class="text-center m-t-20">
-                            <button type="submit" class="btn btn-primary submit-btn">{% trans "Create" %}</button>
+                            <button type="submit" class="btn btn-primary submit-btn">{% trans "Save" %}</button>
                         </div>
                     </form>
                 </div>

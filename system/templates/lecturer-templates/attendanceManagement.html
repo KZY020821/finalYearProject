@@ -26,7 +26,7 @@
 </head>
 
 <body>
-    <div class="main-wrapper">
+        <div class="main-wrapper">
         <div class="header">
             <div class="header-left">
                 <a href="{% url 'lecturer-dashboard' %}" class="logo">
@@ -36,7 +36,7 @@
             <a id="toggle_btn" href="javascript:void(0);"><i class="fa fa-bars"></i></a>
             <a id="mobile_btn" class="mobile_btn float-left" href="#sidebar"><i class="fa fa-bars"></i></a>
             <ul class="nav user-menu float-right">
-                <li class="nav-item dropdown has-arrow">
+                <li class="nav-item dropdown" style="pointer-events: none;">
                     <a href="" class="dropdown-toggle nav-link user-link" data-toggle="dropdown">
                         <span class="user-img">
                             <img class="rounded-circle" src="{{request.user.lecturerprofile.lecturerProfileImage.url}}" width="24" alt="Admin">
@@ -44,12 +44,8 @@
                         </span>
                         <span>{{request.user.username}}</span>
                     </a>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        <a class="dropdown-item" href="{% url 'lecturer-face' request.user.id %}">Take Attendance</a>
-                    </div>
                 </li>
-            </ul>
+            </ul>            
         </div>
         <div class="sidebar" id="sidebar">
             <div class="sidebar-inner slimscroll">
@@ -87,7 +83,10 @@
                         <h4 class="page-title">{% trans "Attendance Management" %}</h4>
                     </div>
                     <div class="col-sm-8 col-9 text-right m-b-20">
-                        <a href="lecturer-choose-subject" class="btn btn-primary float-right"><i class="fa fa-plus"></i> {% trans "Create Attendance" %}</a>
+                        <a href="lecturer-choose-subject" class="btn btn-primary float-right" style="margin: 10px;"><i class="fa fa-plus"></i> {% trans "Take Attendance" %}</a>
+                        <a href="{% url 'lecturer-face' request.user.id %}" class="btn btn-primary float-right d-none d-md-block" style="margin: 10px;">
+                            <i class="fa-solid fa-users-viewfinder"></i> {% trans "Face Recognition" %}
+                        </a>                        
                     </div>
                 </div>
                 {% if messages %}

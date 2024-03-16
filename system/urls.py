@@ -74,8 +74,11 @@ urlpatterns =[
     path('admin-deny-leave/<int:id>/', admin_views.admin_denyLeave, name='admin-deny-leave'),
     
     path('admin-attendance-management', admin_views.admin_attendanceManagement, name='admin-attendance-management'),
+    path('createJson', admin_views.createJson, name='createJson'),
     path('createCsv', admin_views.createCsv, name='createCsv'),
+    path('createXlsx', admin_views.createXlsx, name='createXlsx'),
     path('admin-choose-subject', admin_views.admin_chooseSubject, name='admin-choose-subject'),
+    path('admin-attendance-status', admin_views.admin_attendanceStatus, name='admin-attendance-status'),
     path('admin-create-attendance/<str:classCode>/', admin_views.admin_createAttendance, name='admin-create-attendance'),
     path('admin-edit-attendance/<int:id>/', admin_views.admin_editAttendance, name='admin-edit-attendance'),
     path('admin-view-attendance/<int:id>/', admin_views.admin_viewAttendance, name='admin-view-attendance'),
@@ -135,6 +138,7 @@ urlpatterns =[
     path('user-noted-notification/<int:id>/', user_views.user_notedNotification, name='user-noted-notification'),
 
     path('view-myProfileUser/<int:user_id>/', user_views.viewMyProfileUser, name='view-myProfileUser'),
+    path('report-attendance/<int:attendance_id>/', user_views.reportAttendance, name='reoprt-attendance'),
     path('user-change-language', user_views.user_change_language, name='user-change-language'),
     # error
     path('error', views.error, name='error'),
