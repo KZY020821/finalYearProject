@@ -75,6 +75,10 @@ urlpatterns =[
     
     path('admin-attendance-management', admin_views.admin_attendanceManagement, name='admin-attendance-management'),
     path('createJson', admin_views.createJson, name='createJson'),
+    path('createPdf/', admin_views.createPdf, name='createPdf'),
+    path('createPdfStatus', admin_views.createPdfStatus, name='createPdfStatus'),
+    path('pdf', admin_views.pdf, name='pdf'),
+    path('print_namelist/<str:classCode>/', admin_views.print_namelist, name='print_namelist'),
     path('createCsv', admin_views.createCsv, name='createCsv'),
     path('createXlsx', admin_views.createXlsx, name='createXlsx'),
     path('admin-choose-subject', admin_views.admin_chooseSubject, name='admin-choose-subject'),

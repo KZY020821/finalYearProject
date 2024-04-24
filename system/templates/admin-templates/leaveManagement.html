@@ -177,10 +177,10 @@
                                                     {% endif%}
                                                 </td>
                                                 <td class="text-right">
-                                                    <a href="admin-view-leave/{{leave.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
+                                                    <a href="admin-view-leave/{{leave.id}}"><button type="button" class="btn btn-primary mt-1"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
                                                     {% if leave.status == "pending"%}
-                                                        <a href="admin-approve-leave/{{leave.id}}"><button type="button" class="btn btn-success" style="width: 105px;"><i class="fa fa-check"></i> {% trans "Approve" %}</button></a>
-                                                        <a href="admin-deny-leave/{{leave.id}}"><button type="button" class="btn btn-danger" style="width: 105px;"><i class="fa fa-ban"></i> {% trans "Deny" %}</button></a>
+                                                        <a href="admin-approve-leave/{{leave.id}}"><button type="button" class="btn btn-success mt-1"><i class="fa fa-check"></i> {% trans "Approve" %}</button></a>
+                                                        <a href="admin-deny-leave/{{leave.id}}"><button type="button" class="btn btn-danger mt-1"><i class="fa fa-ban"></i> {% trans "Deny" %}</button></a>
                                                     {% endif %}
                                                 </td>
                                             </tr>

@@ -129,11 +129,8 @@
         </div>
         <div class="page-wrapper">
             <div class="content">
-                <div class="row">
-                    <div class="col-sm-4 col-3">
-                        <h4 class="page-title">{% trans "Create New Absence Limit" %}</h4>
-                    </div>
-                </div>
+                <div class="row m-2">
+                    <h4 class="page-title">{% trans "Create New Absence Limit" %}</h4>
                 {% if messages %}
                     <ul class="messages">
                         {% for message in messages %}
@@ -143,6 +140,7 @@
                         {% endfor %}
                     </ul>
                 {% endif %}
+                </div>
                 <div class="card-box">
                     <form method="POST" class="form-signin" enctype="multipart/form-data">
                         {% csrf_token %}

@@ -92,7 +92,7 @@
                   <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
                       <span class="dash-widget-bg1"><i class="fa fa-users" aria-hidden="true"></i></span>
                       <div class="dash-widget-info text-right" style="color: #656565;">
-                        <h4>Total Classes</h4>
+                        <h4>{% trans "Total Classes" %}</h4>
                         <h3>{{ classes_count }}</h3>
                       </div>
                   </div>
@@ -104,15 +104,11 @@
                       <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
                           <span class="dash-widget-bg2"><i class="fa fa-users" aria-hidden="true"></i></span>
                           <div class="dash-widget-info text-right" style="color: #656565;">
-                              <h4>Class Code:</h4>
+                              <h4>{% trans "Class Code" %}:</h4>
                               <h3>{{ kelas.classCode }}</h3>
                           </div>
                       </div>
                   </div>
-          
-                  {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-                      </div><div class="row" style="margin: 15px;">
-                  {% endif %}
               {% endfor %}
           </div>          
           <div class="row" style="margin: 15px;">
@@ -120,15 +116,12 @@
                 <div class="col-sm">
                   <div class="dash-widget"  style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
                     <div class="chart-title">
-                      <h4>{{attendance_percentage.class_name}} attendance - %</h4>
+                      <h4>{% trans "Attendance" %} {{attendance_percentage.class_name}}- %</h4>
                     </div>	
                     <div id="intake{{forloop.counter}}" data-average-percentage="{{ attendance_percentage.average_percentage }}"></div>
                   </div>
                 </div>
             {% endfor %}
-            {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-              </div><div class="row" style="margin: 15px;">
-            {% endif %}
         </div>
         <div class="row" style="margin: 15px;">
           {% for intake_code, data in data.items %}    
@@ -141,9 +134,6 @@
                 </div>
             </div>
           {% endfor %}
-          {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-            </div><div class="row" style="margin: 15px;">
-          {% endif %}
         </div>
         </div>
     </div>

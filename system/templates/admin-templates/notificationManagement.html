@@ -161,7 +161,7 @@
                                                 {% endif %}
                                                 <td class="text-right">
                                                     {% if notification.status == "delivered" or notification.status == "Delivered" %}
-                                                    <a href="admin-noted-notification/{{notification.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> Noted</button></a>
+                                                    <a href="admin-noted-notification/{{notification.id}}"><button type="button" class="btn btn-primary" style="width: 105px;"><i class="fa fa-eye"></i> {% trans "Noted" %}</button></a>
                                                     {% elif notification.status == "noted" or notification.status == "Noted" %}
                                                         -
                                                     {% endif %}

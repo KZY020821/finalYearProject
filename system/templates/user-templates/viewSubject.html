@@ -149,31 +149,6 @@
                         </select>                        
                     </form>
                 </div>
-                <h3 class="card-title">Student list</h3>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="table-responsive">
-                            <table class="table table-striped custom-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>{% trans "Student's ID" %}</th>
-                                            <th>{% trans "Student's name" %}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for user in users %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>{{ user.userId }}</td>
-                                            <td>{{ user.user.first_name }} {{ user.user.last_name }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     <div id="delete_user_modal" class="modal fade delete-modal" role="dialog">

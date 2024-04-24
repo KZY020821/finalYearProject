@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 import json
 from django.http import JsonResponse
@@ -6,6 +7,7 @@ from django.core.files import File
 import shutil
 import subprocess
 from datetime import datetime
+from django.utils.timezone import make_aware
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,9 +18,13 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 from django.core.files.base import ContentFile
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 import tempfile
+from django.template.loader import get_template
+from xhtml2pdf import pisa 
 from ..decorators import allow_users
 from ..models import AbsenceMonitoringTable
 from ..models import IntakeTable
@@ -35,16 +41,20 @@ from ..models import NotificationTable
 from ..models import AttendanceStatus
 from django.db import transaction
 from django.db.models import Count
-
+from json import dump
 from django.shortcuts import redirect
 from django.contrib import messages
 import face_recognition
 from tablib import Dataset
 from ..resources import UserProfileResource, UserResource
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 import csv
 import sys
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Min, Max
+
 
 # Get the absolute path of the current file
 current_file_path = os.path.abspath(__file__)
@@ -62,7 +72,33 @@ def adminDashboard(request):
     check_leave()
     status = AttendanceStatus.objects.all()
     user = User.objects.get(id=request.user.id)
-    admin = AdminProfile.objects.get(user=user)
+    intake_count = IntakeTable.objects.count()
+    subject_count = SubjectTable.objects.count()
+    class_count = ClassTable.objects.count()
+    admin_count = AdminProfile.objects.count()
+    lecturer_count = LecturerProfile.objects.count()
+    user_count = UserProfile.objects.count()
+    earliest_check_in = AttendanceStatus.objects.aggregate(earliest_check_in=Min('checkIn'))['earliest_check_in']
+    latest_check_in = AttendanceStatus.objects.aggregate(latest_check_in=Max('checkIn'))['latest_check_in']
+    formatted_earliest_date = earliest_check_in.strftime("%Y-%m-%d")
+    formatted_latest_date = latest_check_in.strftime("%Y-%m-%d")    # Check if earliest_check_in and latest_check_in are not None before using them
+    if earliest_check_in is not None and latest_check_in is not None:
+        if request.method == 'POST':
+            startDate_str = request.POST['startDate']
+            endDate_str = request.POST['endDate']
+            
+            # Convert string dates to datetime objects
+            startDate = datetime.strptime(startDate_str, '%Y-%m-%d')
+            endDate = datetime.strptime(endDate_str, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+            
+            # Make sure the datetime objects are aware of the timezone
+            startDate = make_aware(startDate)
+            endDate = make_aware(endDate)
+            if startDate < endDate:
+                status = AttendanceStatus.objects.filter(checkIn__range=(startDate, endDate))
+            else:
+                messages.error(request, 'Start date is after end date')
+
     intake_data = {}
     data = {}
     for state in status:
@@ -103,13 +139,7 @@ def adminDashboard(request):
         average_percentages[intake_code] = {
             'average_percentage': average_percentage,
         }
-
-    intake_count = IntakeTable.objects.count()
-    subject_count = SubjectTable.objects.count()
-    class_count = ClassTable.objects.count()
-    admin_count = AdminProfile.objects.count()
-    lecturer_count = LecturerProfile.objects.count()
-    user_count = UserProfile.objects.count()
+    
     context =  {
         'average_percentages': average_percentages, 
         'intake_count' : intake_count,
@@ -120,8 +150,102 @@ def adminDashboard(request):
         'user_count' : user_count, 
         'intake_data': intake_data, 
         'data': data,
+        'earliest_date':formatted_earliest_date,
+        'latest_date':formatted_latest_date,
         }
+    
     return render(request, 'admin-templates/dashboard.html', context)
+
+def pdf(request):
+    attendances = AttendanceTable.objects.all().order_by('-classDate')
+    status = AttendanceStatus.objects.all()
+    user = User.objects.get(id=request.user.id)
+    intake_count = IntakeTable.objects.count()
+    subject_count = SubjectTable.objects.count()
+    class_count = ClassTable.objects.count()
+    admin_count = AdminProfile.objects.count()
+    lecturer_count = LecturerProfile.objects.count()
+    user_count = UserProfile.objects.count()
+    earliest_check_in = AttendanceStatus.objects.aggregate(earliest_check_in=Min('checkIn'))['earliest_check_in']
+    latest_check_in = AttendanceStatus.objects.aggregate(latest_check_in=Max('checkIn'))['latest_check_in']
+
+    # Check if earliest_check_in and latest_check_in are not None before using them
+    if earliest_check_in is not None and latest_check_in is not None:
+        if request.method == 'POST':
+            startDate_str = request.POST['startDate']
+            endDate_str = request.POST['endDate']
+            
+            # Convert string dates to datetime objects
+            startDate = datetime.strptime(startDate_str, '%Y-%m-%d')
+            endDate = datetime.strptime(endDate_str, '%Y-%m-%d')
+
+            # Make sure the datetime objects are aware of the timezone
+            startDate = make_aware(startDate)
+            endDate = make_aware(endDate)
+
+            # Compare datetime objects directly
+            if startDate > earliest_check_in and endDate < latest_check_in:
+                if startDate < endDate:
+                    status = AttendanceStatus.objects.filter(checkIn__range=(startDate, endDate))
+                else:
+                    messages.error(request, 'Start date is after end date')
+            else:
+                messages.error(request, 'Date is out of range')
+    intake_data = {}
+    data = {}
+    for state in status:
+        key = state.userId.intakeCode.intakeCode
+        if key not in intake_data:
+            intake_data[key] = {'attended_sum': 0, 'absent_sum': 0, 'mc_sum': 0, 'curriculum_sum': 0, 'excuse_sum': 0, 'emergency_sum': 0, 'late_sum': 0, 'total_sum': 0}
+            data[key] = {'attendance_list': [0, 0, 0, 0, 0, 0, 0]}
+
+        if state.status == "attended":
+            intake_data[key]['attended_sum'] += 1
+            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+        if state.status == "absent":
+            intake_data[key]['absent_sum'] += 1
+            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+        if state.status == "mc":
+            intake_data[key]['mc_sum'] += 1
+            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+        if state.status == "curriculum":
+            intake_data[key]['curriculum_sum'] += 1
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "excuse":
+            intake_data[key]['excuse_sum'] += 1
+            data[key]['attendance_list'][5] = data[key]['attendance_list'][5]+1
+        if state.status == "emergency":
+            intake_data[key]['emergency_sum'] += 1
+            data[key]['attendance_list'][6] = data[key]['attendance_list'][6]+1
+        if state.status == "late":
+            intake_data[key]['late_sum'] += 1
+            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
+        intake_data[key]['total_sum'] += 1
+    
+    average_percentages = {}
+    for intake_code, list in intake_data.items():
+        attended_sum = list['attended_sum']
+        total_sum = list['total_sum']
+        average_percentage = (attended_sum / total_sum)*100 if total_sum != 0 else 0
+        average_percentage = format(average_percentage, ".0f")
+        average_percentages[intake_code] = {
+            'average_percentage': average_percentage,
+        }
+    
+    context =  {
+        'average_percentages': average_percentages, 
+        'intake_count' : intake_count,
+        'subject_count' : subject_count,
+        'class_count' : class_count, 
+        'admin_count' : admin_count, 
+        'lecturer_count' : lecturer_count, 
+        'user_count' : user_count, 
+        'intake_data': intake_data, 
+        'data': data,
+        'attendances': attendances,
+        }
+    
+    return render(request, 'admin-templates/pdf.html', context)
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -156,6 +280,12 @@ def admin_createAdmin(request):
         elif password1 != password2:
             messages.error(request, _('Passwords do not match'))
         else:
+            try:
+                validate_password(password1, user=None, password_validators=None)
+            except ValidationError as e:
+                for error_message in e.messages:
+                    messages.error(request, error_message)
+                return redirect('admin-create-admin')
             try:
                 face_image = face_recognition.load_image_file(profileImage)
                 face_encoding = face_recognition.face_encodings(face_image)[0]
@@ -302,6 +432,12 @@ def admin_createLecturer(request):
         messages.error(request, _('Passwords do not match'))
     else:
         try:
+            validate_password(password1, user=None, password_validators=None)
+        except ValidationError as e:
+            for error_message in e.messages:
+                messages.error(request, error_message)
+            return redirect('admin-create-lecturer')
+        try:
             face_image = face_recognition.load_image_file(profileImage)
             face_encoding = face_recognition.face_encodings(face_image)[0]
         except Exception as ex:
@@ -443,7 +579,7 @@ def admin_createUser(request):
         last_name = request.POST['last_name']
         intakeCode = request.POST['intakeCode']
         faceimage = request.FILES.get('image')  # Use request.FILES for file input
-
+        
         if password != password2:
             messages.error(request, _('Passwords do not match'))
             return redirect('admin-create-user') 
@@ -455,32 +591,43 @@ def admin_createUser(request):
             return redirect('admin-create-user') 
         else:
             try:
+                validate_password(password, user=None, password_validators=None)
+            except ValidationError as e:
+                for error_message in e.messages:
+                    messages.error(request, error_message)
+                return redirect('admin-create-user')
+            try:
                 intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
-                absenceMonitoring_instance = AbsenceMonitoringTable.objects.get(id=1)
+                absenceMonitoring_instance = AbsenceMonitoringTable.objects.get(id=7)
             except (IntakeTable.DoesNotExist, AbsenceMonitoringTable.DoesNotExist):
                 intake_instance = None
                 absenceMonitoring_instance = None
 
             if intake_instance:
-                # Handle face recognition and image processing
-
                 try:
                     face_image = face_recognition.load_image_file(faceimage)
-                    face_encoding = face_recognition.face_encodings(face_image)[0]
+                    face_encoding = face_recognition.face_encodings(face_image, model='large')[0]
                 except Exception as ex:
                     messages.error(request, _("Failed to detect face from the image you uploaded."))
                     return redirect('admin-create-user')
-
-                # Define the path for saving the face image
+                
                 username_id = f"{id}_{first_name}-{last_name}"
+                json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+                json_file_path = os.path.join(json_dir, f'{username_id}.json')
+                        
+                os.makedirs(json_dir, exist_ok=True)
+                jsonStatus = {
+                    'file_name': username_id,
+                    'face_encoding': face_encoding.tolist()  # Convert NumPy array to list
+                }
+                with open(json_file_path, 'w') as json_file:
+                    json.dump(jsonStatus, json_file)
+
                 file_extension = faceimage.name.split('.')[-1]
                 image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
-
                 # Save the uploaded image with the new name and correct file extension
                 fs = FileSystemStorage()
                 fs.save(image_path, faceimage)
-
-                # Create a new user
                 user = User.objects.create_user(username=id, email=email, password=password, first_name=first_name, last_name=last_name)
 
                 # Create a new UserProfile
@@ -500,7 +647,7 @@ def admin_createUser(request):
                 return redirect("admin-user-management")
             else:
                 messages.error(request, _("Register failed."))
-                return redirect("register")
+                return redirect("admin-user-management")
 
     intakes = IntakeTable.objects.all()
     return render(request, 'admin-templates/createUser.html', {'intakes': intakes})
@@ -523,9 +670,9 @@ def admin_editUser(request, user_id):
             # images = request.FILES.getlist('additional_images')
 
             if User.objects.filter(email=userEmail).exclude(id=user_id).exists():
-                messages.error(request, _('Email used'))
+                messages.error(request, 'Email used')
             elif UserProfile.objects.filter(userId=userID).exclude(user=user).exists():
-                messages.error(request, _('ID used'))
+                messages.error(request, 'ID used')
             else:
                 try:
                     intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
@@ -538,18 +685,40 @@ def admin_editUser(request, user_id):
                     except Exception as ex:
                         messages.error(request, f"Failed to detect face from the image you uploaded.")
                         return render(request, 'admin-templates/editUser.html', {'user': user, 'intakes': intakes})
+                    
 
                     old_image_path = user_profile.faceImageUrl.path  # Get the current image path
+                    file_name_with_extension = os.path.basename(old_image_path)  # Extracts 'BMC2109057_BMC-2109057.jpg'
+                    file_name, _ = os.path.splitext(file_name_with_extension)
+                    json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+                    json_file_path = os.path.join(json_dir, f'{file_name}.json')
+                    print(json_file_path)
+
+                    if os.path.exists(json_file_path):
+                        os.remove(json_file_path)
+
                     # Remove the old image file
                     if os.path.exists(old_image_path):
                         os.remove(old_image_path)
                     
+
                     username_id = f"{userID}_{firstName}-{lastName}"
+                    json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+                    json_file_path = os.path.join(json_dir, f'{username_id}.json')
+                            
+                    os.makedirs(json_dir, exist_ok=True)
+                    jsonStatus = {
+                        'file_name': username_id,
+                        'face_encoding': face_encoding.tolist()  # Convert NumPy array to list
+                    }
+                    with open(json_file_path, 'w') as json_file:
+                        json.dump(jsonStatus, json_file)
+
                     file_extension = profileImage.name.split('.')[-1]
                     image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+                    # Save the uploaded image with the new name and correct file extension
                     fs = FileSystemStorage()
                     fs.save(image_path, profileImage)
-                    
                     user_profile.faceImageUrl = image_path
                     user_profile.save()
 
@@ -566,7 +735,7 @@ def admin_editUser(request, user_id):
                 user_profile = user.userprofile
                 user_profile.userId = userID
 
-                messages.success(request, _('Modification has been saved successfully.'))
+                messages.success(request, 'Modification has been saved successfully.')
                 return redirect('admin-user-management')
         return render(request, 'admin-templates/editUser.html', {'user': user, 'intakes': intakes})
     except User.DoesNotExist:
@@ -643,10 +812,20 @@ def admin_removeUser(request):
     
         if os.path.exists(user_profile_image_path):
             os.remove(user_profile_image_path)
-            
+
+        
+        file_name_with_extension = os.path.basename(user_profile_image_path)  # Extracts 'BMC2109057_BMC-2109057.jpg'
+        file_name, _ = os.path.splitext(file_name_with_extension)
+        json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+        json_file_path = os.path.join(json_dir, f'{file_name}.json')
+
+        if os.path.exists(json_file_path):
+            os.remove(json_file_path)
+
+        
         user.delete()
 
-        messages.success(request, _('Account removed successfully.'))
+        messages.success(request, 'Account removed successfully.')
         return redirect('admin-user-management')
       except User.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'User not found'})
@@ -665,73 +844,94 @@ def admin_import_data(request):
         imported_data = dataset.load(excel_file.read(), format='xlsx')
         for data in imported_data:
             student_id, email, first_name, last_name, password, face_image_path, intake_code = data
+            if None not in data:
+                id = student_id
+                email = email
+                password = password
+                first_name = first_name
+                last_name = last_name
+                intakeCode = intake_code
+                faceimage_path = face_image_path
 
-            id = student_id
-            email = email
-            password = password
-            first_name = first_name
-            last_name = last_name
-            intakeCode = intake_code
-            faceimage_path = face_image_path
-
-            if User.objects.filter(email=email).exists() or User.objects.filter(username=id).exists():
-                messages.error(request, 'Email or ID already used. Skipping the row.')
-                continue
-            try:
-                intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
-            except IntakeTable.DoesNotExist:
-                messages.error(request, f'Intake with code {intakeCode} does not exist. Skipping the row.')
-                continue
-            try:
-                absenceMonitoring_instance = AbsenceMonitoringTable.objects.get(id=1)
-            except AbsenceMonitoringTable.DoesNotExist:
-                messages.error(request, 'Absence monitoring instance with ID 1 does not exist. Skipping the row.')
-                continue
-
-            if os.path.exists(faceimage_path):
-                with open(face_image_path, 'rb') as image_file:
-                    faceimage = image_file.read()
-
-                # Create a ContentFile with the image content
-                face_image = ContentFile(faceimage)
+                if User.objects.filter(email=email).exists() or User.objects.filter(username=id).exists():
+                    messages.error(request, 'Email or ID already used. Skipping the row.')
+                    continue
                 
                 try:
-                    # Your face recognition code here
-                    faceImage = face_recognition.load_image_file(face_image)
-                    face_encoding = face_recognition.face_encodings(faceImage)[0]
-                except Exception as ex:
-                    messages.error(request, 'Failed to detect face from the image you uploaded. Skipping the row.')
+                    validate_email(email)
+                except ValidationError:
+                    messages.error(request, f'Email {email} is not in a proper form. Skipping the row.')
+                    continue
+                
+                try:
+                    intake_instance = IntakeTable.objects.get(intakeCode=intakeCode)
+                except IntakeTable.DoesNotExist:
+                    messages.error(request, f'Intake with code {intakeCode} does not exist. Skipping the row.')
+                    continue
+                    
+                try:
+                    absenceMonitoring_instance = AbsenceMonitoringTable.objects.get(id=7)
+                except AbsenceMonitoringTable.DoesNotExist:
+                    messages.error(request, 'Absence monitoring instance with ID 1 does not exist. Skipping the row.')
                     continue
 
-                # Extract the file name from the original path
-                file_name = os.path.basename(face_image_path)
+                if os.path.exists(faceimage_path):
+                    with open(face_image_path, 'rb') as image_file:
+                        faceimage = image_file.read()
 
-                if intake_instance:
-                    username_id = f"{id}_{first_name}-{last_name}"
-                    file_extension = file_name.split('.')[-1]
-                    image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+                    # Create a ContentFile with the image content
+                    face_image = ContentFile(faceimage)
+                    
+                    try:
+                        # Your face recognition code here
+                        faceImage = face_recognition.load_image_file(face_image)
+                        face_encoding = face_recognition.face_encodings(faceImage)[0]
+                    except Exception as ex:
+                        messages.error(request, 'Failed to detect face from the image you uploaded. Skipping the row.')
+                        continue
 
-                    if os.path.exists(image_path):
-                        os.remove(image_path)
+                    # Extract the file name from the original path
+                    file_name = os.path.basename(face_image_path)
 
-                    # Save the uploaded image with the new name and correct file extension
-                    fs = FileSystemStorage()
-                    fs.save(image_path, face_image)
+                    if intake_instance:
+                        username_id = f"{id}_{first_name}-{last_name}"
+                        json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+                        json_file_path = os.path.join(json_dir, f'{username_id}.json')
+                                
+                        os.makedirs(json_dir, exist_ok=True)
+                        jsonStatus = {
+                            'file_name': username_id,
+                            'face_encoding': face_encoding.tolist()  # Convert NumPy array to list
+                        }
+                        with open(json_file_path, 'w') as json_file:
+                            json.dump(jsonStatus, json_file)
 
-                    user = User.objects.create_user(username=id, email=email, password=password, first_name=first_name, last_name=last_name)
-                    user.save()
+                        file_extension = file_name.split('.')[-1]
+                        image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
+                        # Save the uploaded image with the new name and correct file extension
+                        fs = FileSystemStorage()
+                        fs.save(image_path, face_image)
+                        user = User.objects.create_user(username=id, email=email, password=password, first_name=first_name, last_name=last_name)
 
-                    user_profile = UserProfile(user=user, userId=id, intakeCode=intake_instance, absenceMonitoringId=absenceMonitoring_instance, faceImageUrl=image_path)
-                    user_profile.save()
+                        # Create a new UserProfile
+                        user_profile = UserProfile(
+                            user=user,
+                            userId=id,
+                            intakeCode=intake_instance,
+                            absenceMonitoringId=absenceMonitoring_instance,
+                            faceImageUrl=image_path
+                        )
+                        user_profile.save()
 
-                    group = Group.objects.get(name='user')
-                    user.groups.add(group)
+                        # Set user groups
+                        user.groups.set([Group.objects.get(name='user')])
 
-                    messages.success(request, 'Account created successfully.')
+                        messages.success(request, 'Account created successfully.')
 
-            else:
-                messages.error(request, 'Face image file not found. Skipping the row.')
-                continue
+                else:
+                    messages.error(request, 'Face image file not found. Skipping the row.')
+                    continue
+            continue
         return redirect("admin-user-management")
 
     return render(request, 'admin-templates/importData.html')
@@ -882,6 +1082,10 @@ def admin_activeSubject(request, subjectCode):
     subject = get_object_or_404(SubjectTable, subjectCode=subjectCode) 
     subject.status = "Active"
     subject.save()
+    classes = ClassTable.objects.filter(subjectCode = subjectCode)
+    for kelas in classes:
+        kelas.status = 'Active'
+        kelas.save()
     messages.success(request, _('Subject has been activated.'))
     return redirect('admin-subject-management')
 
@@ -891,6 +1095,10 @@ def admin_deactiveSubject(request, subjectCode):
     subject = get_object_or_404(SubjectTable, subjectCode=subjectCode) 
     subject.status = "Deactive"
     subject.save()
+    classes = ClassTable.objects.filter(subjectCode = subjectCode)
+    for kelas in classes:
+        kelas.status = 'Deactive'
+        kelas.save()
     messages.success(request, _('Subject has been deactivated.'))
     return redirect('admin-subject-management')
 
@@ -1317,6 +1525,147 @@ def createJson(request):
     response['Content-Disposition'] = 'attachment; filename="attendance-report.json"'
     return response
 
+def createPdf(request):
+    attendances = AttendanceTable.objects.all().order_by('-classDate')
+    status = AttendanceStatus.objects.all()
+    user = User.objects.get(id=request.user.id)
+    intake_count = IntakeTable.objects.count()
+    subject_count = SubjectTable.objects.count()
+    class_count = ClassTable.objects.count()
+    admin_count = AdminProfile.objects.count()
+    lecturer_count = LecturerProfile.objects.count()
+    user_count = UserProfile.objects.count()
+    earliest_check_in = AttendanceStatus.objects.aggregate(earliest_check_in=Min('checkIn'))['earliest_check_in']
+    latest_check_in = AttendanceStatus.objects.aggregate(latest_check_in=Max('checkIn'))['latest_check_in']
+
+    # Check if earliest_check_in and latest_check_in are not None before using them
+    if earliest_check_in is not None and latest_check_in is not None:
+        if request.method == 'POST':
+            startDate_str = request.POST['startDate']
+            endDate_str = request.POST['endDate']
+            
+            # Convert string dates to datetime objects
+            startDate = datetime.strptime(startDate_str, '%Y-%m-%d')
+            endDate = datetime.strptime(endDate_str, '%Y-%m-%d')
+
+            # Make sure the datetime objects are aware of the timezone
+            startDate = make_aware(startDate)
+            endDate = make_aware(endDate)
+
+            # Compare datetime objects directly
+            if startDate > earliest_check_in and endDate < latest_check_in:
+                if startDate < endDate:
+                    status = AttendanceStatus.objects.filter(checkIn__range=(startDate, endDate))
+                else:
+                    messages.error(request, 'Start date is after end date')
+            else:
+                messages.error(request, 'Date is out of range')
+    intake_data = {}
+    data = {}
+    for state in status:
+        key = state.userId.intakeCode.intakeCode
+        if key not in intake_data:
+            intake_data[key] = {'attended_sum': 0, 'absent_sum': 0, 'mc_sum': 0, 'curriculum_sum': 0, 'excuse_sum': 0, 'emergency_sum': 0, 'late_sum': 0, 'total_sum': 0}
+            data[key] = {'attendance_list': [0, 0, 0, 0, 0, 0, 0]}
+
+        if state.status == "attended":
+            intake_data[key]['attended_sum'] += 1
+            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+        if state.status == "absent":
+            intake_data[key]['absent_sum'] += 1
+            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+        if state.status == "mc":
+            intake_data[key]['mc_sum'] += 1
+            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+        if state.status == "curriculum":
+            intake_data[key]['curriculum_sum'] += 1
+            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+        if state.status == "excuse":
+            intake_data[key]['excuse_sum'] += 1
+            data[key]['attendance_list'][5] = data[key]['attendance_list'][5]+1
+        if state.status == "emergency":
+            intake_data[key]['emergency_sum'] += 1
+            data[key]['attendance_list'][6] = data[key]['attendance_list'][6]+1
+        if state.status == "late":
+            intake_data[key]['late_sum'] += 1
+            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
+        intake_data[key]['total_sum'] += 1
+    
+    average_percentages = {}
+    for intake_code, list in intake_data.items():
+        attended_sum = list['attended_sum']
+        total_sum = list['total_sum']
+        average_percentage = (attended_sum / total_sum)*100 if total_sum != 0 else 0
+        average_percentage = format(average_percentage, ".0f")
+        average_percentages[intake_code] = {
+            'average_percentage': average_percentage,
+        }
+    
+    context =  {
+        'average_percentages': average_percentages, 
+        'intake_count' : intake_count,
+        'subject_count' : subject_count,
+        'class_count' : class_count, 
+        'admin_count' : admin_count, 
+        'lecturer_count' : lecturer_count, 
+        'user_count' : user_count, 
+        'intake_data': intake_data, 
+        'data': data,
+        'attendances': attendances,
+        }
+    
+    template = get_template('admin-templates/pdf.html')
+    html_content = template.render(context)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html_content.encode("utf-8")), result)
+    if not pdf.err:
+        # Set response content type and headers for download
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+        return response
+    else:
+        return HttpResponse('Error generating PDF')
+    
+def createPdfStatus(request):
+    attendances = AttendanceTable.objects.all().order_by('-classDate')
+    status = AttendanceStatus.objects.all()
+    
+    context =  {
+        'attendances': attendances,
+        'status': status,
+        }
+    template = get_template('admin-templates/pdfStatus.html')
+    html_content = template.render(context)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html_content.encode("utf-8")), result)
+    if not pdf.err:
+        # Set response content type and headers for download
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="attendance_report.pdf"'
+        return response
+    else:
+        return HttpResponse('Error generating PDF')
+    
+def print_namelist(request, classCode):
+    kelas = ClassTable.objects.get(classCode=classCode)
+    intakes = IntakeTable.objects.all()
+    selected_intakes = list(kelas.intakeTables.values_list('intakeCode', flat=True))
+    selected_users = UserProfile.objects.filter(intakeCode__in=selected_intakes)
+    lecturer_group = Group.objects.get(name='lecturer')
+    lecturer_users = User.objects.filter(groups=lecturer_group)
+    context = {'kelas': kelas, 'lecturers': lecturer_users, 'intakes': intakes, 'selected_intakes':selected_intakes, 'users':selected_users, }
+    
+    template = get_template('admin-templates/name_list.html')
+    html_content = template.render(context)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html_content.encode("utf-8")), result)
+    if not pdf.err:
+        # Set response content type and headers for download
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="name_list_{classCode}.pdf"'
+        return response
+    else:
+        return HttpResponse('Error generating PDF')
 
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
@@ -1328,7 +1677,7 @@ def admin_attendanceManagement(request):
 @login_required(login_url='/')
 @allow_users(allow_roles=['admin'])
 def admin_chooseSubject(request):
-    kelas = ClassTable.objects.all()
+    kelas = ClassTable.objects.filter(Q(status='active') | Q(status='Active'))
     context = {'kelas': kelas}
     if request.method == 'POST':
         classCode = request.POST['classCode']
@@ -1340,6 +1689,7 @@ def admin_chooseSubject(request):
 @transaction.atomic
 def admin_createAttendance(request, classCode):
     count_userAbsence()
+    check_leave()
     kelas = ClassTable.objects.get(classCode = classCode)
     intakes = IntakeTable.objects.all()
     selected_intakes = kelas.intakeTables.all()
@@ -1409,6 +1759,7 @@ def admin_createAttendance(request, classCode):
 @allow_users(allow_roles=['admin'])
 def admin_viewAttendance(request, id):
     count_userAbsence()
+    check_leave()
     attendance = AttendanceTable.objects.get(id=id)
     kelas = ClassTable.objects.get(classCode = attendance.classCode)
     intakes = IntakeTable.objects.all()
@@ -1430,7 +1781,10 @@ def admin_viewAttendance(request, id):
 def admin_attendanceStatus(request):
     attendances = AttendanceTable.objects.all()
     status = AttendanceStatus.objects.all()
-
+    earliest_check_in = AttendanceStatus.objects.aggregate(earliest_check_in=Min('checkIn'))['earliest_check_in']
+    latest_check_in = AttendanceStatus.objects.aggregate(latest_check_in=Max('checkIn'))['latest_check_in']
+    formatted_earliest_date = earliest_check_in.strftime("%Y-%m-%d")
+    formatted_latest_date = latest_check_in.strftime("%Y-%m-%d") 
     attendance_data = []
     for attendance in attendances:
         for state in status:
@@ -1438,23 +1792,27 @@ def admin_attendanceStatus(request):
                 aware_datetime = state.checkIn
                 local_time = timezone.localtime(aware_datetime)
                 formatted_time = local_time.strftime('%H:%M:%S')
-                
+                formatted_date = local_time.strftime('%d/%m/%Y')
                 data_entry = {
                     "Date": attendance.classDate.strftime('%d-%m-%Y'),
                     "ClassCode": attendance.classCode.classCode,
                     "SubjectCode": attendance.classCode.subjectCode.subjectCode,
                     "SubjectName": attendance.classCode.subjectCode.subjectName,
                     "Lecturer": f"{attendance.classCode.lecturerId.user.first_name} {attendance.classCode.lecturerId.user.last_name}",
+                    "CheckInDate": formatted_date,
                     "CheckInTime": formatted_time,
                     "Status": state.status,
                     "Id": state.userId.userId,
                     "User": f"{state.userId.user.first_name} {state.userId.user.last_name}",
                     "Intake": state.userId.intakeCode.intakeCode,
+                    "id": state.relation_id.id
                 }
                 attendance_data.append(data_entry)
         
     context = {
         'attendance_data': attendance_data,
+        'earliest_date':formatted_earliest_date,
+        'latest_date':formatted_latest_date,
         }
     return render(request, 'admin-templates/attendanceStatus.html', context)
 
@@ -1463,6 +1821,7 @@ def admin_attendanceStatus(request):
 @transaction.atomic
 def admin_editAttendance(request, id):
     count_userAbsence()
+    check_leave()
     attendance = AttendanceTable.objects.get(id=id)
     kelas = ClassTable.objects.get(classCode = attendance.classCode)
     intakes = IntakeTable.objects.all()
@@ -1705,7 +2064,7 @@ def admin_face (request, user_id):
                 else:
                     return redirect('user-dashboard')
         
-        kelas = ClassTable.objects.all()
+        kelas = ClassTable.objects.filter(Q(status='active') | Q(status='Active'))
         return render(request, 'admin-templates/admin_face.html', {'kelas': kelas})
     else:
         message = 'Sorry, you are not allowed to view this page'
@@ -1713,6 +2072,7 @@ def admin_face (request, user_id):
 
 @transaction.atomic    
 def collect_attendance(ids, classCode, creator):
+    check_leave()
     try:
         class_instance = ClassTable.objects.get(classCode=classCode)
     except ClassTable.DoesNotExist:
@@ -1801,7 +2161,6 @@ def check_leave():
     for leave in LeaveTable.objects.filter(status = 'approved'):
         start_date = leave.startDate
         end_date = leave.endDate
-
         start_datetime = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
         end_datetime = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
 
@@ -1812,11 +2171,10 @@ def check_leave():
                 if state.status != 'mc':
                     state.status = 'mc'
                     state.save()
-
+            
             if leave.userID in attendance.attendedUser.all():
                 attendance.attendedUser.remove(leave.userID)
+                attendance.noAttendedUser = attendance.attendedUser.count()
                 attendance.save()
-        
-
-
+   
     

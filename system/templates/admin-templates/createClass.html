@@ -15,6 +15,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/style.css' %} ">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/bootstrap-datetimepicker.min.css' %} ">
     <link rel="stylesheet" type="text/css" href="{% static 'assets/css/dataTables.bootstrap4.min.css' %} ">
+    <link rel="stylesheet" type="text/css" href="{% static 'assets/chosen_v1.8.7/chosen.min.css' %} ">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href=" {% static 'assets/DataTables/datatables.min.css' %} " rel="stylesheet">
     <script src=" {% static 'assets/js/html5shiv.min.js' %} "></script>
@@ -155,20 +156,21 @@
                             </div>
                         </div>
                         <h3 class="card-title">{% trans "Subject" %}</h3>
-                        <select class="form-control" name="subjectCode" required>
+                        <select class="form-control subject" name="subjectCode" required>
                             <option>---</option>
                             {% for subject in subjects %}
                                 <option value="{{ subject.subjectCode }}">{{ subject.subjectCode }} - {{ subject.subjectName }}</option>
                             {% endfor %}
                         </select>
-                        <h3 class="card-title">{% trans "Lecturer" %}</h3>
-                        <select class="form-control" name="lecturerId" required>
+                        
+                        <h3 class="card-title mt-3">{% trans "Lecturer" %}</h3>
+                        <select class="form-control lecturer" name="lecturerId" required>
                             <option>---</option>
                             {% for lecturer in lecturers %}
                                 <option value="{{ lecturer.lecturerprofile.lecturerId}}">{{ lecturer.lecturerprofile.lecturerId}} - {{ lecturer.username }}</option>
                             {% endfor %}
                         </select>
-                        <h3 class="card-title">{% trans "Intake" %} - hold ctrl to select multiple intakes</h3>
+                        <h3 class="card-title mt-3">{% trans "Intake" %} - hold ctrl to select multiple intakes</h3>
                         <select class="form-control" name="intakes" style="height: 250px;" required multiple>
                             {% for intake in intakes %}
                                 <option style="padding: 5px 0px;" value="{{ intake.intakeCode }}" >{{ intake.intakeCode }}</option>
@@ -211,6 +213,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="{% static 'assets/js/chosen.jquery.min.js' %} "></script>
+    <script>
+        $(document).ready(function(){
+            $(".subject").chosen();
+            $(".lecturer").chosen();
+        });
+    </script>
 </body>
 
 </html>

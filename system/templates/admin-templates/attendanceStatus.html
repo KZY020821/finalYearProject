@@ -133,6 +133,17 @@
                     <div class="col-sm-4 col-3">
                         <h4 class="page-title">{% trans "Attendance Status - All attendance data" %}</h4>
                     </div>
+                    <div class="col-sm-8 col-9 text-right m-b-20">
+                        <div class="dropdown">
+                            <button type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"  class="btn btn-primary float-right d-none d-md-block dropdown-toggle" style="margin: 10px;">
+                                <i class="fa fa-download" aria-hidden="true"></i> Download data
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              <a href="{% url 'createXlsx' %}" class="dropdown-item" ><i class="fas fa-file-excel"></i> {% trans "Download XLSX" %}</a>
+                              <a href="{% url 'createPdfStatus' %}" class="dropdown-item" ><i class="fa-solid fa-file-pdf"></i> {% trans "Download PDF" %}</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -142,11 +153,11 @@
                                     <tbody>
                                         <tr>
                                             <td>Start Date:</td>
-                                            <td><input type="date" id="start_date" name="start_date"></td>
+                                            <td><input type="date" id="start_date" name="start_date"  min="{{earliest_date}}" max="{{latest_date}}"></td>
                                         </tr>
                                         <tr>
                                             <td>End Date:</td>
-                                            <td><input type="date" id="end_date" name="end_date"></td>
+                                            <td><input type="date" id="end_date" name="end_date" max="{{latest_date}}"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -158,14 +169,14 @@
                                         <th>Date</th>
                                         <th>Class Code</th>
                                         <th>Subject Code</th>
-                                        <th>Subject Name</th>
-                                        <th>Lecturer's Name</th>
+                                        <th>Creator</th>
+                                        <th>Check In Date</th>
                                         <th>Check In Time</th>
                                         <th>Status</th>
-                                        <th>Status</th>
-                                        <th>User's Id</th>
-                                        <th>User's Name</th>
-                                        <th>User's Intake</th>
+                                        <th>Student ID</th>
+                                        <th>Student's Name</th>
+                                        <th>Intake Code</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -174,9 +185,9 @@
                                         <td>{{ forloop.counter }}</td>
                                         <td>{{ entry.Date }}</td>
                                         <td>{{ entry.ClassCode }}</td>
-                                        <td>{{ entry.SubjectCode }}</td>
-                                        <td>{{ entry.SubjectName }}</td>
+                                        <td>{{ entry.SubjectCode }} - {{ entry.SubjectName }}</td>
                                         <td>{{ entry.Lecturer }}</td>
+                                        <td>{{ entry.CheckInDate }}</td>
                                         <td>{{ entry.CheckInTime }}</td>
                                         <td>
                                             {% if entry.Status == "attended" or entry.Status == "Attended" %}
@@ -195,13 +206,32 @@
                                                 <span class="custom-badge status-pink">{% trans "Emergency" %}</span>
                                             {% endif %}
                                         </td>
-                                        <td> {{entry.Status}} </td>
                                         <td>{{ entry.Id }}</td>
                                         <td>{{ entry.User }}</td>
                                         <td>{{ entry.Intake }}</td>
+                                        <td class="text-right">
+                                            <a href="admin-view-attendance/{{entry.id}}"><button type="button" class="btn btn-primary mt-1"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
+                                            <a href="admin-edit-attendance/{{entry.id}}"><button type="button" class="btn btn-secondary mt-1"><i class="fa fa-edit"></i> Edit</button></a>
+                                        </td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Class Code</th>
+                                        <th>Subject Code</th>
+                                        <th>Creator</th>
+                                        <th>Check In Date</th>
+                                        <th>Check In Time</th>
+                                        <th>Status</th>
+                                        <th>Student ID</th>
+                                        <th>Student's Name</th>
+                                        <th>Intake Code</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -240,25 +270,92 @@
     <script src="{% static 'assets/DataTables/datatables.min.js' %} "></script>
     <script src="https://cdn.datatables.net/fixedheader/3.2.3/js/dataTables.fixedHeader.min.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var startDateInput = document.getElementById('start_date');
+            var endDateInput = document.getElementById('end_date');
+
+            // Set the minimum date of the end date input to the selected start date
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = startDateInput.value;
+            });
+
+            endDateInput.disabled = true;
+
+            // Enable the end date input when the start date is selected
+            startDateInput.addEventListener('change', function() {
+                endDateInput.disabled = false;
+                endDateInput.min = startDateInput.value;
+            });
+
+
+        });
         $(document).ready(function() {
-            // Initialize DataTable
-            var table = $('#example').DataTable({
-                orderCellsTop: true,
-                fixedHeader: true,
-                language: {
-                    search: "{% trans 'Search:' %}",
-                    lengthMenu: "{% trans 'Show _MENU_ entries' %}",
-                    info: "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
-                    infoEmpty: "{% trans 'Showing 0 to 0 of 0 entries' %}",
-                    infoFiltered: "({% trans 'filtered from _MAX_ total entries' %})",
-                    zeroRecords: "{% trans 'No matching records found' %}",
-                    paginate: {
-                        first: "{% trans 'First' %}",
-                        previous: "{% trans 'Previous' %}",
-                        next: "{% trans 'Next' %}",
-                        last: "{% trans 'Last' %}"
+            if ($.fn.DataTable.isDataTable('#example')) {
+                // Destroy the existing DataTable instance
+                $('#example').DataTable().destroy();
+            }
+
+            $('#example tfoot th').each(function () {
+                var title = $(this).text();
+                $(this).html('<input type="text" placeholder="Search ' + title + '"/>');
+            })
+
+            $('#example').DataTable({
+                "language": {
+                    "search": "{% trans 'Search:' %}",
+                    "lengthMenu": "{% trans 'Show _MENU_ entries' %}",
+                    "info": "{% trans 'Showing _START_ to _END_ of _TOTAL_ entries' %}",
+                    "infoEmpty": "{% trans 'Showing 0 to 0 of 0 entries' %}",
+                    "infoFiltered": "({% trans 'filtered from _MAX_ total entries' %})",
+                    "zeroRecords": "{% trans 'No matching records found' %}",
+                    "paginate": {
+                        "first": "{% trans 'First' %}",
+                        "previous": "{% trans 'Previous' %}",
+                        "next": "{% trans 'Next' %}",
+                        "last": "{% trans 'Last' %}"
                     }
+                },
+                "searching": true,
+                "paging": true,
+                "pageLength": 10,
+                "order": [[3, 'desc']],
+                "ordering": 1,
+                "columnDefs": [{
+                    "targets": [0, 1, 2],
+                    "orderable": false
+                },
+                {
+                    "targets": [1],
+                    "visible": false,
+                    "searchable": true
+                }],
+                initComplete: function () {
+                    // Apply the search
+                    var api = this.api();
+                    api.columns().every(function () {
+                        var that = this;
+                        $('input', this.footer()).on('keyup change clear', function () {
+                            if (that.search() !== this.value) {
+                                that.search(this.value).draw();
+                            }
+                        });
+                    });
                 }
+            });
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                var startDateInput = document.getElementById('start_date');
+                var endDateInput = document.getElementById('end_date');
+
+                // Add event listener to start date input
+                startDateInput.addEventListener('change', function() {
+                    // Set min attribute of end date input to the selected start date
+                    endDateInput.min = startDateInput.value;
+                    // Reset end date value if it's less than the new min value
+                    if (endDateInput.value < startDateInput.value) {
+                        endDateInput.value = startDateInput.value;
+                    }
+                });
             });
 
             // Add event listeners for Start Date and End Date inputs

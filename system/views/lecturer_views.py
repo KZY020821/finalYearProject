@@ -41,7 +41,7 @@ def lecturerDashboard(request):
     attendances = []
 
     class_data = []
-
+    
     for kelas in classes:
         attendance = AttendanceTable.objects.filter(classCode=kelas)
         class_total_attendances = 0
@@ -63,25 +63,25 @@ def lecturerDashboard(request):
     
     data = {}
     for state in status:
-        key = state.relation_id.classCode.classCode
-        if key not in data:
-            data[key] = {'attendance_list': [0, 0, 0, 0, 0]}
+        if state.relation_id.classCode.lecturerId == lecturer:
+            key = state.relation_id.classCode.classCode
+            if key not in data:
+                data[key] = {'attendance_list': [0, 0, 0, 0, 0]}
 
-        if state.status == "attended":
-            data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
-        if state.status == "absent":
-            data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
-        if state.status == "mc":
-            data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
-        if state.status == "curriculum":
-            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
-        if state.status == "excuse":
-            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
-        if state.status == "emergency":
-            data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
-        if state.status == "late":
-            data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
-
+            if state.status == "attended":
+                data[key]['attendance_list'][0] = data[key]['attendance_list'][0]+1
+            if state.status == "absent":
+                data[key]['attendance_list'][1] = data[key]['attendance_list'][1]+1
+            if state.status == "mc":
+                data[key]['attendance_list'][2] = data[key]['attendance_list'][2]+1
+            if state.status == "curriculum":
+                data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+            if state.status == "excuse":
+                data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+            if state.status == "emergency":
+                data[key]['attendance_list'][4] = data[key]['attendance_list'][4]+1
+            if state.status == "late":
+                data[key]['attendance_list'][3] = data[key]['attendance_list'][3]+1
     context = {
         'classes_count': classes_count,
         'classes': classes,

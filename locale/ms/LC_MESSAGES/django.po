@@ -1381,6 +1381,12 @@ msgstr "Mengambil Kehadiran"
 msgid "Download XLSX"
 msgstr "Muat Turun XLSX"
 
+msgid "Download PDF"
+msgstr "Muat Turun PDF"
+
+msgid "Download Report"
+msgstr "Muat Turun Laporan"
+
 msgid "Subject"
 msgstr "Subjek"
 
@@ -1703,7 +1709,7 @@ msgid "Absent Count"
 msgstr "Kiraan tidak hadir"
 
 msgid "Your Intake"
-msgstr "pengambilan Anda"
+msgstr "Pengambilan Anda"
 
 msgid "Create Report"
 msgstr "Cipta Laporan"
@@ -1891,3 +1897,30 @@ msgstr "Mesin <i class=\"fa-brands fa-apple\"></i> Mac sepatutnya kelihatan sepe
 
 msgid "Upload the template.xlsx file to the form below."
 msgstr "Muat naik fail template.xlsx ke borang di bawah."
+
+msgid "Start Date - End Date"
+msgstr "Tarikh Mula - Tarikh Tamat"
+
+msgid "Filter Chart"
+msgstr "Tapis Carta"
+
+msgid "Create New Admin"
+msgstr "Cipta Admin Baharu"
+
+msgid "Attendance Detail"
+msgstr "Butiran Kehadiran"
+
+msgid "Face Recognition"
+msgstr "Pengecaman Muka"
+
+msgid "Create New Absence Limit"
+msgstr "Cipta Had Ketidakhadiran Baharu"
+
+msgid "Noted"
+msgstr "Tercacat"
+
+msgid "Total Classes"
+msgstr "Jumlah Kelas"
+
+msgid "Attendance for"
+msgstr "Kehadiran Untuk"

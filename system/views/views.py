@@ -13,6 +13,7 @@ import os
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from ..models import ReportTable
+from json import dump
 
 @unauthenticated_user
 def loginPage(request):
@@ -74,24 +75,25 @@ def registerPage(request):
 
             try:
                 face_image = face_recognition.load_image_file(faceimage)
-                face_encoding = face_recognition.face_encodings(face_image)[0]
+                face_encoding = face_recognition.face_encodings(face_image, model='large')[0]
             except Exception as ex:
-                messages.error(request, f"Failed to detect face from the image you uploaded.")
-                return redirect('register')
-
-            # Get the username and user ID
+                messages.error(request, "Failed to detect face from the image you uploaded.")
+                return redirect('admin-create-user')
+            
             username_id = f"{id}_{first_name}-{last_name}"
+            json_dir = '/Users/khorzeyi/code/finalYearProject/media/encode_faces'
+            json_file_path = os.path.join(json_dir, f'{username_id}.json')
+                    
+            os.makedirs(json_dir, exist_ok=True)
+            jsonStatus = {
+                'file_name': username_id,
+                'face_encoding': face_encoding.tolist()  # Convert NumPy array to list
+            }
+            with open(json_file_path, 'w') as json_file:
+                dump(jsonStatus, json_file)
 
-            # Determine the file extension based on the user's uploaded file
             file_extension = faceimage.name.split('.')[-1]
-
-            # Define the path to save the image with the appropriate extension
             image_path = os.path.join('faceImage', f"{username_id}.{file_extension}")
-
-            # Delete the existing image if it exists
-            if os.path.exists(image_path):
-                os.remove(image_path)
-
             # Save the uploaded image with the new name and correct file extension
             fs = FileSystemStorage()
             fs.save(image_path, faceimage)

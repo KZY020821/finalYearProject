@@ -154,7 +154,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="date" class="form-control" name="startDate" required>
+                                    <input type="date" class="form-control" name="startDate" id="startDate" required>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +162,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <input type="date" class="form-control" name="endDate" required>
+                                    <input type="date" class="form-control" name="endDate" id="endDate" required>
                                 </div>
                             </div>
                         </div>
@@ -209,6 +209,30 @@
             $("#success-alert").alert('close');
         }, 3000); // 3000 milliseconds = 3 seconds
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var startDateInput = document.getElementById('startDate');
+            var endDateInput = document.getElementById('endDate');
+            var currentDate = new Date();
+            var minDate = new Date();
+            minDate.setDate(currentDate.getDate() - 5);
+            var minDateString = minDate.toISOString().split('T')[0]; 
+            startDateInput.min = minDateString;
+
+            // Set the minimum date of the end date input to the selected start date
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = startDateInput.value;
+            });
+  
+            endDateInput.disabled = true;
+  
+            // Enable the end date input when the start date is selected
+            startDateInput.addEventListener('change', function() {
+                endDateInput.disabled = false;
+                endDateInput.min = startDateInput.value;
+            });
+        });
+      </script>
 </body>
 
 </html>

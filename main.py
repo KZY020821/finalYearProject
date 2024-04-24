@@ -3,21 +3,11 @@ import os
 import sys
 
 import cv2
-import django
 import face_recognition
 import numpy as np
 
-# Set the DJANGO_SETTINGS_MODULE
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 
-# Initialize Django
-django.setup()
-
-
-# Import Django models
-# Define a function to calculate face recognition confidence
-def face_confidence(face_distance, face_match_threshold=0.4):
-    # Calculate confidence linearly based on face distance
+def face_confidence(face_distance, face_match_threshold=0.8):
     ranges = (1.0 - face_match_threshold)
     linear_val = (1.0 - face_distance) / (ranges * 2.0)
 
@@ -38,8 +28,8 @@ class FaceRecognition:
     known_face_names = []
     processed_names = set()  # Set to store names that have already been processed
     process_current_frame = True
-    face_match_threshold = 0.4
-    confidence_threshold = 0.3
+    face_match_threshold = 0.8
+    confidence_threshold = 0.8
 
     def __init__(self):
         self.qr_code_alpha_channel = None
@@ -47,7 +37,7 @@ class FaceRecognition:
         self.load_qr_code()  # Call the function to load the QR code image
 
     def encode_faces(self):
-        directory = f'media/faceImage/'
+        directory = f'media/zhzy/'
         files = os.listdir(directory)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png'))]
 
@@ -107,33 +97,43 @@ class FaceRecognition:
                     face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
                     matches = face_distances <= self.face_match_threshold
 
-                    if any(matches):
+                    if True in matches:
                         best_match_index = np.argmin(face_distances)
-                        confidence = face_confidence(face_distances[best_match_index], face_match_threshold=0.7)
+                        confidence = face_confidence(face_distances[best_match_index], face_match_threshold=0.8)
 
                         if float(confidence.rstrip('%')) > self.confidence_threshold * 100:
                             name = self.known_face_names[best_match_index]
-                            self.face_names.append(f'{name} ({confidence})')
+                            self.face_names.append(f'{name}')
                             if name not in self.processed_names:
                                 self.processed_names.add(f'{name}')
+
+                            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                                top *= 4
+                                right *= 4
+                                bottom *= 4
+                                left *= 4
+
+                                cv2.rectangle(frame, (left, top), (right, bottom), (124,252,0),
+                                              2)  # Draw a red rectangle around the face
+                                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (124,252,0),
+                                              -1)  # Draw a label background
+                                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                            (255, 255, 255), 1)  # Put the name and confidence label
                     else:
-                        # Face does not match any known face above the confidence threshold
-                        unknown_confidence = face_confidence(np.min(face_distances), face_match_threshold=0.7)
-                        if float(unknown_confidence.rstrip('%')) > self.confidence_threshold * 100:
-                            self.face_names.append(f'Unknown')
+                        self.face_names.append(f'Unknown')
 
-            # Draw rectangles and labels on the frame for recognized faces
-            for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
-                top *= 4
-                right *= 4
-                bottom *= 4
-                left *= 4
+                        # Draw rectangles and labels on the frame for recognized faces
+                        for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
+                            top *= 4
+                            right *= 4
+                            bottom *= 4
+                            left *= 4
 
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255),
-                              2)  # Draw a red rectangle around the face
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
-                cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
-                            (255, 255, 255), 1)  # Put the name and confidence label
+                            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255),
+                                          2)  # Draw a red rectangle around the face
+                            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), -1)  # Draw a label background
+                            cv2.putText(frame, name, (left + 6, bottom - 6), cv2.FONT_HERSHEY_DUPLEX, 0.8,
+                                        (255, 255, 255), 1)  # Put the name and confidence label
 
             cv2.imshow('face recognition', frame)  # Display the frame with face recognition
 

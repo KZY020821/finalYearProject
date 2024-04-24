@@ -151,7 +151,11 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="report-attendance/{{attendance.relation_id.id}}"><button type="button" class="btn btn-danger" style="width: 105px;"><i class="fa fa-exclamation" aria-hidden="true" style="padding: 0px 5px;"></i>  {% trans "Report" %}</button></a>
+                                                {% if attendance.status == 'absent' or attendance.status == 'Absent' %}
+                                                    <a href="report-attendance/{{attendance.relation_id.id}}"><button type="button" class="btn btn-danger" style="width: 105px;"><i class="fa fa-exclamation" aria-hidden="true" style="padding: 0px 5px;"></i>  {% trans "Report" %}</button></a>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}

@@ -184,10 +184,6 @@ def user_attendanceManagement(request):
 @allow_users(allow_roles=['user'])
 def user_reportManagement(request):
     reports = ReportTable.objects.all()
-    if request.method == 'POST':
-        searchReport = request.POST['searchReport']
-        lists = ReportTable.objects.filter( Q(creator__icontains=searchReport) | Q(reportTitle__icontains=searchReport))
-        return render(request, 'user-templates/reportManagement.html', {'reports': reports, 'searched': searchReport, 'lists': lists})
     return render(request, 'user-templates/reportManagement.html', {'reports': reports})
 
 @login_required(login_url='/')
@@ -264,7 +260,9 @@ def reportAttendance(request, attendance_id):
     intake = IntakeTable.objects.get(intakeCode=intakeCoder)
     admin = intake.adminId.adminId
     class_date_formatted = attendance.classDate.strftime("%Y-%m-%d")
-    check_in_time_formatted = attendance.classDate.strftime("%H:%M:%S")
+    aware_datetime = attendance.classDate
+    local_time = timezone.localtime(aware_datetime)
+    check_in_time_formatted  = local_time.strftime('%H:%M:%S')
     report_title = f'Report Attendance of class {attendance.classCode}, on {class_date_formatted} at {check_in_time_formatted}'
 
     if request.method == "POST":

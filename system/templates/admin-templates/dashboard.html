@@ -128,17 +128,19 @@
             </div>
         </div>
         <div class="page-wrapper">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-success" id="success-alert">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
             <div class="content">
                 <h3 class="page-title">{% trans 'Admin Dashboard'%}</h3>
             </div>
-            <div class="row" style="margin: 15px;">
+            {% if messages %}
+                  <ul class="messages" id="alert">
+                      {% for message in messages %}
+                          <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>
+                              {{ message }}
+                          </li> 
+                      {% endfor %}
+                  </ul>
+              {% endif %}
+            <div class="row" style="margin: 0px 15px 15px 15px;">
               <div class="col-sm ">
                 <a href="{% url 'admin-intake-management' %}" style="text-decoration: none;">
                   <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
@@ -177,7 +179,7 @@
               <div class="col-sm ">
                 <a href="{% url 'admin-admin-management' %}" style="text-decoration: none;">
                   <div class="dash-widget" style="box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;">
-                      <span class="dash-widget-bg4"><i class="fa fa-user" aria-hidden="true"></i></span>
+                      <span class="dash-widget-bg5"><i class="fa fa-user" aria-hidden="true"></i></span>
                       <div class="dash-widget-info text-right" style="color: #656565;">
                         <h4>{% trans "Total" %} Admin</h4>
                         <h3>{{ admin_count }}</h3>
@@ -208,6 +210,21 @@
                 </a>
               </div>
             </div>
+            <h4 style="margin-left: 30px;">{% trans "Start Date - End Date" %}</h4>
+              <form method="POST">
+                {% csrf_token %}
+                <div class="row filter-row" style="margin: 15px;">
+                    <div class="col-8">
+                        <div class="form-group form-focus">
+                            <input type="date" class="form-control floating" name="startDate" id="startDate" min="{{earliest_date}}" max="{{latest_date}}">
+                            <input type="date" class="form-control floating" name="endDate" id="endDate" max="{{latest_date}}">
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-primary btn-block" type="sumbit"> {% trans "Filter Chart" %}</button>
+                    </div>
+                </div>
+              </form>
             <div class="row" style="margin: 15px;">
               {% for intake_code, data in average_percentages.items %}    
                   <div class="col-sm">
@@ -215,13 +232,10 @@
                       <div class="chart-title">
                         <h4>{{intake_code}} {% trans "Attendance" %} - %</h4>
                       </div>	
-                      <div id="intake{{forloop.counter}}" data-average-percentage="{{ data.average_percentage }}"></div>
+                      <div  style="display: flex; justify-content: center;"  id="intake{{forloop.counter}}" data-average-percentage="{{ data.average_percentage }}"></div>
                     </div>
                   </div>
               {% endfor %}
-              {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-                </div><div class="row" style="margin: 15px;">
-              {% endif %}
             </div>
             <div class="row" style="margin: 15px;">
               {% for intake_code, data in data.items %}    
@@ -234,9 +248,6 @@
                     </div>
                 </div>
               {% endfor %}
-              {% if forloop.counter|divisibleby:"4" and not forloop.last %}
-                </div><div class="row" style="margin: 15px;">
-              {% endif %}
             </div>
         </div>
     </div>
@@ -269,6 +280,27 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     <script src="{% static 'assets/DataTables/datatables.min.js' %}"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          var startDateInput = document.getElementById('startDate');
+          var endDateInput = document.getElementById('endDate');
+
+          // Set the minimum date of the end date input to the selected start date
+          startDateInput.addEventListener('change', function() {
+              endDateInput.min = startDateInput.value;
+          });
+
+          endDateInput.disabled = true;
+
+          // Enable the end date input when the start date is selected
+          startDateInput.addEventListener('change', function() {
+              endDateInput.disabled = false;
+              endDateInput.min = startDateInput.value;
+          });
+
+
+      });
+    </script>
     <script>
       $(document).ready(function() {
         // Automatically close the success alert after 3 seconds
@@ -401,10 +433,10 @@
           breakpoint: 480,
           options: {
             chart: {
-              width: 200
+              width: 400
             },
             legend: {
-              position: 'bottom'
+              position: 'bottom',
             }
           }
         }],

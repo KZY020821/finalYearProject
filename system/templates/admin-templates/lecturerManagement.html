@@ -172,9 +172,11 @@
                                 <div class="doc-prof">lecturer</div>
                                 <div class="user-country">ID: {{ lecturer.lecturerId }}</div>
                                 <br>
-                                <a href="{% url 'admin-view-lecturer' lecturer.user.id %}"><button type="button" class="btn btn-primary" style="width: 80px; margin: 3px;"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
-                                <a href="{% url 'admin-edit-lecturer' lecturer.user.id %}"><button type="button" class="btn btn-secondary" style="width: 80px; margin: 3px;"><i class="fa fa-edit"></i> Edit</button></a>
-                                <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ lecturer.user.id }}" style="width: 86px; margin: 3px;"><i class="fa fa-trash"></i> {% trans "Delete" %}</button>
+                                <div class="col-sm">
+                                    <a href="admin-view-lecturer/{{ lecturer.id }}"><button type="button" class="btn btn-primary mt-1"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
+                                    <a href="{% url 'admin-edit-lecturer' lecturer.id %}"><button type="button" class="btn btn-secondary mt-1"><i class="fa fa-edit" ></i> Edit</button></a>
+                                    <button type="button" class="btn btn-danger delete-user-button mt-1" data-toggle="modal" data-target="#popup_modal_{{ lecturer.id }}"><i class="fa fa-trash"></i> {% trans "Delete" %}</button>
+                                </div>
                             </div>
                         </div>
                     
@@ -207,10 +209,11 @@
                                         <h4 class="text-ellipsis">{{ lecturer.first_name }} {{ lecturer.last_name }}</h4>
                                         <div class="doc-prof">lecturer</div>
                                         <div class="user-country">ID: {{ lecturer.lecturerprofile.lecturerId }}</div>
-                                        <br>
-                                        <a href="admin-view-lecturer/{{ lecturer.id }}"><button type="button" class="btn btn-primary" style="width: 80px; margin: 3px;"><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
-                                        <a href="{% url 'admin-edit-lecturer' lecturer.id %}"><button type="button" class="btn btn-secondary" style="width: 80px; margin: 3px;"><i class="fa fa-edit" ></i> Edit</button></a>
-                                        <button type="button" class="btn btn-danger delete-user-button" data-toggle="modal" data-target="#popup_modal_{{ lecturer.id }}" style="width: 86px; margin: 3px;"><i class="fa fa-trash"></i> {% trans "Delete" %}</button>
+                                        <div class="col-sm">
+                                            <a href="admin-view-lecturer/{{ lecturer.id }}"><button type="button" class="btn btn-primary mt-1" ><i class="fa fa-eye"></i> {% trans "View" %}</button></a>
+                                            <a href="{% url 'admin-edit-lecturer' lecturer.id %}"><button type="button" class="btn btn-secondary mt-1"><i class="fa fa-edit" ></i> Edit</button></a>
+                                            <button type="button" class="btn btn-danger delete-user-button mt-1" data-toggle="modal" data-target="#popup_modal_{{ lecturer.id }}"><i class="fa fa-trash"></i> {% trans "Delete" %}</button>
+                                        </div>
                                     </div>  
                             </div>
                         
