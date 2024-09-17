@@ -1,7 +1,7 @@
 import os
 import re
 import sys
-from json import load
+
 current_file_path = os.path.abspath(__file__)
 base_path = os.path.dirname(os.path.dirname(current_file_path))
 sys.path.append(base_path)

@@ -1,3 +1,4 @@
+# import neccessary libraries
 import os
 from PIL import Image
 import numpy as np
@@ -18,18 +19,14 @@ from PIL import Image
 import os
 import sys
 
-# Get the absolute path of the current file
 current_file_path = os.path.abspath(__file__)
-
-# Go up two levels to get the base directory
 base_path = os.path.dirname(os.path.dirname(current_file_path))
-
-# Add the base path to sys.path
 sys.path.append(base_path)
 
 
-IMG_SIZE = 24  # or the desired size for resizing
+IMG_SIZE = 24 
 
+# collecting image
 def collect():
 	train_datagen = ImageDataGenerator(
 			rescale=1./255,
@@ -63,7 +60,7 @@ def collect():
 	)
 	return train_generator, val_generator
 
-
+# same the model into json file
 def save_model(model):
 	model_json = model.to_json()
 	with open("model.json", "w") as json_file:
@@ -71,6 +68,7 @@ def save_model(model):
 	# serialize weights to HDF5
 	model.save_weights("face_rec-master/model.h5")
 
+# load the saved model
 def load_model():
 	json_file = open('face_rec-master/model.json', 'r')
 	loaded_model_json = json_file.read()
@@ -81,6 +79,7 @@ def load_model():
 	loaded_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 	return loaded_model
 
+# train the model to differentiate open or close eyes
 def train(train_generator, val_generator):
 	STEP_SIZE_TRAIN=train_generator.n//train_generator.batch_size
 	STEP_SIZE_VALID=val_generator.n//val_generator.batch_size
@@ -114,29 +113,15 @@ def train(train_generator, val_generator):
 	)
 	save_model(model)
 
+# predict eye statys with NumPy 
 def predict(img, model):
-    # Convert the image to a NumPy array if it's not already
     img_array = np.array(img)
-
-    # Resize the image
     img_resized = resize(img_array, (IMG_SIZE, IMG_SIZE)).astype('float32')
-
-    # Convert the resized image to grayscale
     img_gray = Image.fromarray(img_resized, 'RGB').convert('L')
-
-    # Resize the grayscale image
     img_gray_resized = resize(np.array(img_gray), (IMG_SIZE, IMG_SIZE)).astype('float32')
-
-    # Normalize the pixel values
     img_gray_resized /= 255
-
-    # Reshape the image for the model input
     img_reshaped = img_gray_resized.reshape(1, IMG_SIZE, IMG_SIZE, 1)
-
-    # Make the prediction
     prediction = model.predict(img_reshaped)
-
-    # Interpret the prediction
     if prediction < 0.1:
         return 'closed'
     elif prediction > 0.9:

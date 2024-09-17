@@ -1,27 +1,33 @@
-import os
 import re
-import sys
+from collections import defaultdict
 from json import load
+
+import cv2
+from face_recognition import face_encodings, face_distance
+from imutils.video import VideoStream
+
+from eye_status import *
+
+# initialize current directory
 current_file_path = os.path.abspath(__file__)
 base_path = os.path.dirname(os.path.dirname(current_file_path))
 sys.path.append(base_path)
+
+# Initialize django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "finalYearProject.settings")
 import django
 django.setup()
-from json import load
-import cv2
-from face_recognition import face_encodings, face_distance
-from collections import defaultdict
-from imutils.video import VideoStream
-from eye_status import *
+# import data from django SQLite
 from system.models import UserProfile
 from system.models import ClassTable
 from system.views.admin_views import collect_attendance
+
 processed_names = []
 if len(sys.argv) > 1:
     classCode = sys.argv[1]
     creator = sys.argv[2]
 
+# initialize file
 def init():
     face_detector = cv2.CascadeClassifier('face_rec-master/haarcascade_frontalface_alt.xml')
     open_eyes_detector = cv2.CascadeClassifier('face_rec-master/haarcascade_eye_tree_eyeglasses.xml')
@@ -29,8 +35,9 @@ def init():
     right_eye_detector = cv2.CascadeClassifier('face_rec-master/haarcascade_righteye_2splits.xml')
     model = load_model()
     video_capture = VideoStream(src=1).start()
-    return (model, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, video_capture)
+    return model, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, video_capture
 
+# obtain encoded face data based on namelist
 def process_and_encode():
     dataset = f'media/encode_faces/'
     known_face_names = []
@@ -44,7 +51,7 @@ def process_and_encode():
             user_ids.append(user.userId)
 
     for filename in os.listdir(dataset):
-        if filename.lower().endswith(('.json')):
+        if filename.lower().endswith('.json'):
             user_id = filename.split('_')[0]
             filepath = os.path.join(dataset, filename)
             with open(filepath, 'r') as f:
@@ -56,18 +63,16 @@ def process_and_encode():
                     cleaned_name = name.replace('-', ' ')
                     status = ('ID: ' + user_id + '  Name: ' + cleaned_name)
                     known_face_names.append(status)
-
-    print("filtered faces")
-    print(known_face_names)
     return {"encodings": known_face_encodings, "names": known_face_names}
 
-def isBlinking(history, maxFrames):
-    for i in range(maxFrames):
+# Check if eyes of the detected faces is blinking
+def is_blinking(history, max_frames):
+    for i in range(max_frames):
         pattern = '1' + '0' * (i + 1) + '1'
         if pattern in history:
             return True
     return False
-
+# if detected display the name 
 def detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, data, eyes_detected, face_match_threshold):
     frame = video_capture.read()
     frame = cv2.resize(frame, (0, 0), fx=1.0, fy=1.0)
@@ -148,7 +153,7 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
                 cv2.rectangle(left_face, (ex, ey), (ex + ew, ey + eh), color, 2)
             eyes_detected[name] += eye_status
 
-        if isBlinking(eyes_detected[name], 3):
+        if is_blinking(eyes_detected[name], 3):
             if name != "Unknown":
                 colour = (0, 255, 0)
             else:
@@ -162,7 +167,6 @@ def detect_and_display(model, video_capture, face_detector, open_eyes_detector, 
                     processed_names.append(f'{name}')
     return frame
 
-
 if __name__ == "__main__":
     (model, face_detector, open_eyes_detector, left_eye_detector, right_eye_detector, video_capture) = init()
     data = process_and_encode()
@@ -170,18 +174,17 @@ if __name__ == "__main__":
     while True:
         frame = detect_and_display(model, video_capture, face_detector, open_eyes_detector, left_eye_detector,right_eye_detector, data, eyes_detected, 0.5)
         cv2.imshow(f"BOLT-FRAS Face Recognition Attendance System", frame)
+        # Press 'q' to quit the program
         if cv2.waitKey(1) == ord('q'):
             ids = []
 
             for string in processed_names:
-                # Use regex to find the ID pattern
                 match = re.search(r'ID: (\w+)', string)
 
                 if match:
-                    # Extract the ID from the regex match
                     id_value = match.group(1)
                     ids.append(id_value)
             collect_attendance(ids, classCode, creator)
-            break  # Press 'q' to quit the program
+            break  
     cv2.destroyAllWindows()
     video_capture.stop()

@@ -80,8 +80,15 @@ def adminDashboard(request):
     user_count = UserProfile.objects.count()
     earliest_check_in = AttendanceStatus.objects.aggregate(earliest_check_in=Min('checkIn'))['earliest_check_in']
     latest_check_in = AttendanceStatus.objects.aggregate(latest_check_in=Max('checkIn'))['latest_check_in']
-    formatted_earliest_date = earliest_check_in.strftime("%Y-%m-%d")
-    formatted_latest_date = latest_check_in.strftime("%Y-%m-%d")    # Check if earliest_check_in and latest_check_in are not None before using them
+    if earliest_check_in is not None:
+        formatted_earliest_date = earliest_check_in.strftime("%Y-%m-%d")
+    else:
+        formatted_earliest_date = datetime.now().strftime("%Y-%m-%d")
+    if latest_check_in is not None:
+        formatted_latest_date = latest_check_in.strftime("%Y-%m-%d")    # Check if earliest_check_in and latest_check_in are not None before using them
+    else:
+        formatted_latest_date = datetime.now().strftime("%Y-%m-%d")
+
     if earliest_check_in is not None and latest_check_in is not None:
         if request.method == 'POST':
             startDate_str = request.POST['startDate']
